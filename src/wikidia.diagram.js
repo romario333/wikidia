@@ -16,7 +16,7 @@ var WIKIDIA = WIKIDIA || {};
     WIKIDIA.newDiagram = function (diagramDiv, editorTextArea) {
 
         var that = {}, // public interface
-            mSvgBuilder,
+            mSvgRoot,
             mEditor = editorTextArea,
             // nodes or arrows
             mItems = [],
@@ -24,13 +24,13 @@ var WIKIDIA = WIKIDIA || {};
 
         function init() {
             // create root SVG element
-            mSvgBuilder = svg.newSvgBuilder();
-            $(diagramDiv).append(mSvgBuilder.rootElement);
+            mSvgRoot = svg.newSvgRootNode();
+            $(diagramDiv).append(mSvgRoot.element);
         }
 
         init();
 
-        that.svgBuilder = mSvgBuilder;
+        that.svgRoot = mSvgRoot;
 
         /**
          * Selects one item (node or arrow). Any other selected items will be deselected.

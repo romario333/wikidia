@@ -29,6 +29,11 @@ var WIKIDIA = WIKIDIA || {};
                 var formattedText = sprintf.apply(null, arguments);
                 console.log(formattedText + "\n");
             }
+        },
+        dir: function (object) {
+            if (console) {
+                console.dir(object);
+            }
         }
     };
 

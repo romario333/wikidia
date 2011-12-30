@@ -1,4 +1,4 @@
-var WIKIDIA = WIKIDIA || {};
+    var WIKIDIA = WIKIDIA || {};
 
 (function (global) {
     "use strict";
@@ -16,25 +16,78 @@ var WIKIDIA = WIKIDIA || {};
         },
 
 
-        newNodeUiBuilder = function (svgBuilder) {
+        newNodeUiBuilder = function (svgGroup) {
             return {
-                svgBuilder: svgBuilder,
-                contour: null,
-                addGroup: function (attrs) {
-                    return this.svgBuilder.addGroup(attrs);
-                },
-                addRect: function (attrs)  {
-                    return this.svgBuilder.addRect(attrs);
-                },
-                addText: function (attrs) {
-                    return this.svgBuilder.addText(attrs);
-                },
-                clear: function () {
-                    this.svgBuilder.clear();
-                    this.contour = null;
-                }
+                svgGroup: svgGroup,
+                contour: null
             };
         };
+
+    // TODO: I should do this as a jquery plugin
+    function newDragEventHandler(element) {
+        var mReadyForDrag = false,
+            mIsDragged = false,
+            mDragStartX,
+            mDragStartY,
+            // TODO: only one listener can be registered at the  moment
+            mOnDragStart,
+            mOnDragMove,
+            mOnDragEnd;
+
+        element.mousedown(function (e) {
+            log.dir(e);
+            mDragStartX = e.clientX;
+            mDragStartY = e.clientY;
+            mReadyForDrag = true;
+        });
+
+        // TODO: this is not very effective implementation
+        $(document.body).mouseup(function (e) {
+            if (mIsDragged) {
+                mIsDragged = false;
+                mReadyForDrag = false;
+                if (mOnDragEnd) {
+                    var dx = e.clientX - mDragStartX;
+                    var dy = e.clientY - mDragStartY;
+                    mOnDragEnd(dx, dy);
+                }
+            }
+        });
+
+        $(document.body).mousemove(function (e) {
+            if (mReadyForDrag) {
+                mIsDragged = true;
+                mReadyForDrag = false;
+                if (mOnDragStart) {
+                    mOnDragStart();
+                }
+            }
+            if (mIsDragged) {
+                if (mOnDragMove) {
+                    var dx = e.clientX - mDragStartX;
+                    var dy = e.clientY - mDragStartY;
+                    mOnDragMove(dx, dy);
+                }
+            }
+        });
+
+        var that = {
+            dragStart: function (handler) {
+                mOnDragStart = handler;
+            },
+            dragMove: function (handler) {
+                mOnDragMove = handler;
+            },
+            dragEnd: function (handler) {
+                mOnDragEnd = handler;
+            }
+        };
+        return that;
+
+
+
+
+    }
 
     /**
      * @constructor
@@ -156,28 +209,43 @@ var WIKIDIA = WIKIDIA || {};
         that.update = update;
 
         function init() {
-            mNodeUiBuilder = newNodeUiBuilder(mDiagram.svgBuilder.addGroup());
+            mNodeUiBuilder = newNodeUiBuilder(mDiagram.svgRoot.addGroup());
 
             update();
 
-            // TODO: zapouzdrit
-            mNodeUiBuilder.svgBuilder.rootElement.mousedown(function () {
-                log.debug("mousedown");
-            });
-
-            mNodeUiBuilder.svgBuilder.rootElement.mouseup(function () {
-                log.debug("mouseup");
-            });
+            var dragHandler = newDragEventHandler(mNodeUiBuilder.svgGroup.element);
+            dragHandler.dragStart(onDragStart);
+            dragHandler.dragMove(onDragMove);
+            dragHandler.dragEnd(onDragEnd);
 
 
-            mNodeUiBuilder.svgBuilder.rootElement.click(function () {
+            mNodeUiBuilder.svgGroup.element.click(function () {
                 log.debug("click");
             });
 
-            mNodeUiBuilder.svgBuilder.rootElement.dblclick(function () {
+            mNodeUiBuilder.svgGroup.element.dblclick(function () {
                 log.debug("dblclick");
             });
-        };
+        }
+
+        function onDragStart() {
+            log.debug("ondragstart");
+
+        }
+
+        function onDragMove(dx, dy) {
+            log.debug("ondragmove, dx=%s, dy=%s", dx, dy);
+            // TODO: create nicer API for transformations
+            mNodeUiBuilder.svgGroup.transform(sprintf("translate(%d,%d)", dx, dy));
+        }
+
+        function onDragEnd(dx, dy) {
+            log.debug("ondragend");
+            mNodeUiBuilder.svgGroup.clearTransform();
+            mNodeRect.x += dx;
+            mNodeRect.y += dy;
+            update();
+        }
 
         /**
          * Updates node. Returns true if update is successful. This method can request its re-run
@@ -186,7 +254,7 @@ var WIKIDIA = WIKIDIA || {};
          */
         function updateInner() {
             // remove any existing elements
-            mNodeUiBuilder.clear();
+            mNodeUiBuilder.svgGroup.clear();
 
             my.onUpdate(mNodeUiBuilder);
 
@@ -209,7 +277,7 @@ var WIKIDIA = WIKIDIA || {};
             });
 
             // TODO: I should specify minimum interface for contourElement
-            mNodeUiBuilder.contour.rootElement.attr({
+            mNodeUiBuilder.contour.element.attr({
                 fill : backgroundColor
             });
 
@@ -220,11 +288,11 @@ var WIKIDIA = WIKIDIA || {};
                 height: mNodeRect.height - 2 * TEXT_PADDING
             };
 
-            var textElement = mNodeUiBuilder.addText({
+            var textElement = mNodeUiBuilder.svgGroup.addText({
                 x: mTextRect.x,
                 y: mTextRect.y,
-                'alignment-baseline': 'text-before-edge',
-                text: visibleLines.join("\n")});
+                'alignment-baseline': 'text-before-edge'});
+            textElement.text(visibleLines);
 
 //              // TODO: change size should be negotiable during onUpdate
 //              if (mAutoResizeMode === AUTO_RESIZE_MODE.growAndShrink || mAutoResizeMode === AUTO_RESIZE_MODE.growOnly) {
@@ -258,7 +326,7 @@ var WIKIDIA = WIKIDIA || {};
 
             // update completed successfully
             return true;
-        };
+        }
 
         /**
          * Called when node is updating. This function can be overridden by inheriting objects
@@ -267,7 +335,7 @@ var WIKIDIA = WIKIDIA || {};
          * This function must at minimum create contour.
          */
         my.onUpdate = function (nodeUiBuilder) {
-            var contour = nodeUiBuilder.addRect({
+            var contour = nodeUiBuilder.svgGroup.addRect({
                 x: mNodeRect.x,
                 y: mNodeRect.y,
                 width: mNodeRect.width,
@@ -276,7 +344,7 @@ var WIKIDIA = WIKIDIA || {};
             });
             nodeUiBuilder.contour = contour;
         };
-        var onUpdate = undefined; // you should always call shared version of onUpdate
+        var onUpdate = null; // you should always call shared version of onUpdate
 
         that._test = that._test || {};
         that._test.DEFAULT_NODE_WIDTH = defaultNodeWidth;
