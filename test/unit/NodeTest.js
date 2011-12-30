@@ -5,10 +5,10 @@ TestCase("NodeTest", {
         this.paper = document.createElement("div");
         this.editor = document.createElement("textarea");
         $(document.body).append(this.paper).append(this.editor);
-        this.diagram = WIKIDIA.diagram(this.paper, this.editor);
+        this.newDiagram = WIKIDIA.newDiagram(this.paper, this.editor);
     },
     "test Create node": function () {
-        var node = this.diagram.node({
+        var node = this.newDiagram.newNode({
             x: 10,
             y: 20,
             width: 30,
@@ -24,7 +24,7 @@ TestCase("NodeTest", {
         assertEquals("test", node.text());
 
         // check also defaults
-        var node = this.diagram.node();
+        var node = this.newDiagram.newNode();
         assertEquals(0, node.x());
         assertEquals(0, node.y());
         assertEquals(node._test.DEFAULT_NODE_WIDTH, node.width());
@@ -32,7 +32,7 @@ TestCase("NodeTest", {
         assertEquals("", node.text());
     },
     "test AUTO_RESIZE_MODE.none": function () {
-        var node = this.diagram.node({
+        var node = this.newDiagram.newNode({
             width: 1,
             height: 1,
             text: "This text cannot fit.",
@@ -43,7 +43,7 @@ TestCase("NodeTest", {
         assertEquals(1, node.height());
     },
     "test AUTO_RESIZE_MODE.growAndShrink": function () {
-        var node = this.diagram.node({
+        var node = this.newDiagram.newNode({
             minNodeWidth: 6,
             minNodeHeight: 6,
             width: 100,
@@ -67,7 +67,7 @@ TestCase("NodeTest", {
         assertThat(node.height(), equalTo(6));
     },
     "test AUTO_RESIZE_MODE.growOnly": function () {
-        var node = this.diagram.node({
+        var node = this.newDiagram.newNode({
             width: 100,
             height: 100,
             text: "xxx",

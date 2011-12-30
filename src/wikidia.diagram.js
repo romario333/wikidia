@@ -3,7 +3,7 @@ var WIKIDIA = WIKIDIA || {};
 (function (global) {
     "use strict";
 
-    var node = WIKIDIA.node;
+    var node = WIKIDIA.newNode;
     var svg = WIKIDIA.modules.svg;
 
     /**
@@ -13,10 +13,10 @@ var WIKIDIA = WIKIDIA || {};
      * @param diagramDiv DOM element on which diagram canvas will be created.
      * @param editorTextArea Textarea element which will be used to edit the content of diagram by user.
      */
-    WIKIDIA.diagram = function (diagramDiv, editorTextArea) {
+    WIKIDIA.newDiagram = function (diagramDiv, editorTextArea) {
 
         var that = {}, // public interface
-            mSvg,
+            mSvgBuilder,
             mEditor = editorTextArea,
             // nodes or arrows
             mItems = [],
@@ -24,13 +24,13 @@ var WIKIDIA = WIKIDIA || {};
 
         function init() {
             // create root SVG element
-            mSvg = svg.svgElement();
-            $(diagramDiv).append(mSvg.element);
+            mSvgBuilder = svg.newSvgBuilder();
+            $(diagramDiv).append(mSvgBuilder.rootElement);
         }
 
         init();
 
-        that.svg = mSvg;
+        that.svgBuilder = mSvgBuilder;
 
         /**
          * Selects one item (node or arrow). Any other selected items will be deselected.
@@ -63,7 +63,7 @@ var WIKIDIA = WIKIDIA || {};
          *
          * @param spec Node property specification (x, y, width, height, text).
          */
-        that.node = function (spec) {
+        that.newNode = function (spec) {
             var n = node(this, spec);
             mItems.push(n);
             return n;

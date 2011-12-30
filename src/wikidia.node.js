@@ -3,18 +3,38 @@ var WIKIDIA = WIKIDIA || {};
 (function (global) {
     "use strict";
 
-    var svg = WIKIDIA.modules.svg;
-    var log = WIKIDIA.modules.log;
+    var log = WIKIDIA.modules.log,
 
-    /**
-     * Auto-resize mode of node. It specifies how should node behave when its content (text) does
-     * not fit it.
-     */
-    var AUTO_RESIZE_MODE = WIKIDIA.AUTO_RESIZE_MODE = {
-        none: "none",
-        growAndShrink: "growAndShrink",
-        growOnly: "growOnly"
-    };
+        /**
+         * Auto-resize mode of node. It specifies how should node behave when its content (text) does
+         * not fit it.
+         */
+        AUTO_RESIZE_MODE = WIKIDIA.AUTO_RESIZE_MODE = {
+            none: "none",
+            growAndShrink: "growAndShrink",
+            growOnly: "growOnly"
+        },
+
+
+        newNodeUiBuilder = function (svgBuilder) {
+            return {
+                svgBuilder: svgBuilder,
+                contour: null,
+                addGroup: function (attrs) {
+                    return this.svgBuilder.addGroup(attrs);
+                },
+                addRect: function (attrs)  {
+                    return this.svgBuilder.addRect(attrs);
+                },
+                addText: function (attrs) {
+                    return this.svgBuilder.addText(attrs);
+                },
+                clear: function () {
+                    this.svgBuilder.clear();
+                    this.contour = null;
+                }
+            };
+        };
 
     /**
      * @constructor
@@ -22,9 +42,9 @@ var WIKIDIA = WIKIDIA || {};
      *
      * @param diagram Diagram in which this node is being created.
      * @param spec Node property specification (x, y, width, height, text).
-     * @param my Protected interface (you should not use this unless you are constructor).
+     * @param my Protected interface.
      */
-    WIKIDIA.node = function (diagram, spec, my) {
+    WIKIDIA.newNode = function (diagram, spec, my) {
         spec = spec || {};
 
         var that = {}, // public interface
@@ -47,7 +67,7 @@ var WIKIDIA = WIKIDIA || {};
 
             mAutoResizeMode = spec.autoResizeMode || AUTO_RESIZE_MODE.growAndShrink,
 
-            mSvgGroup,
+            mNodeUiBuilder,
             mIsSelected = false;
 
         my = my || {}; // protected interface
@@ -136,25 +156,25 @@ var WIKIDIA = WIKIDIA || {};
         that.update = update;
 
         function init() {
-            mSvgGroup = mDiagram.svg.group();
+            mNodeUiBuilder = newNodeUiBuilder(mDiagram.svgBuilder.addGroup());
 
             update();
 
             // TODO: zapouzdrit
-            mSvgGroup.element.mousedown(function () {
+            mNodeUiBuilder.svgBuilder.rootElement.mousedown(function () {
                 log.debug("mousedown");
             });
 
-            mSvgGroup.element.mouseup(function () {
+            mNodeUiBuilder.svgBuilder.rootElement.mouseup(function () {
                 log.debug("mouseup");
             });
 
 
-            mSvgGroup.element.click(function () {
+            mNodeUiBuilder.svgBuilder.rootElement.click(function () {
                 log.debug("click");
             });
 
-            mSvgGroup.element.dblclick(function () {
+            mNodeUiBuilder.svgBuilder.rootElement.dblclick(function () {
                 log.debug("dblclick");
             });
         };
@@ -166,9 +186,9 @@ var WIKIDIA = WIKIDIA || {};
          */
         function updateInner() {
             // remove any existing elements
-            mSvgGroup.clear();
+            mNodeUiBuilder.clear();
 
-            my.onUpdate();
+            my.onUpdate(mNodeUiBuilder);
 
             if (mIsSelected) {
                 // TODO
@@ -189,7 +209,7 @@ var WIKIDIA = WIKIDIA || {};
             });
 
             // TODO: I should specify minimum interface for contourElement
-            my.contourElement.attr({
+            mNodeUiBuilder.contour.rootElement.attr({
                 fill : backgroundColor
             });
 
@@ -200,13 +220,17 @@ var WIKIDIA = WIKIDIA || {};
                 height: mNodeRect.height - 2 * TEXT_PADDING
             };
 
-            var textElement = mSvgGroup.text({x: mTextRect.x, y: mTextRect.y, text: visibleLines.join("\n")});
-            //textElement.translate(0, textElement.getBBox().height / 2);
+            var textElement = mNodeUiBuilder.addText({
+                x: mTextRect.x,
+                y: mTextRect.y,
+                'alignment-baseline': 'text-before-edge',
+                text: visibleLines.join("\n")});
+
+//              // TODO: change size should be negotiable during onUpdate
+//              if (mAutoResizeMode === AUTO_RESIZE_MODE.growAndShrink || mAutoResizeMode === AUTO_RESIZE_MODE.growOnly) {
 //
-//            if (mAutoResizeMode === AUTO_RESIZE_MODE.growAndShrink || mAutoResizeMode === AUTO_RESIZE_MODE.growOnly) {
-//
-//                var textWidth = textElement.getBBox().width;
-//                var textHeight = textElement.getBBox().height;
+//                var textWidth = textElement.rootElement.getBBox().width;
+//                var textHeight = textElement.rootElement.getBBox().height;
 //                var minTextWidth = minNodeWidth - 2 * TEXT_PADDING;
 //                var minTextHeight = minNodeHeight - 2 * TEXT_PADDING;
 //                var sizeChanged = false;
@@ -226,7 +250,6 @@ var WIKIDIA = WIKIDIA || {};
 //                    sizeChanged = true;
 //                }
 //
-//                // TODO: make this more general, inheriting objects should have this capability too via return false in onUpdate
 //                if (sizeChanged) {
 //                    // size has changed, we need to update again
 //                    return false;
@@ -241,17 +264,17 @@ var WIKIDIA = WIKIDIA || {};
          * Called when node is updating. This function can be overridden by inheriting objects
          * to customize node rendering.
          *
-         * This function must at minimum create contourElement.
+         * This function must at minimum create contour.
          */
-        my.onUpdate = function () {
-            var contourElement = mSvgGroup.rect({
+        my.onUpdate = function (nodeUiBuilder) {
+            var contour = nodeUiBuilder.addRect({
                 x: mNodeRect.x,
                 y: mNodeRect.y,
                 width: mNodeRect.width,
                 height: mNodeRect.height,
                 stroke: "black"
             });
-            my.contourElement = contourElement.element;
+            nodeUiBuilder.contour = contour;
         };
         var onUpdate = undefined; // you should always call shared version of onUpdate
 
