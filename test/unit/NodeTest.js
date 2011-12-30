@@ -2,7 +2,6 @@ JsHamcrest.Integration.JsTestDriver();
 
 TestCase("NodeTest", {
     setUp: function () {
-        log("NodeTest setup");
         this.paper = document.createElement("div");
         this.editor = document.createElement("textarea");
         $(document.body).append(this.paper).append(this.editor);

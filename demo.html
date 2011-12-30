@@ -5,12 +5,31 @@
     <title>Wikidia Demo</title>
 
     <script type="text/javascript" src="lib/jquery-1.7.1.js"></script>
-    <script type="text/javascript" src="lib/raphael.js"></script>
     <script type="text/javascript" src="lib/sprintf-0.7-beta1.js"></script>
-    <script type="text/javascript" src="src/devel.js"></script>
-    <script type="text/javascript" src="src/wikidia.js"></script>
+    <script type="text/javascript" src="src/wikidia.log.js"></script>
+    <script type="text/javascript" src="src/wikidia.svg.js"></script>
+    <script type="text/javascript" src="src/wikidia.node.js"></script>
+    <script type="text/javascript" src="src/wikidia.diagram.js"></script>
 </head>
 <body>
+
+    <div id="diagram">
+    </div>
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            var diagram = WIKIDIA.diagram($("#diagram")[0]);
+            var node = diagram.node({
+              text: "xxx\nbg=green"
+            });
+        });
+
+    //  diagram.node(0, 0, 50, 50, "some text to display\nbg=green\nsome other text");
+    //  diagram.useCaseNode(50, 50, 100, 40, "bg=#f00\nhahah");
+    //  diagram.noteNode(200, 50, 100, 100, "bg=yellow\nSample note");
+    //  diagram.node(100, 100, 100, 100);
+    </script>
 
 </body>
 </html>
