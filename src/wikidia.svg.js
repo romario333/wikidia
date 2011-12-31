@@ -59,6 +59,12 @@ var WIKIDIA = WIKIDIA || {};
             return node;
         };
 
+        that.addLine = function (attrs) {
+            var el = newSvgTag("line", attrs);
+            mElement.append(el);
+            return newSvgNode(el);
+        }
+
 
         that.addRect = function (attrs)  {
             var el = newSvgTag("rect", attrs);

@@ -236,7 +236,8 @@
         function onDragMove(dx, dy) {
             log.debug("ondragmove, dx=%s, dy=%s", dx, dy);
             // TODO: create nicer API for transformations
-            mNodeUiBuilder.svgGroup.transform(sprintf("translate(%d,%d)", dx, dy));
+            var snapped = mDiagram.snapToGrid({x: dx, y: dy});
+            mNodeUiBuilder.svgGroup.transform(sprintf("translate(%d,%d)", snapped.x, snapped.y));
         }
 
         function onDragEnd(dx, dy) {
@@ -244,6 +245,9 @@
             mNodeUiBuilder.svgGroup.clearTransform();
             mNodeRect.x += dx;
             mNodeRect.y += dy;
+            if (mDiagram) {
+                mDiagram.snapToGrid(mNodeRect);
+            }
             update();
         }
 

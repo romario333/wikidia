@@ -1,9 +1,11 @@
+JsHamcrest.Integration.JsTestDriver();
+
 TestCase("DiagramTest", {
     setUp: function () {
         this.paper = document.createElement("div");
         this.editor = document.createElement("textarea");
         $(document.body).append(this.paper).append(this.editor);
-        this.newDiagram = WIKIDIA.newDiagram(this.paper, this.editor);
+        this.diagram = WIKIDIA.newDiagram(this.paper, this.editor);
     },
     "test Create diagram": function () {
         this.assertHasChild(this.paper, "svg");
@@ -22,31 +24,52 @@ TestCase("DiagramTest", {
         assertNotSame(svg1, svg2);
     },
     "test Create multiple nodes": function () {
-        var node1 = this.newDiagram.newNode();
-        var node2 = this.newDiagram.newNode();
+        var node1 = this.diagram.newNode();
+        var node2 = this.diagram.newNode();
 
-        assertEquals(2, this.newDiagram.items().length);
-        assertSame(node1, this.newDiagram.items()[0]);
-        assertSame(node2, this.newDiagram.items()[1]);
+        assertEquals(2, this.diagram.items().length);
+        assertSame(node1, this.diagram.items()[0]);
+        assertSame(node2, this.diagram.items()[1]);
     },
     "test Select item": function () {
-        var node1 = this.newDiagram.newNode();
-        var node2 = this.newDiagram.newNode();
+        var node1 = this.diagram.newNode();
+        var node2 = this.diagram.newNode();
 
         assertFalse(node1.isSelected());
         assertFalse(node2.isSelected());
 
-        this.newDiagram.select(node1);
+        this.diagram.select(node1);
 
         assertTrue(node1.isSelected());
         assertFalse(node2.isSelected());
 
-        this.newDiagram.select(node2);
+        this.diagram.select(node2);
 
         assertFalse(node1.isSelected());
         assertTrue(node2.isSelected());
     },
+    "test snapToGrid": function () {
+        assertThat(this.diagram.gridStep(), equalTo(10));
 
+        var point1 = {x: 6, y: 5};
+        var point2 = this.diagram.snapToGrid(point1);
+
+        assertThat(point1, sameAs(point2));
+
+        assertThat(point2.x, equalTo(10));
+        assertThat(point2.y, equalTo(0));
+    },
+    "test snapToGrid can work with more properties than just x and y": function () {
+        assertThat(this.diagram.gridStep(), equalTo(10));
+
+        var point = this.diagram.snapToGrid({x: 6, y: 5, width: 16, height: 15, text: "test"});
+
+        assertThat(point.x, equalTo(10));
+        assertThat(point.y, equalTo(0));
+        assertThat(point.width, equalTo(20));
+        assertThat(point.height, equalTo(10));
+        assertThat(point.text, equalTo("test"));
+    },
     // TODO: I need some DOM assertions
     assertHasChild: function (parentSelector, childSelector) {
         return $(parentSelector).children(childSelector).length > 0;
