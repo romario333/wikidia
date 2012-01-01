@@ -36,10 +36,10 @@ var WIKIDIA = WIKIDIA || {};
             var diagramHeight = mSvgRoot.element.innerHeight();
             var x, y;
             for (x = 0; x < diagramWidth; x += GRID_STEP) {
-                gridGroup.addLine({x1: x, y1: 0, x2: x, y2: diagramHeight, "stroke-width": 0.5, stroke: "blue"});
+                gridGroup.addLine({x1: x, y1: 0, x2: x, y2: diagramHeight, stroke: "blue", opacity: 0.5});
             }
             for (y = 0; y < diagramHeight; y += GRID_STEP) {
-                gridGroup.addLine({x1: 0, y1: y, x2: diagramWidth, y2: y, "stroke-width": 0.5, stroke: "blue"});
+                gridGroup.addLine({x1: 0, y1: y, x2: diagramWidth, y2: y, stroke: "blue", opacity: 0.5});
             }
         }
 

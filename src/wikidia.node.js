@@ -1,9 +1,10 @@
-    var WIKIDIA = WIKIDIA || {};
+var WIKIDIA = WIKIDIA || {};
 
 (function (global) {
     "use strict";
 
     var log = WIKIDIA.modules.log,
+        utils = WIKIDIA.modules.utils,
 
         /**
          * Auto-resize mode of node. It specifies how should node behave when its content (text) does
@@ -16,9 +17,12 @@
         },
 
 
-        newNodeUiBuilder = function (svgGroup) {
+        newNodeUiBuilder = function (svgRoot, nodeRect) {
+            var mSvg = svgRoot.addGroup();
+
             return {
-                svgGroup: svgGroup,
+                svg: mSvg,
+                nodeRect: nodeRect,
                 contour: null
             };
         };
@@ -35,7 +39,6 @@
             mOnDragEnd;
 
         element.mousedown(function (e) {
-            log.dir(e);
             mDragStartX = e.clientX;
             mDragStartY = e.clientY;
             mReadyForDrag = true;
@@ -43,13 +46,13 @@
 
         // TODO: this is not very effective implementation
         $(document.body).mouseup(function (e) {
+            mReadyForDrag = false;
             if (mIsDragged) {
                 mIsDragged = false;
-                mReadyForDrag = false;
                 if (mOnDragEnd) {
                     var dx = e.clientX - mDragStartX;
                     var dy = e.clientY - mDragStartY;
-                    mOnDragEnd(dx, dy);
+                    mOnDragEnd(e, dx, dy);
                 }
             }
         });
@@ -59,14 +62,14 @@
                 mIsDragged = true;
                 mReadyForDrag = false;
                 if (mOnDragStart) {
-                    mOnDragStart();
+                    mOnDragStart(e);
                 }
             }
             if (mIsDragged) {
                 if (mOnDragMove) {
                     var dx = e.clientX - mDragStartX;
                     var dy = e.clientY - mDragStartY;
-                    mOnDragMove(dx, dy);
+                    mOnDragMove(e, dx, dy);
                 }
             }
         });
@@ -83,10 +86,57 @@
             }
         };
         return that;
+    }
 
+    function newMoveOperation(node) {
+        var that = {},
+            mNode = node;
 
+        that.preview = function (dx, dy) {
+            // TODO: create nicer API for transformations
+            // TODO: use .nodeRect
+            var snapped = mNode.diagram.snapToGrid({x: dx, y: dy});
+            mNode.uiBuilder.svg.transform(sprintf("translate(%d,%d)", snapped.x, snapped.y));
+        };
 
+        // TODO: will be useful?
+        that.cancel = function () {
 
+        };
+
+        that.execute = function (dx, dy) {
+            mNode.uiBuilder.svg.clearTransform();
+            var snapped = mNode.diagram.snapToGrid({x: mNode.x() + dx, y: mNode.y() + dy});
+            mNode.moveTo(snapped.x, snapped.y);
+        };
+
+        that.undo = function (dx, dy) {
+
+        };
+
+        return that;
+    }
+
+    function newResizeOperation(node) {
+        var that = {},
+            mNode = node,
+            mOldSize = utils.copyShallow(node.uiBuilder.nodeRect);
+
+        that.preview = function (dx, dy, dWidth, dHeight) {
+            mNode.uiBuilder.nodeRect.x = mOldSize.x + dx;
+            mNode.uiBuilder.nodeRect.y = mOldSize.y + dy;
+            mNode.uiBuilder.nodeRect.width = mOldSize.width + dWidth;
+            mNode.uiBuilder.nodeRect.height = mOldSize.height + dHeight;
+
+            mNode.diagram.snapToGrid(node.uiBuilder.nodeRect);
+            mNode.update();
+        };
+
+        that.execute = function (dx, dy, dWidth, dHeight) {
+            // do nothing
+        };
+
+        return that;
     }
 
     /**
@@ -120,8 +170,10 @@
 
             mAutoResizeMode = spec.autoResizeMode || AUTO_RESIZE_MODE.growAndShrink,
 
-            mNodeUiBuilder,
-            mIsSelected = false;
+            mUiBuilder,
+            mIsSelected = false,
+            // TODO: should be in some command executor
+            mMoveOperation;
 
         my = my || {}; // protected interface
 
@@ -208,48 +260,75 @@
         }
         that.update = update;
 
+        // TODO: this wouldn't be necessary if I can do x(x) and y(y) at once
+        that.moveTo = function (x, y) {
+            mNodeRect.x = x;
+            mNodeRect.y = y;
+            update();
+        };
+
         function init() {
-            mNodeUiBuilder = newNodeUiBuilder(mDiagram.svgRoot.addGroup());
+            mUiBuilder = newNodeUiBuilder(mDiagram.svgRoot, mNodeRect);
+
+            // TODO: I should divide visual representation from interaction UI
+            mUiBuilder.svg.element.attr("cursor", "move");
+
+            // TODO: quick resize hack
+//            var controlsGroup = mDiagram.svgRoot.addGroup({id: "controls"});
+//
+//            // TODO: potrebuju neco jako resizeOperation - umi to ukazovat online tu zmenu jak tahnu a na konci vytvori neco, co se da undoovat (to same pak bude platit i pro move)
+//            // TODO: operace jdou volat nad vice nody najednou (move je ocividny use-case a vidim i nekolik vybranych nodu a resize na jednom se bude projevovat i na druhem)
+//            // TODO: navic se da operace vyvolat pomoci klavesnice
+//            var addResizeBorder = function(x1, y1, x2, y2, cursor, handler) {
+//                var resizeBorder = controlsGroup.addLine({x1: x1, y1: y1, x2: x2, y2: y2, cursor: cursor, "stroke-width": "5", stroke: "red"});
+//                // TODO: get rid of that goddamn .element everywhere :(
+//                newDragEventHandler(resizeBorder.element).dragMove(handler);
+//            };
+//
+//            addResizeBorder(10, 10, 50, 10, "se-resize", function(dx, dy) {
+//                mNodeRect.width += dx;
+//                mNodeRect.height += dy;
+//                update();
+//            });
+
+
+
+
 
             update();
 
-            var dragHandler = newDragEventHandler(mNodeUiBuilder.svgGroup.element);
+            var dragHandler = newDragEventHandler(mUiBuilder.svg.element);
             dragHandler.dragStart(onDragStart);
             dragHandler.dragMove(onDragMove);
             dragHandler.dragEnd(onDragEnd);
 
 
-            mNodeUiBuilder.svgGroup.element.click(function () {
+            mUiBuilder.svg.element.click(function () {
                 log.debug("click");
             });
 
-            mNodeUiBuilder.svgGroup.element.dblclick(function () {
+            mUiBuilder.svg.element.dblclick(function () {
                 log.debug("dblclick");
             });
+
+            // TODO: I need proper getter
+            that.uiBuilder = mUiBuilder;
         }
 
-        function onDragStart() {
-            log.debug("ondragstart");
-
+        function onDragStart(e) {
+            log.debug("move dragStart");
+            mMoveOperation = newMoveOperation(that);
         }
 
-        function onDragMove(dx, dy) {
-            log.debug("ondragmove, dx=%s, dy=%s", dx, dy);
-            // TODO: create nicer API for transformations
-            var snapped = mDiagram.snapToGrid({x: dx, y: dy});
-            mNodeUiBuilder.svgGroup.transform(sprintf("translate(%d,%d)", snapped.x, snapped.y));
+        function onDragMove(e, dx, dy) {
+            mMoveOperation.preview(dx, dy);
         }
 
-        function onDragEnd(dx, dy) {
-            log.debug("ondragend");
-            mNodeUiBuilder.svgGroup.clearTransform();
-            mNodeRect.x += dx;
-            mNodeRect.y += dy;
-            if (mDiagram) {
-                mDiagram.snapToGrid(mNodeRect);
-            }
-            update();
+        function onDragEnd(e, dx, dy) {
+            mMoveOperation.execute(dx, dy);
         }
+
+
 
         /**
          * Updates node. Returns true if update is successful. This method can request its re-run
@@ -258,9 +337,11 @@
          */
         function updateInner() {
             // remove any existing elements
-            mNodeUiBuilder.svgGroup.clear();
+            mUiBuilder.svg.clear();
 
-            my.onUpdate(mNodeUiBuilder);
+            my.onUpdate(mUiBuilder);
+
+            updateResizeBorder(mUiBuilder);
 
             if (mIsSelected) {
                 // TODO
@@ -281,7 +362,7 @@
             });
 
             // TODO: I should specify minimum interface for contourElement
-            mNodeUiBuilder.contour.element.attr({
+            mUiBuilder.contour.element.attr({
                 fill : backgroundColor
             });
 
@@ -292,7 +373,7 @@
                 height: mNodeRect.height - 2 * TEXT_PADDING
             };
 
-            var textElement = mNodeUiBuilder.svgGroup.addText({
+            var textElement = mUiBuilder.svg.addText({
                 x: mTextRect.x,
                 y: mTextRect.y,
                 'alignment-baseline': 'text-before-edge'});
@@ -332,6 +413,62 @@
             return true;
         }
 
+        function updateResizeBorder(nodeUiBuilder) {
+            // TODO: do I really want to recreate all this on every update?
+            var controlsGroup = nodeUiBuilder.svg.addGroup();
+
+            var CORNER_SIZE = 15;
+
+            // TODO:
+            controlsGroup.addLine({
+                x1: mNodeRect.x + mNodeRect.width,
+                y1: mNodeRect.y,
+                x2: mNodeRect.x + mNodeRect.width,
+                y2: mNodeRect.y + mNodeRect.height,
+                "stroke-width": 7,
+                stroke: "red",
+                opacity: 0,
+                fill: "none",
+                cursor: "e-resize"
+            });
+
+            // TODO: fakt %d?
+            // TODO: fuj
+            var resizeBorder = controlsGroup.addPath({
+                d: sprintf("M %d %d L %d %d L %d %d",
+                    mNodeRect.x + mNodeRect.width, mNodeRect.y + mNodeRect.height - CORNER_SIZE,
+                    mNodeRect.x + mNodeRect.width, mNodeRect.y + mNodeRect.height,
+                    mNodeRect.x + mNodeRect.width - CORNER_SIZE, mNodeRect.y + mNodeRect.height
+                ),
+                "stroke-width": 7,
+                stroke: "red",
+                opacity: 0,
+                fill: "none",
+                cursor: "se-resize"
+            });
+
+            var resizeDragHandler = newDragEventHandler(resizeBorder.element);
+            var resizeOperation;
+
+            resizeDragHandler.dragStart(function (e) {
+                log.debug("resize dragStart");
+                e.stopImmediatePropagation();
+                resizeOperation = newResizeOperation(that);
+            });
+
+            resizeDragHandler.dragMove(function (e, dx, dy) {
+                e.stopImmediatePropagation();
+                resizeOperation.preview(0, 0, dx, dy);
+            });
+
+            resizeDragHandler.dragEnd(function (e, dx, dy) {
+                e.stopImmediatePropagation();
+                resizeOperation.execute(0, 0, dx, dy);
+            });
+
+            //var resizeBorder = controlsGroup.addLine({x1: x1, y1: y1, x2: x2, y2: y2, cursor: cursor, "stroke-width": "5", stroke: "red"});
+        }
+
         /**
          * Called when node is updating. This function can be overridden by inheriting objects
          * to customize node rendering.
@@ -339,7 +476,8 @@
          * This function must at minimum create contour.
          */
         my.onUpdate = function (nodeUiBuilder) {
-            var contour = nodeUiBuilder.svgGroup.addRect({
+            // TODO: I should read nodeRect from same interface as subclasses
+            var contour = nodeUiBuilder.svg.addRect({
                 x: mNodeRect.x,
                 y: mNodeRect.y,
                 width: mNodeRect.width,
@@ -349,6 +487,9 @@
             nodeUiBuilder.contour = contour;
         };
         var onUpdate = null; // you should always call shared version of onUpdate
+
+        // TODO: public interface spread around whole object
+        that.diagram = mDiagram;
 
         that._test = that._test || {};
         that._test.DEFAULT_NODE_WIDTH = defaultNodeWidth;

@@ -23,10 +23,6 @@ var WIKIDIA = WIKIDIA || {};
         init(element);
 
         that = {
-            /**
-             * Builder's root element. New elements are added to this element. Typically it will
-             * be root <code>svg</code> element or group <code>g</code> element.
-             */
             element: mElement,
             /**
              * Clears content of this node (that is all its children).
@@ -63,11 +59,16 @@ var WIKIDIA = WIKIDIA || {};
             var el = newSvgTag("line", attrs);
             mElement.append(el);
             return newSvgNode(el);
-        }
-
+        };
 
         that.addRect = function (attrs)  {
             var el = newSvgTag("rect", attrs);
+            mElement.append(el);
+            return newSvgNode(el);
+        };
+
+        that.addPath = function (attrs)  {
+            var el = newSvgTag("path", attrs);
             mElement.append(el);
             return newSvgNode(el);
         };
