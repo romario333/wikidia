@@ -6,6 +6,7 @@ var WIKIDIA = WIKIDIA || {};
     var svg = WIKIDIA.modules.svg;
     var utils = WIKIDIA.modules.utils;
     var newNode = WIKIDIA.newNode; // TODO: should tell me have a look at node.js
+    var newUseCaseNode = WIKIDIA.newUseCaseNode;
 
     var GRID_STEP = 10;
 
@@ -80,6 +81,12 @@ var WIKIDIA = WIKIDIA || {};
          */
         that.newNode = function (spec) {
             var n = newNode(this, spec);
+            mItems.push(n);
+            return n;
+        };
+
+        that.newUseCaseNode = function (spec) {
+            var n = newUseCaseNode(this, spec);
             mItems.push(n);
             return n;
         };

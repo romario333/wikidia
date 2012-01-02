@@ -67,6 +67,12 @@ var WIKIDIA = WIKIDIA || {};
             return newSvgNode(el);
         };
 
+        that.addEllipse = function (attrs)  {
+            var el = newSvgTag("ellipse", attrs);
+            mElement.append(el);
+            return newSvgNode(el);
+        };
+
         that.addPath = function (attrs)  {
             var el = newSvgTag("path", attrs);
             mElement.append(el);

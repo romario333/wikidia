@@ -452,6 +452,7 @@ var WIKIDIA = WIKIDIA || {};
 
             resizeDragHandler.dragStart(function (e) {
                 log.debug("resize dragStart");
+                // TODO: why stopPropagation is not enough?
                 e.stopImmediatePropagation();
                 resizeOperation = newResizeOperation(that);
             });
@@ -496,6 +497,29 @@ var WIKIDIA = WIKIDIA || {};
         that._test.DEFAULT_NODE_HEIGHT = defaultNodeHeight;
 
         init();
+
+        return that;
+    };
+
+    WIKIDIA.newUseCaseNode = function (diagram, spec, my) {
+        var that;
+
+        my = my || {};
+
+        that = WIKIDIA.newNode(diagram, spec, my);
+
+        my.onUpdate = function (nodeUiBuilder) {
+            var halfWidth = nodeUiBuilder.nodeRect.width / 2;
+            var halfHeight = nodeUiBuilder.nodeRect.height / 2;
+
+            var contour = nodeUiBuilder.svg.addEllipse({
+                cx: nodeUiBuilder.nodeRect.x + halfWidth,
+                cy: nodeUiBuilder.nodeRect.y + halfHeight,
+                rx: halfWidth,
+                ry: halfHeight
+            });
+            nodeUiBuilder.contour = contour;
+        };
 
         return that;
     };
