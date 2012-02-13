@@ -5,6 +5,7 @@ var WIKIDIA = WIKIDIA || {};
 
     var log = WIKIDIA.modules.log,
         utils = WIKIDIA.modules.utils,
+        svg = WIKIDIA.modules.svg,
 
         /**
          * Auto-resize mode of node. It specifies how should node behave when its content (text) does
@@ -18,7 +19,7 @@ var WIKIDIA = WIKIDIA || {};
 
 
         newNodeUiBuilder = function (svgRoot, nodeRect) {
-            var mSvg = svgRoot.addGroup();
+            var mSvg = svg.newSvgGroupNode();
 
             return {
                 svg: mSvg,
@@ -95,7 +96,7 @@ var WIKIDIA = WIKIDIA || {};
         that.preview = function (dx, dy) {
             // TODO: create nicer API for transformations
             // TODO: use .nodeRect
-            var snapped = mNode.diagram.snapToGrid({x: dx, y: dy});
+            var snapped = mNode.diagram().snapToGrid({x: dx, y: dy});
             mNode.uiBuilder.svg.transform(sprintf("translate(%d,%d)", snapped.x, snapped.y));
         };
 
@@ -106,7 +107,7 @@ var WIKIDIA = WIKIDIA || {};
 
         that.execute = function (dx, dy) {
             mNode.uiBuilder.svg.clearTransform();
-            var snapped = mNode.diagram.snapToGrid({x: mNode.x() + dx, y: mNode.y() + dy});
+            var snapped = mNode.diagram().snapToGrid({x: mNode.x() + dx, y: mNode.y() + dy});
             mNode.moveTo(snapped.x, snapped.y);
         };
 
@@ -128,12 +129,12 @@ var WIKIDIA = WIKIDIA || {};
             mNode.uiBuilder.nodeRect.width = mOldSize.width + dWidth;
             mNode.uiBuilder.nodeRect.height = mOldSize.height + dHeight;
 
-            mNode.diagram.snapToGrid(node.uiBuilder.nodeRect);
+            mNode.diagram().snapToGrid(node.uiBuilder.nodeRect);
             mNode.update();
         };
 
         that.execute = function (dx, dy, dWidth, dHeight) {
-            // do nothing
+            // do nothing, node was already re-sized by preview
         };
 
         return that;
@@ -143,11 +144,10 @@ var WIKIDIA = WIKIDIA || {};
      * @constructor
      * Creates new node.
      *
-     * @param diagram Diagram in which this node is being created.
      * @param spec Node property specification (x, y, width, height, text).
      * @param my Protected interface.
      */
-    WIKIDIA.newNode = function (diagram, spec, my) {
+    WIKIDIA.newNode = function (spec, my) {
         spec = spec || {};
 
         var that = {}, // public interface
@@ -156,7 +156,6 @@ var WIKIDIA = WIKIDIA || {};
             minNodeWidth = spec.minNodeWidth || 50,
             minNodeHeight = spec.minNodeHeight || 10,
 
-            mDiagram = diagram,
             mNodeRect = {
                 x: spec.x || 0,
                 y: spec.y || 0,
@@ -172,6 +171,7 @@ var WIKIDIA = WIKIDIA || {};
 
             mUiBuilder,
             mIsSelected = false,
+            mDiagram,
             // TODO: should be in some command executor
             mMoveOperation;
 
@@ -248,6 +248,20 @@ var WIKIDIA = WIKIDIA || {};
         };
         that.isSelected = isSelected;
 
+        function diagram(diagram) {
+            if (arguments.length === 0) {
+                return mDiagram;
+            } else {
+                mDiagram = diagram;
+            }
+        }
+        that.diagram = diagram;
+
+        function svg() {
+            return mUiBuilder.svg;
+        }
+        that.svg = svg;
+
         /**
          * Updates node.
          */
@@ -268,7 +282,7 @@ var WIKIDIA = WIKIDIA || {};
         };
 
         function init() {
-            mUiBuilder = newNodeUiBuilder(mDiagram.svgRoot, mNodeRect);
+            mUiBuilder = newNodeUiBuilder(mNodeRect);
 
             // TODO: I should divide visual representation from interaction UI
             mUiBuilder.svg.element.attr("cursor", "move");
@@ -490,7 +504,6 @@ var WIKIDIA = WIKIDIA || {};
         var onUpdate = null; // you should always call shared version of onUpdate
 
         // TODO: public interface spread around whole object
-        that.diagram = mDiagram;
 
         that._test = that._test || {};
         that._test.DEFAULT_NODE_WIDTH = defaultNodeWidth;

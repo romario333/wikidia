@@ -21,14 +21,20 @@
 
         $(document).ready(function () {
             var diagram = WIKIDIA.newDiagram($("#diagram")[0]);
-            var node = diagram.newNode({
+
+            var node = WIKIDIA.newNode({
               text: "xxx\nbg=green\n123456"
             });
-            var ucNode = diagram.newUseCaseNode({
+            diagram.addItem(node);
+
+            var ucNode = WIKIDIA.newUseCaseNode({
                 text: "sample use case",
                 x: 10,
                 y: 20
             });
+            diagram.addItem(ucNode);
+
+
         });
 
     //  diagram.node(0, 0, 50, 50, "some text to display\nbg=green\nsome other text");

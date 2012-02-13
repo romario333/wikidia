@@ -41,16 +41,22 @@ var WIKIDIA = WIKIDIA || {};
         return that;
     }
 
-    // TODO: can be either svg or g
-    function newSvgGroupNode(element) {
+    function newSvgCompositeNode(element) {
         var that,
             mElement = element;
 
         that = newSvgNode(element);
 
+        that.addNode = function (node) {
+            // TODO: I should keep also tree of nodes
+            mElement.append(node.element);
+            return node;
+        };
+
+        // TODO: rename na new
         that.addGroup = function (attrs) {
             var el = newSvgTag("g", attrs);
-            var node = newSvgGroupNode(el);
+            var node = newSvgCompositeNode(el);
             mElement.append(node.element);
             return node;
         };
@@ -86,7 +92,6 @@ var WIKIDIA = WIKIDIA || {};
         };
 
         return that;
-
     }
 
     module.newSvgRootNode = function (attrs) {
@@ -94,9 +99,17 @@ var WIKIDIA = WIKIDIA || {};
             mElement;
 
         mElement = newSvgTag("svg", attrs);
-        // TODO: can svg be really considered to by group?
-        that = newSvgGroupNode(mElement);
+        // TODO: can svg be really considered to be group?
+        that = newSvgCompositeNode(mElement);
+        return that;
+    };
 
+    module.newSvgGroupNode = function (attrs) {
+        var that,
+            mElement;
+
+        mElement = newSvgTag("g", attrs);
+        that = newSvgCompositeNode(mElement);
         return that;
     };
 

@@ -46,8 +46,6 @@ var WIKIDIA = WIKIDIA || {};
 
         init();
 
-        that.svgRoot = mSvgRoot;
-
         /**
          * Selects one item (node or arrow). Any other selected items will be deselected.
          *
@@ -66,29 +64,13 @@ var WIKIDIA = WIKIDIA || {};
             item.isSelected(true);
         };
 
-        /**
-         * All items in diagram (nodes and arrows).
-         */
-        that.items = function () {
-            return mItems;
-        };
+        that.addItem = function (item) {
+            mItems.push(item);
+            item.diagram(that);
+            item.update();
+            mSvgRoot.addNode(item.svg());
+            //item.diagram(item);
 
-        /**
-         * @constructor
-         * Creates new node in this diagram.
-         *
-         * @param spec Node property specification (x, y, width, height, text).
-         */
-        that.newNode = function (spec) {
-            var n = newNode(this, spec);
-            mItems.push(n);
-            return n;
-        };
-
-        that.newUseCaseNode = function (spec) {
-            var n = newUseCaseNode(this, spec);
-            mItems.push(n);
-            return n;
         };
 
         /**

@@ -1,3 +1,5 @@
+"use strict";
+
 JsHamcrest.Integration.JsTestDriver();
 
 TestCase("DiagramTest", {
@@ -24,16 +26,20 @@ TestCase("DiagramTest", {
         assertNotSame(svg1, svg2);
     },
     "test Create multiple nodes": function () {
-        var node1 = this.diagram.newNode();
-        var node2 = this.diagram.newNode();
+        var node1 = WIKIDIA.newNode();
+        var node2 = WIKIDIA.newNode();
+        this.diagram.addItem(node1);
+        this.diagram.addItem(node2);
 
         assertEquals(2, this.diagram.items().length);
         assertSame(node1, this.diagram.items()[0]);
         assertSame(node2, this.diagram.items()[1]);
     },
     "test Select item": function () {
-        var node1 = this.diagram.newNode();
-        var node2 = this.diagram.newNode();
+        var node1 = WIKIDIA.newNode();
+        var node2 = WIKIDIA.newNode();
+        this.diagram.addItem(node1);
+        this.diagram.addItem(node2);
 
         assertFalse(node1.isSelected());
         assertFalse(node2.isSelected());

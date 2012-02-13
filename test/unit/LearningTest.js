@@ -1,3 +1,5 @@
+"use strict";
+
 JsHamcrest.Integration.JsTestDriver();
 
 TestCase("LearningTest", {
