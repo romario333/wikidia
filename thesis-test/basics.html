@@ -89,6 +89,8 @@
                 equal(Function.prototype.__proto__, Object.prototype);
              });
 
+            module("Functions");
+
             test("Function is an object", function () {
                 function greet() { return "hello"; } // define function
 
@@ -206,6 +208,7 @@
 
             });
 
+            // TODO: tohle IMHO smazat, uz to mam jinde
             test("Beware of a Global Scope", function () {
 
                 function topLevel() {
@@ -216,6 +219,8 @@
                 equal(global, "I've just rewritten a global var");
                 equal(window.global, "I've just rewritten a global var");
             });
+
+            module("Closures");
 
             test("Simple Closure", function () {
 
