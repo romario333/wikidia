@@ -1,0 +1,287 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <script src="lib/jquery-1.7.1.js"></script>
+    <link rel="stylesheet" href="lib/qunit-v1.3.0pre.css" type="text/css" media="screen"/>
+    <script type="text/javascript" src="lib/qunit-1.3.0pre.js"></script>
+
+    <script>
+
+    var global = "global";
+
+        $(document).ready(function () {
+
+            "use strict";
+
+            module("Objects");
+
+            test("An object is a collection of properties.", function () {
+                var person = {
+                    firstName: "Brandon",
+                    lastName: "Eich",
+                    toString: function () {
+                        return this.firstName + " " + this.lastName;
+                    }
+                };
+
+                equal(person["firstName"], "Brandon");
+                equal(person["lastName"], "Eich");
+                equal(person["toString"](), "Brandon Eich");
+
+
+                equal(person.firstName, "Brandon");
+                equal(person.lastName, "Eich");
+                equal(person.toString(), "Brandon Eich");
+
+                equal("Hello " + person, "Hello Brandon Eich");
+            });
+
+            test("Almost everything can be treated as an object", function () {
+                equal({}.toString(), "[object Object]", "{}.toString()");
+                equal("test".toString(), "test");
+                equal(true.toString(), "true");
+                equal((3).toString(), "3"); // TODO: vysvetlit, proc musi byt trojka v zavorce
+                equal((function () {}).toString(), "function () {}");
+
+                raises(function () {undefined.toString();}, TypeError, "Undefined is not an object, so we can't call toString on it.");
+                raises(function () {null.toString();}, TypeError, "Type is not an object, so we can't call toString on it.");
+            });
+
+            test("There are two kinds of properties - data and accessor properties", function () {
+                var person = {
+                    firstName: "Brandon",
+                    lastName: "Eich",
+                    get fullName() {
+                        return this.firstName + " " +  this.lastName;
+                    },
+                    set fullName(value) {
+                        var parts = value.split(" ");
+                        this.firstName = parts[0];
+                        this.lastName = parts[1];
+                    }
+                };
+
+                equal(person["fullName"], "Brandon Eich");
+                equal(person.fullName, "Brandon Eich");
+
+                person.fullName = "Douglas Crockford";
+
+                equal(person.fullName, "Douglas Crockford");
+                equal(person.firstName, "Douglas");
+                equal(person.lastName, "Crockford");
+            });
+
+            test("Inheritance and prototypes", function () {
+                equal({}.__proto__, Object.prototype);
+                equal("test".__proto__, String.prototype);
+                equal(true.__proto__, Boolean.prototype);
+                equal((3).__proto__, Number.prototype);
+                equal((function () {}).__proto__, Function.prototype);
+
+                raises(function () {undefined.__proto__;}, TypeError, "Undefined is not an object, so we can't call toString on it.");
+                raises(function () {null.__proto__;}, TypeError, "Type is not an object, so we can't call toString on it.");
+
+                // everything inherits from object
+                equal(String.prototype.__proto__, Object.prototype);
+                equal(Boolean.prototype.__proto__, Object.prototype);
+                equal(Number.prototype.__proto__, Object.prototype);
+                equal(Function.prototype.__proto__, Object.prototype);
+             });
+
+            module("Functions");
+
+            test("Function is an object", function () {
+                function greet() { return "hello"; } // define function
+
+                equal(greet(), "hello"); // invoke function
+
+                // function is an object
+                equal(greet.__proto__, Function.prototype);
+                equal(Function.prototype.__proto__, Object.prototype);
+
+                // you can reference it in variables just like any other object
+                var greet2 = greet;
+                equal(greet2(), "hello");
+
+                // you can add properties to it
+                greet.who = "world";
+                equal(greet.who, "world");
+
+                // you can call toString on function
+                equal(greet.toString(), 'function greet() { return "hello"; }');
+
+            });
+
+            test("How to Define a Function", function () {
+                // define function using function statement
+                function greet1(who) {
+                    return "hello " + who;
+                }
+
+                // define function using function expression
+                var greet2 = function (who) {
+                    return "hello " + who;
+                };
+
+                equal(greet1("world"), "hello world");
+                equal(greet2("world"), "hello world");
+
+                // both function have same prototype
+                equal(greet1.__proto__, greet2.__proto__);
+                equal(greet1.__proto__, Function.prototype);
+                equal(greet2.__proto__, Function.prototype);
+            });
+
+            test("Order of Functions", function () {
+                // function statement - you can call function before it's defined
+                equal(callMe1(), "test");
+
+                function callMe1() {
+                    return "test";
+                }
+
+                // function expression - YOU HAVE TO DEFINE FUNCTION FIRST!
+                raises(function () {callMe2();}, TypeError); // TypeError: undefined is not a function
+
+                var callMe2 = function () {
+                    return "test";
+                };
+            });
+
+            test("Function as a Scope", function () {
+
+                var test = "global value";
+
+                function scope1() {
+                    var test = "local value";
+                    equal(test, "local value");
+                }
+                scope1();
+                equal(test, "global value"); // global variable wasn't affected by scope1 function
+
+                function scope2() {
+                    test = "local value";
+                    equal(test, "local value");
+                }
+                scope2();
+                equal(test, "local value"); // global variable was changed by scope2!
+
+            });
+
+            test("Variable Hoisting", function () {
+
+                function scope1() {
+                    raises(function () {undefinedVar;}, ReferenceError); // ReferenceError: undefinedVar is not defined
+
+                    equal(local, undefined); // we can access variable before it is declared
+                    var local = "local variable";
+                    equal(local, "local variable");
+                }
+                scope1();
+
+                // Code above is equivalent to this:
+                function scope2() {
+                    var local;
+                    equal(local, undefined);
+                    local = "local variable";
+                    equal(local, "local variable");
+                }
+                scope2();
+
+
+
+//                var local = "local variable";
+//
+//                (function () {
+//                    var innerLocal = "Outer function don't see this variable";
+//                })();
+//
+//                raises(function () {innerLocal;}, ReferenceError); //ReferenceError: innerLocal is not defined
+//                equal(local, "changed by inner function");
+
+
+
+
+
+
+
+            });
+
+            // TODO: tohle IMHO smazat, uz to mam jinde
+            test("Beware of a Global Scope", function () {
+
+                function topLevel() {
+                    global = "I've just rewritten a global var";
+                }
+                topLevel();
+
+                equal(global, "I've just rewritten a global var");
+                equal(window.global, "I've just rewritten a global var");
+            });
+
+            module("Closures");
+
+            test("Simple Closure", function () {
+
+                function outer() {
+
+                    var outerVar = "set by outer";
+
+                    function inner() {
+                        equal(outerVar, "set by outer");
+                        outerVar = "set by inner";
+                    }
+
+                    equal(outerVar, "set by outer");
+                    inner();
+                    equal(outerVar, "set by inner");
+                }
+
+            });
+
+
+
+//            test ("Functions", function () {
+//                function greet() {
+//                    return "hello " + greet.who;
+//                }
+//
+//                var hello2 = greet;
+//                equal(hello2(), "hello");
+//
+//                greet.who = "world";
+//
+//                equal(greet(), "hi world");
+//                equal(hello2(), "hi world");
+//
+//                hello2.who = "dear reader";
+//
+//                equal(greet(), "who");
+//                equal(hello2(), "who");
+//
+//
+//
+//
+//            });
+
+
+
+
+
+
+        });
+    </script>
+
+</head>
+<body>
+<h1 id="qunit-header">QUnit example</h1>
+
+<h2 id="qunit-banner"></h2>
+
+<div id="qunit-testrunner-toolbar"></div>
+<h2 id="qunit-userAgent"></h2>
+<ol id="qunit-tests"></ol>
+<div id="qunit-fixture">test markup, will be hidden</div>
+</body>
+</html>
