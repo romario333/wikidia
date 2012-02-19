@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <script src="lib/jquery-1.7.1.js"></script>
+    <link rel="stylesheet" href="lib/qunit-v1.3.0pre.css" type="text/css" media="screen"/>
+    <script type="text/javascript" src="lib/qunit-1.3.0pre.js"></script>
+
+    <script>
+
+
+        $(document).ready(function () {
+
+            test("Constructor Function Without Strict Mode - DO NOT DO THIS!", function () {
+                // DON'T USE CONSTRUCTOR FUNCTIONS!
+                function Person() {
+                    this.firstName = "Brandon";
+                    this.lastName = "Eich";
+
+                    this.toString = function () {
+                        return this.firstName + " " + this.lastName;
+                    };
+
+                    return this;
+                }
+
+                // call constructor with new
+                var person1 = new Person();
+                equal(person1.toString(), "Brandon Eich");
+
+                // now have a look what happens if we FORGET A NEW KEYWORD:
+                var person2 = Person();
+
+                // we have inadvertently REWRITTEN parts of WINDOW OBJECT!
+                equal(person2, window);
+                equal(window.toString(), "Brandon Eich");
+                equal(window.firstName, "Brandon");
+                equal(window.lastName, "Eich");
+            });
+
+            test("Constructor Function in Strict Mode - Slightly Better", function () {
+                "use strict";
+
+                function Person() {
+                    this.firstName = "Brandon";
+                    this.lastName = "Eich";
+
+                    this.toString = function () {
+                        return this.firstName + " " + this.lastName;
+                    };
+
+                    return this; // return is actually not required here
+                }
+
+                raises(function () { var person2 = Person(); }, TypeError); // TypeError: Cannot set property 'firstName' of undefined
+            });
+
+
+
+        });
+    </script>
+
+</head>
+<body>
+<h1 id="qunit-header">QUnit example</h1>
+
+<h2 id="qunit-banner"></h2>
+
+<div id="qunit-testrunner-toolbar"></div>
+<h2 id="qunit-userAgent"></h2>
+<ol id="qunit-tests"></ol>
+<div id="qunit-fixture">test markup, will be hidden</div>
+</body>
+</html>

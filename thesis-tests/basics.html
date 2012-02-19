@@ -8,7 +8,7 @@
 
     <script>
 
-    var global = "global";
+        var global = "global";
 
         $(document).ready(function () {
 
@@ -208,18 +208,6 @@
 
             });
 
-            // TODO: tohle IMHO smazat, uz to mam jinde
-            test("Beware of a Global Scope", function () {
-
-                function topLevel() {
-                    global = "I've just rewritten a global var";
-                }
-                topLevel();
-
-                equal(global, "I've just rewritten a global var");
-                equal(window.global, "I've just rewritten a global var");
-            });
-
             module("Closures");
 
             test("Simple Closure", function () {
@@ -239,6 +227,24 @@
                 }
 
             });
+
+            test("Sequence Generator Example", function () {
+
+                function sequence() {
+                    var count = 0;
+
+                    return function () {
+                        return count += 1;
+                    }
+                }
+
+                var next = sequence();
+                equal(next(), 1);
+                equal(next(), 2);
+                equal(next(), 3);
+            });
+
+
 
 
 
