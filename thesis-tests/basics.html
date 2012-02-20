@@ -37,17 +37,6 @@
                 equal("Hello " + person, "Hello Brandon Eich");
             });
 
-            test("Almost everything can be treated as an object", function () {
-                equal({}.toString(), "[object Object]", "{}.toString()");
-                equal("test".toString(), "test");
-                equal(true.toString(), "true");
-                equal((3).toString(), "3"); // TODO: vysvetlit, proc musi byt trojka v zavorce
-                equal((function () {}).toString(), "function () {}");
-
-                raises(function () {undefined.toString();}, TypeError, "Undefined is not an object, so we can't call toString on it.");
-                raises(function () {null.toString();}, TypeError, "Type is not an object, so we can't call toString on it.");
-            });
-
             test("There are two kinds of properties - data and accessor properties", function () {
                 var person = {
                     firstName: "Brandon",
@@ -72,6 +61,19 @@
                 equal(person.lastName, "Crockford");
             });
 
+            test("Almost everything can be treated as an object", function () {
+                equal({}.toString(), "[object Object]");
+                equal("test".toString(), "test");
+                equal(true.toString(), "true");
+                equal((3).toString(), "3");
+                equal((function () {}).toString());
+
+                // TypeError: Cannot call method 'toString' of undefined
+                raises(function () {undefined.toString();}, TypeError);
+                // TypeError: Cannot call method 'toString' of null
+                raises(function () {null.toString();}, TypeError);
+            });
+
             test("Inheritance and prototypes", function () {
                 equal({}.__proto__, Object.prototype);
                 equal("test".__proto__, String.prototype);
@@ -79,8 +81,10 @@
                 equal((3).__proto__, Number.prototype);
                 equal((function () {}).__proto__, Function.prototype);
 
-                raises(function () {undefined.__proto__;}, TypeError, "Undefined is not an object, so we can't call toString on it.");
-                raises(function () {null.__proto__;}, TypeError, "Type is not an object, so we can't call toString on it.");
+                // TypeError: Cannot read property '__proto__' of undefined
+                raises(function () {undefined.__proto__;}, TypeError);
+                // TypeError: Cannot read property '__proto__' of null
+                raises(function () {null.__proto__;}, TypeError);
 
                 // everything inherits from object
                 equal(String.prototype.__proto__, Object.prototype);
@@ -100,17 +104,13 @@
                 equal(greet.__proto__, Function.prototype);
                 equal(Function.prototype.__proto__, Object.prototype);
 
-                // you can reference it in variables just like any other object
                 var greet2 = greet;
                 equal(greet2(), "hello");
 
-                // you can add properties to it
                 greet.who = "world";
                 equal(greet.who, "world");
 
-                // you can call toString on function
                 equal(greet.toString(), 'function greet() { return "hello"; }');
-
             });
 
             test("How to Define a Function", function () {
@@ -147,6 +147,8 @@
                 var callMe2 = function () {
                     return "test";
                 };
+
+                equal(callMe2(), "test");
             });
 
             test("Function as a Scope", function () {
@@ -158,23 +160,26 @@
                     equal(test, "local value");
                 }
                 scope1();
-                equal(test, "global value"); // global variable wasn't affected by scope1 function
+                // global variable wasn't affected by scope1 function
+                equal(test, "global value");
 
                 function scope2() {
                     test = "local value";
                     equal(test, "local value");
                 }
                 scope2();
-                equal(test, "local value"); // global variable was changed by scope2!
+                // global variable was changed by scope2!
+                equal(test, "local value");
 
             });
 
             test("Variable Hoisting", function () {
 
                 function scope1() {
-                    raises(function () {undefinedVar;}, ReferenceError); // ReferenceError: undefinedVar is not defined
+                    // ReferenceError: undefinedVar is not defined
+                    raises(function () {undefinedVar;}, ReferenceError);
 
-                    equal(local, undefined); // we can access variable before it is declared
+                    equal(local, undefined);
                     var local = "local variable";
                     equal(local, "local variable");
                 }
