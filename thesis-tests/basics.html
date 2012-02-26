@@ -93,6 +93,78 @@
                 equal(Function.prototype.__proto__, Object.prototype);
              });
 
+            test("Create an Object - Object Literals and Object.create", function () {
+                var person1 = {
+                    firstName: "Brandon",
+                    lastName: "Eich",
+                    toString: function () {
+                        return this.firstName + " " + this.lastName;
+                    }
+                };
+
+                equal(person1.toString(), "Brandon Eich");
+                equal(person1.__proto__, Object.prototype);
+
+                var person2 = Object.create(person1);
+                person2.firstName = "Douglas";
+                person2.lastName = "Crockford";
+
+                equal(person1.toString(), "Brandon Eich");
+                equal(person2.toString(), "Douglas Crockford");
+
+                // there is only one toString function
+                equal(person1.toString, person2.toString);
+
+                // data properties are duplicated though
+                notEqual(person1.firstName, person2.firstName);
+                notEqual(person1.lastName, person2.lastName);
+
+                // and person2's prototype is person1
+                equal(person2.__proto__, person1);
+            });
+
+            test("Object.create - Closer Look", function () {
+                var person1 = {
+                    firstName: "Brandon",
+                    lastName: "Eich",
+                    toString: function () {
+                        return this.firstName + " " + this.lastName;
+                    }
+                };
+
+                equal(person1.toString(), "Brandon Eich");
+                equal(person1.__proto__, Object.prototype);
+
+                var person2 = Object.create(person1);
+
+                equal(person1.firstName === person2.firstName, true);
+
+                person2.firstName = "Douglas";
+
+                equal(person1.firstName === person2.firstName, false);
+
+            });
+
+            test("Constructor Function - DO NOT DO THIS!", function () {
+                // DON'T USE CONSTRUCTOR FUNCTIONS!
+                function Person() {
+                    this.firstName = "Brandon";
+                    this.lastName = "Eich";
+
+                    this.toString = function () {
+                        return this.firstName + " " + this.lastName;
+                    };
+
+                    return this;
+                }
+
+                // call constructor with new
+                var person = new Person();
+                equal(person.toString(), "Brandon Eich");
+            });
+
+
+
             module("Functions");
 
             test("Function is an object", function () {
