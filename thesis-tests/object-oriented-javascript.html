@@ -13,6 +13,71 @@
 
             "use strict";
 
+            module("Inheritance");
+
+            test("Duck-typing", function () {
+                expect(1);
+
+                var duck = {
+                    quack: function () {
+                        console.log("quack");
+                    }
+                };
+
+                if (duck.quack) {
+                    ok("This duck can quack, so quack!");
+                    duck.quack();
+                }
+            });
+
+            module("Prototype-based Inheritance");
+
+
+
+            test("Prototype Chain - property setting and retrieval", function () {
+                var parent = {
+                    sharedProperty: "shared"
+                };
+
+                var child = Object.create(parent);
+
+                equal(parent.sharedProperty, "shared");
+                equal(child.sharedProperty, "shared");
+
+                parent.sharedProperty = "changedOnParent";
+
+                equal(parent.sharedProperty, "changedOnParent");
+                equal(child.sharedProperty, "changedOnParent");
+
+                child.sharedProperty = "changedOnChild";
+                equal(parent.sharedProperty, "changedOnParent");
+                equal(child.sharedProperty, "changedOnChild");
+
+                child.childProperty = "child";
+                equal(parent.childProperty, undefined);
+                equal(child.childProperty, "child");
+            });
+
+            test("Inspecting prototype chain from code", function () {
+                var parent = {
+                    sharedProperty: "shared"
+                };
+
+                var child = Object.create(parent);
+
+                equal(Object.getPrototypeOf(child), parent);
+                equal(Object.getPrototypeOf(parent), Object.prototype);
+                equal(Object.getPrototypeOf(Object.prototype), null);
+
+                equal(child.__proto__, parent);
+                equal(parent.__proto__, Object.prototype);
+                equal(Object.prototype.__proto__, null);
+
+                equal(parent.isPrototypeOf(child), true);
+                equal(Object.prototype.isPrototypeOf(child), true);
+
+
+            });
 
 
 
@@ -34,6 +99,41 @@
                 // TODO: jaktoze to funguje
                 equal(p1.firstName, "haha");
                 equal(p2.firstName, "");
+            });
+
+            test("Duck-typing", function () {
+                expect(1);
+
+                var duck = {
+                    quack: function () {
+                        console.log("quack");
+                    }
+                };
+
+                if (duck.quack) {
+                    ok("Ducks quack, no surprise here.");
+                    duck.quack();
+                }
+
+                if (duck.bark) {
+                    fail("Ducks do not bark, obviously.")
+                    duck.bark(); // this would fail
+                }
+            });
+
+            test("Defective Duck", function () {
+                expect(1);
+
+                var duck = {quack: true};
+
+                if (duck.quack) {
+                    // TypeError: Property 'quack' of object #<Object> is not a function
+                    raises(function () {duck.quack();}, TypeError);
+                }
+
+                if (duck.quack && typeof duck === "function") {
+                    fail("This duck can't quack.");
+                }
             });
 
 

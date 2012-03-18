@@ -91,6 +91,12 @@
                 equal(Boolean.prototype.__proto__, Object.prototype);
                 equal(Number.prototype.__proto__, Object.prototype);
                 equal(Function.prototype.__proto__, Object.prototype);
+
+                equal(Object.getPrototypeOf(String.prototype), Object.prototype);
+                equal(Object.getPrototypeOf(Boolean.prototype), Object.prototype);
+                equal(Object.getPrototypeOf(Number.prototype), Object.prototype);
+                equal(Object.getPrototypeOf(Function.prototype), Object.prototype);
+
              });
 
             test("Create an Object - Object Literals and Object.create", function () {
