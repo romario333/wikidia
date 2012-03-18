@@ -13,7 +13,7 @@
 
             "use strict";
 
-            module("Inheritance");
+            module("Polymorphism");
 
             test("Duck-typing", function () {
                 expect(1);
@@ -25,10 +25,58 @@
                 };
 
                 if (duck.quack) {
-                    ok("This duck can quack, so quack!");
+                    ok("Ducks quack, no surprise here.");
                     duck.quack();
                 }
+
+                if (duck.bark) {
+                    fail("Ducks do not bark, obviously.")
+                    duck.bark(); // this would fail
+                }
             });
+
+            test("Defective Duck", function () {
+                expect(1);
+
+                var duck = {quack: true};
+
+                if (duck.quack) {
+                    // TypeError: Property 'quack' of object #<Object> is not a function
+                    raises(function () {duck.quack();}, TypeError);
+                }
+
+                if (duck.quack && typeof duck === "function") {
+                    duck.quack();
+                    fail("This duck should be defective and thus can't duck.");
+                }
+            });
+
+            module("Information Hiding");
+
+            test("Privacy with Closures", function () {
+                function newUser(spec) {
+                    var that = {}, // public interface
+                        password = spec.password;
+
+                    that.login = spec.login;
+
+                    that.authenticate = function (aPassword) {
+                        return password === aPassword;
+                    };
+
+                    return that;
+                }
+
+                var user = newUser({login: "eich", password: "secret"});
+
+                equal(user.login, "eich");
+                equal(user.password, undefined);
+                equal(user.authenticate("secret"), true);
+                equal(user.authenticate("bad secret"), false);
+            });
+
+
+            module("Inheritance");
 
             module("Prototype-based Inheritance");
 
@@ -100,42 +148,6 @@
                 equal(p1.firstName, "haha");
                 equal(p2.firstName, "");
             });
-
-            test("Duck-typing", function () {
-                expect(1);
-
-                var duck = {
-                    quack: function () {
-                        console.log("quack");
-                    }
-                };
-
-                if (duck.quack) {
-                    ok("Ducks quack, no surprise here.");
-                    duck.quack();
-                }
-
-                if (duck.bark) {
-                    fail("Ducks do not bark, obviously.")
-                    duck.bark(); // this would fail
-                }
-            });
-
-            test("Defective Duck", function () {
-                expect(1);
-
-                var duck = {quack: true};
-
-                if (duck.quack) {
-                    // TypeError: Property 'quack' of object #<Object> is not a function
-                    raises(function () {duck.quack();}, TypeError);
-                }
-
-                if (duck.quack && typeof duck === "function") {
-                    fail("This duck can't quack.");
-                }
-            });
-
 
 
         });
