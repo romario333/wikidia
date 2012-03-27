@@ -5,12 +5,19 @@
     <title>Wikidia Demo</title>
 
     <script type="text/javascript" src="lib/jquery-1.7.1.js"></script>
-    <script type="text/javascript" src="lib/sprintf-0.7-beta1.js"></script>
-    <script type="text/javascript" src="src/wikidia.log.js"></script>
-    <script type="text/javascript" src="src/wikidia.utils.js"></script>
-    <script type="text/javascript" src="src/wikidia.svg.js"></script>
-    <script type="text/javascript" src="src/wikidia.node.js"></script>
-    <script type="text/javascript" src="src/wikidia.diagram.js"></script>
+    <script type="text/javascript" src="src/helpers/string.js"></script>
+    <script type="text/javascript" src="src/view/svg/svgHelper.js"></script>
+    <script type="text/javascript" src="src/view/svg/dragEventHandler.js"></script>
+    <script type="text/javascript" src="src/view/svg/view.js"></script>
+    <script type="text/javascript" src="src/view/svg/rootView.js"></script>
+    <script type="text/javascript" src="src/view/svg/diagramView.js"></script>
+    <script type="text/javascript" src="src/view/svg/nodeView.js"></script>
+    <script type="text/javascript" src="src/presenter/commandExecutor.js"></script>
+    <script type="text/javascript" src="src/presenter/moveCommand.js"></script>
+    <script type="text/javascript" src="src/presenter/diagramPresenter.js"></script>
+    <script type="text/javascript" src="src/model/diagram.js"></script>
+    <script type="text/javascript" src="src/model/node.js"></script>
+    <script type="text/javascript" src="src/model/nodeBuilder.js"></script>
 </head>
 <body>
 
@@ -20,27 +27,17 @@
     <script type="text/javascript">
 
         $(document).ready(function () {
-            var diagram = WIKIDIA.newDiagram($("#diagram")[0]);
 
-            var node = WIKIDIA.newNode({
-              text: "xxx\nbg=green\n123456"
-            });
-            diagram.addItem(node);
+            var diagram = WIKIDIA.model.diagram();
+            diagram.addNode(WIKIDIA.model.node({x: 10, y: 10, text: "test Node"}));
 
-            var ucNode = WIKIDIA.newUseCaseNode({
-                text: "sample use case",
-                x: 10,
-                y: 20
-            });
-            diagram.addItem(ucNode);
+            var rootView = WIKIDIA.view.svg.rootView($("#diagram"));
+            var diagramView = WIKIDIA.view.svg.diagramView(rootView, diagram);
 
+            var diagramPresenter = WIKIDIA.presenter.diagramPresenter(diagramView, diagram);
 
         });
 
-    //  diagram.node(0, 0, 50, 50, "some text to display\nbg=green\nsome other text");
-    //  diagram.useCaseNode(50, 50, 100, 40, "bg=#f00\nhahah");
-    //  diagram.noteNode(200, 50, 100, 100, "bg=yellow\nSample note");
-    //  diagram.node(100, 100, 100, 100);
     </script>
 
 </body>

@@ -10,3 +10,6 @@ This project is in very early phase, right now there is not much to see.
 ## Documentation
 
 [Requirements](https://docs.google.com/document/d/1p5zK53pU0CMPcHYv749HviLzGVg_20MT1P3urdBlx_A/edit)
+
+## What I don't like on UMLLet
+* size of text in notes is too large, should be smaller than text in nodes
