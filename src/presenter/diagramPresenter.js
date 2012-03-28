@@ -11,18 +11,26 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
 
 
     var that = {},
-        commandExecutor;
+        commandExecutor,
+        items = [],
+        nodeRendererMap;
 
     function init() {
         // TODO: should be at the top, so I can clearly see dependencies
+        createRendererMap();
+
         commandExecutor = WIKIDIA.presenter.commandExecutor();
 
         diagramView.gridStep = GRID_STEP;
         diagram.nodes().forEach(function (node) {
-            addNodeToDiagram(node);
+            addItem(node);
         });
 
         diagramView.update();
+
+        items.forEach(function (item) {
+            updateItem(item);
+        });
 
         // TODO: pokus
         $(document.body).keydown(function (e) {
@@ -32,9 +40,15 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         });
     }
 
-    function addNodeToDiagram(node) {
-        var nodeView = WIKIDIA.view.svg.nodeView(diagramView, node, WIKIDIA.model.nodeBuilder());
-        diagramView.addNodeView(nodeView);
+    function addItem(item) {
+        var nodeView = WIKIDIA.view.svg.nodeView(diagramView);
+
+        items.push({
+            data: item,
+            view: nodeView
+        });
+
+        item.change(onNodeChange);
 
         // TODO: can be optimized (global DOM handler on diagram)
         nodeView.dragStart(onNodeDragStart);
@@ -42,11 +56,52 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         nodeView.dragEnd(onNodeDragEnd);
     }
 
+    function updateItem(node) {
+        var renderer = nodeRendererMap[node.kind];
+        if (!renderer) {
+            renderer = nodeRendererMap.default;
+        }
+        renderer.render(node.data, node.view);
+    }
+
+    items.itemForView = function (view) {
+        // TODO: optimize?
+        var i;
+        for (i = 0; i < this.length; i++) {
+            if (this[i].view === view) {
+                return this[i];
+            }
+        }
+        throw new Error("Node view not found.");
+    };
+
+    items.itemForData = function (data) {
+        var i;
+        for (i = 0; i < this.length; i++) {
+            if (this[i].data === data) {
+                return this[i];
+            }
+        }
+        throw new Error("Node not found.");
+    };
+
+    function createRendererMap() {
+        nodeRendererMap = {
+            default: WIKIDIA.presenter.nodeRenderer()
+        };
+    }
+
+    function onNodeChange(node) {
+        // TODO: spatne, rethink
+        updateItem(items.itemForData(node));
+    }
+
     var nodeDragStartX, nodeDragStartY;
 
     function onNodeDragStart(nodeView) {
-        nodeDragStartX = nodeView.node().x;
-        nodeDragStartY = nodeView.node().y;
+        var node = items.itemForView(nodeView).data;
+        nodeDragStartX = node.x;
+        nodeDragStartY = node.y;
     }
 
     function onNodeDragMove(nodeView, dx, dy) {
@@ -60,7 +115,9 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         // and update model
         var snapped = snapToGrid({x: dx, y: dy});
 
-        commandExecutor.execute(moveCommand(nodeView, nodeView.node(), nodeDragStartX + snapped.x, nodeDragStartY + snapped.y));
+        var node = items.itemForView(nodeView).data;
+
+        commandExecutor.execute(moveCommand(node, nodeDragStartX + snapped.x, nodeDragStartY + snapped.y));
     }
 
     /**

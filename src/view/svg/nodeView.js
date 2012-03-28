@@ -3,7 +3,16 @@ WIKIDIA.view = WIKIDIA.view || {};
 WIKIDIA.view.svg = WIKIDIA.view.svg || {};
 
 
-WIKIDIA.view.svg.nodeView = function (diagramView, node, nodeBuilder) {
+/**
+ * <code>nodeView</code> is an rectangular area and provides following services:
+ * - It publishes drag events.
+ * - It has active border which can be used for node resizing - it publishes resize events.
+ *
+ * <code>nodeView</code> is not responsible for its content - content is rendered by <code>nodeRenderer</code>.
+ *
+ * @param diagramView
+ */
+WIKIDIA.view.svg.nodeView = function (diagramView) {
     "use strict";
 
     var parent = WIKIDIA.view.svg.view;
@@ -16,9 +25,6 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node, nodeBuilder) {
     var onDragStart, onDragMove, onDragEnd;
 
     function init() {
-        // TODO: I'm not sure that view should have ref to nodeBuilder
-        nodeBuilder.nodeView = that;
-
         var dragHandler = dragEventHandler(element);
         dragHandler.dragStart(function (e) {
             if (onDragStart) {
@@ -37,10 +43,6 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node, nodeBuilder) {
         });
     }
 
-    that.node = function () {
-        return node;
-    };
-
     that.dragStart = function(handler) {
         onDragStart = handler;
     };
@@ -53,19 +55,6 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node, nodeBuilder) {
         onDragEnd = handler;
     };
 
-    that.rect = function (spec) {
-        // TODO: validate spec
-        that.addElement("rect", spec);
-    };
-
-    that.update = function () {
-        // clear contents of node
-        element.empty();
-
-        // let node to update us
-        node.update(nodeBuilder);
-    };
-
     that.previewMove = function (dx, dy) {
         if (dx !== 0 && dy !== 0) {
             element.attr("transform", "translate({dx},{dy})".supplant({dx: dx, dy: dy}));
@@ -74,6 +63,18 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node, nodeBuilder) {
         }
     };
 
+    /**
+     * Clears content of the node. It's typically called as the first thing by renderer when it's going to update
+     * node contents.
+     */
+    that.clear = function () {
+        element.empty();
+    };
+
+    that.rect = function (spec) {
+        // TODO: validate spec
+        that.addElement("rect", spec);
+    };
 
 
 

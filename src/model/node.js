@@ -6,38 +6,59 @@ WIKIDIA.model.node = function (spec) {
 
     var DEFAULT_SIZE = 100;
 
-    var that = {};
+    var that = {},
+        observableProperties = {},
+        onChangeHandlers = [];
+
+    // TODO: how fast will this be compared to function call and simple property access?
+    function addObservableProperty(propertyName, defaultValue) {
+        Object.defineProperty(that, propertyName, {
+            get: function () {
+                return observableProperties[propertyName];
+            },
+            set: function (value) {
+                var oldValue = observableProperties[propertyName];
+                if (value !== oldValue && that.changeEventEnabled) {
+                    // value changed, fire change event
+                    that.fireChange();
+                }
+                observableProperties[propertyName] = value;
+            }
+        });
+
+        observableProperties[propertyName] = defaultValue;
+    }
 
     spec = spec || {};
 
-    that.text = spec.text || "";
-    that.x = spec.x || 0;
-    that.y = spec.y || 0;
-    that.width = spec.width || DEFAULT_SIZE;
-    that.height = spec.height || DEFAULT_SIZE;
+    addObservableProperty("text", spec.text || "");
+    addObservableProperty("x", spec.x || 0);
+    addObservableProperty("y", spec.y || 0);
+    addObservableProperty("width", spec.width || DEFAULT_SIZE);
+    addObservableProperty("height", spec.height || DEFAULT_SIZE);
 
-    that.update = function (nodeBuilder) {
-        // TODO: nodeBuilder.drawContour();
-        // TODO: preklad souradnic, starting at 0,0
-        nodeBuilder.rect({x: that.x, y: that.y, width: that.width, height: that.height});
+    /**
+     * Binds an event handler to the "change" event. This handler is called when any property
+     * is changed. You can disable firing of this event using {@link that.changeEventEnabled} property.
+     *
+     * @param handler
+     */
+    that.change = function (handler) {
+        onChangeHandlers.push(handler);
     };
 
-    return that;
-};
+    /**
+     * If true, change events are fired.
+     */
+    that.changeEventEnabled = true;
 
-WIKIDIA.model.classNode = function (spec) {
-    "use strict";
-
-    var that = WIKIDIA.model.node(spec);
-
-    that.update = function (nodeBuilder) {
-        var sections = that.text.split("--");
-        sections.forEach(function (section, index) {
-            nodeBuilder.text(section);
-
-            if (index !== sections.length - 1) {
-                nodeBuilder.line({x1: 0, x2: that.width});
-            }
+    /**
+     * Fires  change event. You want to use this typically when you disabled change events to do several changes
+     * and now want to notify observers about changes.
+     */
+    that.fireChange = function () {
+        onChangeHandlers.forEach(function (handler) {
+            handler(that);
         });
     };
 

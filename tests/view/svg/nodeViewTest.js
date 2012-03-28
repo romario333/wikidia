@@ -6,10 +6,8 @@ describe("nodeView", function () {
     var nodeView;
 
     beforeEach(function () {
-        // TODO: quite complex setup, maybe I should just mock it?
         var rootView = WIKIDIA.view.svg.rootView($("<div></div>"));
-        var diagram = WIKIDIA.model.diagram();
-        var diagramView = WIKIDIA.view.svg.diagramView(rootView, diagram);
+        var diagramView = WIKIDIA.view.svg.diagramView(rootView);
 
         nodeView = WIKIDIA.view.svg.nodeView(diagramView);
     });

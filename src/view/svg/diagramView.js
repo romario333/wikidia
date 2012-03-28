@@ -3,7 +3,7 @@ WIKIDIA.view = WIKIDIA.view || {};
 WIKIDIA.view.svg = WIKIDIA.view.svg || {};
 
 
-WIKIDIA.view.svg.diagramView = function (rootView, diagram) {
+WIKIDIA.view.svg.diagramView = function (rootView) {
     "use strict";
 
     var parent = WIKIDIA.view.svg.view;
@@ -15,7 +15,6 @@ WIKIDIA.view.svg.diagramView = function (rootView, diagram) {
     var that = parent(element);
 
     var diagramElements, decorationElements, gridGroup;
-    var nodeViews = [];
 
     function init() {
         createNodeContainers();
@@ -45,10 +44,6 @@ WIKIDIA.view.svg.diagramView = function (rootView, diagram) {
      */
     that.gridStep = 0;
 
-    that.addNodeView = function (nodeView) {
-        nodeViews.push(nodeView);
-    };
-
     that.update = function () {
         // draw grid
         if (that.gridStep !== 0) {
@@ -64,11 +59,6 @@ WIKIDIA.view.svg.diagramView = function (rootView, diagram) {
                 gridGroup.append(line);
             }
         }
-
-        // update nodes
-        nodeViews.forEach(function (nodeView) {
-            nodeView.update();
-        });
     };
 
     init();
