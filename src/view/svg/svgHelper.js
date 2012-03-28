@@ -21,6 +21,29 @@ WIKIDIA.view.svg.svgHelper = {};
         return el;
     };
 
+    module.pathBuilder = function() {
+        var el = module.createSvgElement("path");
+        var pathData = "";
+        return {
+            moveTo: function (x, y) {
+                pathData += "M {x} {y}".supplant({x: x, y: y});
+                return this;
+            },
+            lineTo: function (x, y) {
+                pathData += "L {x} {y}".supplant({x: x, y: y});
+                return this;
+            },
+            attr: function (attributes) {
+                el.attr(attributes);
+                return this;
+            },
+            create: function () {
+                el.attr("d", pathData);
+                return el;
+            }
+        };
+    };
+
     /**
      * Prints SVG to string. It's not 100% valid SVG though, use only for debug purposes and tests.
      *

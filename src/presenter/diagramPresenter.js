@@ -5,6 +5,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     "use strict";
 
     var moveCommand = WIKIDIA.presenter.moveCommand;
+    var resizeCommand = WIKIDIA.presenter.resizeCommand;
 
     var GRID_STEP = 10;
 
@@ -41,7 +42,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     }
 
     function addItem(item) {
-        var nodeView = WIKIDIA.view.svg.nodeView(diagramView);
+        var nodeView = WIKIDIA.view.svg.nodeView(diagramView, item);
 
         items.push({
             data: item,
@@ -54,6 +55,9 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         nodeView.dragStart(onNodeDragStart);
         nodeView.dragMove(onNodeDragMove);
         nodeView.dragEnd(onNodeDragEnd);
+        nodeView.resizeDragStart(onNodeResizeDragStart);
+        nodeView.resizeDragMove(onNodeResizeDragMove);
+        nodeView.resizeDragEnd(onNodeResizeDragEnd);
     }
 
     function updateItem(node) {
@@ -96,12 +100,12 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         updateItem(items.itemForData(node));
     }
 
-    var nodeDragStartX, nodeDragStartY;
+    var dragStartX, dragStartY;
 
     function onNodeDragStart(nodeView) {
         var node = items.itemForView(nodeView).data;
-        nodeDragStartX = node.x;
-        nodeDragStartY = node.y;
+        dragStartX = node.x;
+        dragStartY = node.y;
     }
 
     function onNodeDragMove(nodeView, dx, dy) {
@@ -117,7 +121,39 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
 
         var node = items.itemForView(nodeView).data;
 
-        commandExecutor.execute(moveCommand(node, nodeDragStartX + snapped.x, nodeDragStartY + snapped.y));
+        commandExecutor.execute(moveCommand(node, dragStartX + snapped.x, dragStartY + snapped.y));
+    }
+
+    var dragStartWidth, dragStartHeight;
+
+    function onNodeResizeDragStart(nodeView) {
+        var node = items.itemForView(nodeView).data;
+        node.changeEventEnabled = false;
+        dragStartWidth = node.width;
+        dragStartHeight = node.height;
+    }
+
+    function onNodeResizeDragMove(nodeView, dx, dy) {
+        var snapped = snapToGrid({width: dx, height: dy});
+        var node = items.itemForView(nodeView).data; // TODO: pomale?
+
+        node.width = dragStartWidth + snapped.width;
+        node.height = dragStartHeight + snapped.height;
+        node.fireChange();
+    }
+
+    function onNodeResizeDragEnd(nodeView, dx, dy) {
+        var node = items.itemForView(nodeView).data;
+        // restore original node size and create proper command
+        node.width = dragStartWidth;
+        node.height = dragStartHeight;
+        node.changeEventEnabled = true;
+
+        // and update model
+        var snapped = snapToGrid({width: dx, height: dy});
+
+        //TODO:
+        commandExecutor.execute(resizeCommand(node, dragStartWidth + snapped.width, dragStartHeight + snapped.height));
     }
 
     /**
