@@ -17,6 +17,13 @@ WIKIDIA.view.svg.diagramView = function (rootView) {
 
     function init() {
         grid = that.createElement("g", {class: "grid"});
+
+        // disable text selection (it collides with diagram manipulation)
+        // -webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-o-user-select: none;user-select: none;
+        element.css("-webkit-user-select", "none");
+        element.css("-khtml-user-select", "none");
+        element.css("-o-user-select", "none");
+        element.css("user-select", "none");
     }
 
     /**

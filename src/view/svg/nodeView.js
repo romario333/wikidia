@@ -38,7 +38,7 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
     function init() {
         element.attr("cursor", "move");
         content = that.createElement("g", {class: "content"});
-        eventBox = that.createElement("rect", {class: "eventBox", opacity: 0});
+        eventBox = that.createElement("rect", {class: "eventBox", opacity: 0, fill: "blue"});
         resizeBorder = that.createElement("g", {class: "resize-border", opacity: 0});
         connectPoints = that.createElement("g", {class: "connect-points"});
         connectPoints.attr("cursor", "default");
@@ -90,7 +90,6 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
             }
         });
 
-        // TODO: I should have some event box, this doesn't work well for non-rect shapes
         element.mouseenter(function (e) {
             if (!isResizing && !isConnectPointDragging && onMouseEnter) {
                 onMouseEnter(that);
@@ -213,7 +212,6 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
         onMouseMove = handler;
     };
 
-
     // TODO: bude treba tahle optimalizace?
     that.previewMove = function (dx, dy) {
         if (dx !== 0 && dy !== 0) {
@@ -238,6 +236,10 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
     that.updateView = function (spec) {
         updateResizeBorder(spec);
         eventBox.attr(spec);
+    };
+
+    that.isSelected = function(selected) {
+        eventBox.attr("opacity", selected ? 0.5 : 0);
     };
 
     /**

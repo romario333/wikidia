@@ -5,15 +5,26 @@ WIKIDIA.model.diagram = function () {
     "use strict";
 
     var that = {},
-        nodes = [],
-        arrows = []; // TODO: mozna jsou arrows to same co nodes, pak by to byly items
+        items = [];
 
-    that.addNode = function (node) {
-        nodes.push(node);
+    that.addItem = function (item) {
+        items.push(item);
     };
 
-    that.nodes = function () {
-        return nodes;
+    that.items = function () {
+        return items;
+    };
+
+    that.toJSON = function () {
+        var json = "[";
+        items.forEach(function (item, index) {
+            json += item.toJSON();
+            if (index < items.length - 1) {
+                json += ", ";
+            }
+        });
+        json += "]";
+        return json;
     };
 
     return that;

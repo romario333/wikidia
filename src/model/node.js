@@ -114,6 +114,12 @@ WIKIDIA.model.node = function (spec) {
             return nodeInner(observableProperties, connectionsCopy, onChangeHandlersCopy);
         };
 
+        that.toJSON = function () {
+            return JSON.stringify(observableProperties);
+        };
+
+        that.isNode = true;
+
         that._test = {
             onChangeHandlers: onChangeHandlers
         };

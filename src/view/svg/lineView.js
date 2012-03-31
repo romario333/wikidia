@@ -77,6 +77,10 @@ WIKIDIA.view.svg.lineView = function (diagramView, node) {
         eventBox.attr(spec);
     };
 
+    that.isSelected = function(selected) {
+        eventBox.attr("opacity", selected ? 0.5 : 0);
+    };
+
 
     // TODO: temp verze
     that.clear = function () {

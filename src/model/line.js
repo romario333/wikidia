@@ -108,6 +108,8 @@ WIKIDIA.model.line = function (spec) {
             return lineInner(observableProperties, connectionsCopy, onChangeHandlersCopy);
         };
 
+        that.isLine = true;
+
         that._test = {
             onChangeHandlers: onChangeHandlers
         };

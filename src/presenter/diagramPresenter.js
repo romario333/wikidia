@@ -4,15 +4,14 @@ WIKIDIA.presenter = WIKIDIA.presenter || {};
 WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     "use strict";
 
-    var moveCommand = WIKIDIA.presenter.moveCommand;
-    var resizeCommand = WIKIDIA.presenter.resizeCommand;
+    var utils = WIKIDIA.utils;
 
     var renderers = {
         node: WIKIDIA.presenter.nodeRenderer(),
         useCase: WIKIDIA.presenter.useCaseNodeRenderer(),
         line: WIKIDIA.presenter.lineRenderer(),
         forItem: function (item) {
-            var kind = item.kind;
+            var kind = item.data.kind;
             if (!this[kind]) {
                 throw new Error("Unknown kind '{kind}'".supplant({kind: kind}));
             }
@@ -28,25 +27,91 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     var that = {},
         commandExecutor,
         items = [],
-        itemToCreate;
+        selection,
+        commandInProgress,
+        itemToCreate,
+        isCtrlKeyDown = false;
+
+    function multipleSelection() {
+        var that = {};
+        var items = [];
+
+        that.addOrRemove = function (item) {
+
+            if (item.isSelected) {
+                that.remove(item);
+            } else {
+                that.add(item);
+            }
+
+        };
+
+        that.add = function (item) {
+            items.push(item);
+            item.isSelected = true;
+            updateItem(item);
+        };
+
+        that.remove = function (item) {
+            var i = items.indexOf(item);
+            items.splice(i, 1);
+            item.isSelected = false;
+            updateItem(item);
+        };
+
+        that.select = function (item) {
+            var selected;
+            while ((selected = items.pop())) {
+                selected.isSelected = false;
+                updateItem(selected);
+            }
+            that.add(item);
+        };
+
+        that.items = function () {
+            return items;
+        };
+        return that;
+    }
 
     function init() {
         // TODO: should be at the top, so I can clearly see dependencies
         commandExecutor = WIKIDIA.presenter.commandExecutor();
 
         diagramView.gridStep = GRID_STEP;
-        diagram.nodes().forEach(function (node) {
-            addNode(node);
+        diagram.items().forEach(function (item) {
+            if (item.isNode) {
+                addNode(item);
+            } else if (item.isLine) {
+                addLine(item);
+            } else {
+                // TODO: tady trochu boli, ze nemam class
+                throw new Error("Don't know what this item is: " + item.kind);
+            }
+
         });
 
         diagramView.update();
+
+        diagramView.click(onDiagramClick);
 
         items.forEach(function (item) {
             updateItem(item);
         });
 
-        // TODO: pokus
-        $(document.body).keydown(function (e) {
+        selection = multipleSelection();
+
+        $(document).keydown(function (e) {
+            if (e.which === 17) {  // TODO: e.ctrlKey does not work here
+                isCtrlKeyDown = true;
+            }
+        });
+
+        $(document).keyup(function (e) {
+            if (e.ctrlKey) {
+                isCtrlKeyDown = false;
+            }
+
             if (e.ctrlKey === true && e.which === 90) {
                 commandExecutor.undo();
             }
@@ -57,17 +122,19 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         // TODO: I should not pass node to view
         var nodeView = WIKIDIA.view.svg.nodeView(diagramView, node);
 
-        var item = {
-            data: node,
-            view: nodeView
-        };
-
+        var item = utils.objectWithId();
+        item.data = node;
+        item.view = nodeView;
+        item.isSelected = false;
 
         items.push(item);
 
         node.change(onNodeChange);
 
         // TODO: can be optimized (global DOM handler on diagram)
+        nodeView.mouseDown(onItemMouseDown);
+        nodeView.click(onItemClick);
+        nodeView.doubleClick(onItemDoubleClick);
         nodeView.dragStart(onNodeDragStart);
         nodeView.dragMove(onNodeDragMove);
         nodeView.dragEnd(onNodeDragEnd);
@@ -89,16 +156,19 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     function addLine(line) {
         var lineView = WIKIDIA.view.svg.lineView(diagramView);
 
-        var item = {
-            data: line,
-            view: lineView
-        };
+        var item = utils.objectWithId();
+        item.data = line;
+        item.view = lineView;
+        item.isSelected = false;
 
         // TODO: je fakt vyhodny mit nodes i lines v jedny items kolekci? davam to tam jen kvuli hunch
         items.push(item);
 
         line.change(onLineChange);
 
+        lineView.mouseDown(onItemMouseDown);
+        lineView.click(onItemClick);
+        lineView.doubleClick(onItemDoubleClick);
         lineView.mouseEnter(onLineMouseEnter);
         lineView.mouseLeave(onLineMouseLeave);
         lineView.connectPointDragStart(onLineConnectPointDragStart);
@@ -111,10 +181,11 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     }
 
     function updateItem(item) {
-        var renderer = renderers.forItem(item.data);
-        renderer.render(item.data, item.view);
+        var renderer = renderers.forItem(item);
+        renderer.render(item);
     }
 
+    // TODO: encapsulate items to object
     items.itemForView = function (view) {
         // TODO: optimize?
         var i;
@@ -145,63 +216,79 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         updateItem(items.itemForData(line));
     }
 
+    function onDiagramClick(view) {
+        console.dir(view);
+        console.log("diagram click");
+    }
+
+    function onItemMouseDown(view) {
+        var item = items.itemForView(view);
+
+        if (!isCtrlKeyDown) {
+            selection.select(item);
+        }
+    }
+
+    function onItemClick(view) {
+        // TODO: think about this
+        // on click, when I do this in mousedown, I can't properly resize multiple nodes
+        var item = items.itemForView(view);
+        if (isCtrlKeyDown) {
+            selection.addOrRemove(item);
+        }
+
+    }
+
+    function onItemDoubleClick(view) {
+
+    }
+
     var dragStartX, dragStartY;
 
     function onNodeDragStart(nodeView) {
-        var node = items.itemForView(nodeView).data;
-        dragStartX = node.x;
-        dragStartY = node.y;
+        commandInProgress = WIKIDIA.presenter.moveCommand(selection.items());
     }
 
     function onNodeDragMove(nodeView, dx, dy) {
         var snapped = snapToGrid({x: dx, y: dy});
-        nodeView.previewMove(snapped.x, snapped.y);
+        commandInProgress.dx = snapped.x;
+        commandInProgress.dy = snapped.y;
+        commandInProgress.preview();
     }
 
     function onNodeDragEnd(nodeView, dx, dy) {
-        // remove preview
-        nodeView.previewMove(0, 0);
-        // and update model
+        commandInProgress.cancelPreview();
         var snapped = snapToGrid({x: dx, y: dy});
-
-        var node = items.itemForView(nodeView).data;
-
-        commandExecutor.execute(moveCommand(node, dragStartX + snapped.x, dragStartY + snapped.y));
+        commandInProgress.dx = snapped.x;
+        commandInProgress.dy = snapped.y;
+        commandExecutor.execute(commandInProgress);
+        commandInProgress = null;
     }
 
+    // TODO: delete
     var dragStartWidth, dragStartHeight;
 
     function onNodeResizeDragStart(nodeView) {
-        var node = items.itemForView(nodeView).data;
-        node.changeEventEnabled = false;
-        dragStartWidth = node.width;
-        dragStartHeight = node.height;
+        commandInProgress = WIKIDIA.presenter.resizeNodeCommand(selection.items());
     }
 
     function onNodeResizeDragMove(nodeView, dx, dy) {
-        var snapped = snapToGrid({width: dx, height: dy});
-        var node = items.itemForView(nodeView).data; // TODO: pomale?
-
-        node.width = dragStartWidth + snapped.width;
-        node.height = dragStartHeight + snapped.height;
-        node.fireChange();
+        var snapped = snapToGrid({x: dx, y: dy});
+        commandInProgress.dWidth = snapped.x;
+        commandInProgress.dHeight = snapped.y;
+        commandInProgress.preview();
     }
 
     function onNodeResizeDragEnd(nodeView, dx, dy) {
-        var node = items.itemForView(nodeView).data;
-        // restore original node size and create proper command
-        node.width = dragStartWidth;
-        node.height = dragStartHeight;
-        node.changeEventEnabled = true;
-
-        // and update model
-        var snapped = snapToGrid({width: dx, height: dy});
-
-
-        commandExecutor.execute(resizeCommand(node, dragStartWidth + snapped.width, dragStartHeight + snapped.height));
+        commandInProgress.cancelPreview();
+        var snapped = snapToGrid({x: dx, y: dy});
+        commandInProgress.dWidth = snapped.x;
+        commandInProgress.dHeight = snapped.y;
+        commandExecutor.execute(commandInProgress);
+        commandInProgress = null;
 
         // TODO: why does not mouseLeave fire?
-        nodeView.hideResizeBorder();
+        //nodeView.hideResizeBorder();
     }
 
     function onNodeConnectPointDragStart(nodeView, connectPointX, connectPointY) {
@@ -214,10 +301,17 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
             x2: connectPointX,
             y2: connectPointY
         });
+        diagram.addItem(line);
+
+        var node = items.itemForView(nodeView);
+        node.addConnection(line);
+
         line.changeEventEnabled = false;
         // TODO: to by chtelo zapouzdrit
         itemToCreate = addLine(line);
         whichEndOfLine = "2";
+
+        // TODO: neni hotove
     }
 
     function onNodeConnectPointDragMove(nodeView, dx, dy) {
@@ -250,8 +344,13 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
 
     function onNodeMouseMove(nodeView, x, y) {
         var node = items.itemForView(nodeView);
-        var renderer = renderers.forItem(node.data);
-        renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
+        var renderer = renderers.forItem(node);
+        if (isCtrlKeyDown) {
+            renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
+        } else {
+            nodeView.hideConnectionPoints();
+        }
+
     }
 
     var whichEndOfLine; // TODO: to the top

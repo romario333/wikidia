@@ -20,10 +20,22 @@
     <script type="text/javascript" src="src/presenter/commands.js"></script>
     <script type="text/javascript" src="src/presenter/renderers.js"></script>
     <script type="text/javascript" src="src/presenter/diagramPresenter.js"></script>
+
+    <style type="text/css">
+        svg
+        {
+            width: 100%;
+            height: 700px;
+        }
+    </style>
+
 </head>
 <body>
 
-    <div id="diagram">
+    <div id="diagram" style="width: 100%; height: 100%;">
+    </div>
+    <div id="controlPanel" style="position: absolute; right: 100px; top: 10px;">
+        <input id="printJSON" type="button" value="Print JSON" />
     </div>
 
     <script type="text/javascript">
@@ -31,13 +43,17 @@
         $(document).ready(function () {
 
             var diagram = WIKIDIA.model.diagram();
-            diagram.addNode(WIKIDIA.model.node({x: 0, y: 0, text: "no kind node"}));
-            diagram.addNode(WIKIDIA.model.node({x: 0, y: 0, text: "use-case node", kind: "useCase"}));
+            diagram.addItem(WIKIDIA.model.node({x: 0, y: 0, text: "no kind node"}));
+            diagram.addItem(WIKIDIA.model.node({x: 0, y: 0, text: "use-case node", kind: "useCase"}));
 
             var rootView = WIKIDIA.view.svg.rootView($("#diagram"));
             var diagramView = WIKIDIA.view.svg.diagramView(rootView, diagram);
 
             var diagramPresenter = WIKIDIA.presenter.diagramPresenter(diagramView, diagram);
+
+            $("#printJSON").click(function () {
+                console.log(diagram.toJSON());
+            });
 
         });
 

@@ -10,9 +10,13 @@ WIKIDIA.presenter.nodeRenderer = function () {
 
     var that = {};
 
-    that.render = function (node, nodeView) {
+    that.render = function (item) {
+        var node = item.data;
+        var nodeView = item.view;
+
         nodeView.clear();
         nodeView.updateView({x: node.x, y: node.y, width: node.width, height: node.height});
+        nodeView.isSelected(item.isSelected);
 
         nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: "#A1BF36", stroke: "black"});
         nodeView.text(node.text);
@@ -53,9 +57,13 @@ WIKIDIA.presenter.useCaseNodeRenderer = function () {
 
     var that = WIKIDIA.presenter.nodeRenderer();
 
-    that.render = function (node, nodeView) {
+    that.render = function (item) {
+        var node = item.data;
+        var nodeView = item.view;
+
         nodeView.clear();
         nodeView.updateView({x: node.x, y: node.y, width: node.width, height: node.height});
+        nodeView.isSelected(item.isSelected);
 
         var halfWidth = node.width / 2;
         var halfHeight = node.height / 2;
@@ -79,9 +87,13 @@ WIKIDIA.presenter.lineRenderer = function () {
 
     var that = {};
 
-    that.render = function (line, lineView) {
+    that.render = function (item) {
+        var line = item.data;
+        var lineView = item.view;
+
         lineView.clear();
         lineView.updateView({x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2});
+        lineView.isSelected(item.isSelected);
 
         lineView.line({x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2, stroke: "black"});
         // TODO: text
