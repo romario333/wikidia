@@ -14,7 +14,7 @@ WIKIDIA.view.svg.view = function (element) {
         return element;
     };
 
-    that.addElement = function (tagName, attributes) {
+    that.createElement = function (tagName, attributes) {
         var el = svgHelper.createSvgElement(tagName, attributes);
         element.append(el);
         return el;

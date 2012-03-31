@@ -1,23 +1,18 @@
 var WIKIDIA = WIKIDIA || {};
 WIKIDIA.model = WIKIDIA.model || {};
 
-WIKIDIA.model.node = function (spec) {
+WIKIDIA.model.line = function (spec) {
     "use strict";
-
-    var DEFAULT_SIZE = 90;
-
-    var utils = WIKIDIA.utils;
 
     var connections = [],
         onChangeHandlers = [];
 
-    // inner constructor (I need this to support cloning) TODO: :-( maybe pseudo-privacy would be easier
-    function nodeInner (spec, connections, onChangeHandlers) {
-
+    // inner constructor (I need this to support cloning)
+    function lineInner(spec, connections, onChangeHandlers) {
         var that = {},
             observableProperties = {};
 
-        // TODO: how fast will this be compared to function call and simple property access?
+        // TODO: DRY
         function addObservableProperty(propertyName, defaultValue) {
             Object.defineProperty(that, propertyName, {
                 get: function () {
@@ -38,14 +33,14 @@ WIKIDIA.model.node = function (spec) {
 
         spec = spec || {};
 
-        // TODO: tady bych mel proste vytvorit objekt, ktery ma automaticky vsechny properties observable?
         addObservableProperty("text", spec.text || "");
-        addObservableProperty("x", spec.x || 0);
-        addObservableProperty("y", spec.y || 0);
-        addObservableProperty("width", spec.width || DEFAULT_SIZE);
-        addObservableProperty("height", spec.height || DEFAULT_SIZE);
-        addObservableProperty("kind", spec.kind || "node");
+        addObservableProperty("x1", spec.x1 || 0);
+        addObservableProperty("y1", spec.y1 || 0);
+        addObservableProperty("x2", spec.x2 || 0);
+        addObservableProperty("y2", spec.y2 || 0);
+        addObservableProperty("kind", spec.kind || "line");
 
+        // TODO: DRY (a pokud nebudu pouzivat, tak pryc)
         /**
          * Binds an event handler to the "change" event. This handler is called when any property
          * is changed. You can disable firing of this event using {@link that.changeEventEnabled} property.
@@ -71,7 +66,6 @@ WIKIDIA.model.node = function (spec) {
             });
         };
 
-        // TODO: DRY
         // TODO: this method should be shared only by line and node
         that._addConnection = function (item) {
             connections.push(item);
@@ -111,7 +105,7 @@ WIKIDIA.model.node = function (spec) {
         that.copyShallow = function () {
             var connectionsCopy = connections.slice();
             var onChangeHandlersCopy = onChangeHandlers.slice();
-            return nodeInner(observableProperties, connectionsCopy, onChangeHandlersCopy);
+            return lineInner(observableProperties, connectionsCopy, onChangeHandlersCopy);
         };
 
         that._test = {
@@ -121,5 +115,5 @@ WIKIDIA.model.node = function (spec) {
         return that;
     }
 
-    return nodeInner(spec, connections, onChangeHandlers);
+    return lineInner(spec, connections, onChangeHandlers);
 };

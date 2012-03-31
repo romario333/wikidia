@@ -19,66 +19,112 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
     var PADDING = 5;
 
     var parent = WIKIDIA.view.svg.view;
-    var utils = WIKIDIA.utils;
     var svgHelper = WIKIDIA.view.svg.svgHelper;
     var dragEventHandler = WIKIDIA.view.svg.dragEventHandler;
 
-    var element = diagramView.addElement("g", {class: "node"});
+    var element = diagramView.createElement("g", {class: "node"});
     var that = parent(element);
 
+    var content, eventBox, resizeBorder, connectPoints;
     var onDragStart, onDragMove, onDragEnd;
     var onResizeDragStart, onResizeDragMove, onResizeDragEnd;
-    var isResizing = false;
-    var content, resizeBorder;
+    // TODO: join nebo joint?
+    var onConnectPointDragStart, onConnectPointDragMove, onConnectPointDragEnd;
+    var onConnectPointMouseUp;
+    var onMouseEnter, onMouseLeave, onMouseMove;
+    // TODO: why do I need to do this? I should be able to avoid this simply by e.stopPropagation() in event handlers.
+    var isResizing = false, isConnectPointDragging = false;
 
     function init() {
+        element.attr("cursor", "move");
+        content = that.createElement("g", {class: "content"});
+        eventBox = that.createElement("rect", {class: "eventBox", opacity: 0});
+        resizeBorder = that.createElement("g", {class: "resize-border", opacity: 0});
+        connectPoints = that.createElement("g", {class: "connect-points"});
+        connectPoints.attr("cursor", "default");
+
         var dragHandler = dragEventHandler(element);
         dragHandler.dragStart(function (e) {
-            if (!isResizing && onDragStart) {
+            if (!isResizing && !isConnectPointDragging && onDragStart) {
                 onDragStart(that);
             }
         });
         dragHandler.dragMove(function (e, dx, dy) {
-            if (!isResizing && onDragMove) {
+            if (!isResizing && !isConnectPointDragging && onDragMove) {
                 onDragMove(that, dx, dy);
             }
         });
         dragHandler.dragEnd(function (e, dx, dy) {
-            if (!isResizing && onDragEnd) {
+            if (!isResizing && !isConnectPointDragging && onDragEnd) {
                 onDragEnd(that, dx, dy);
             }
         });
-        element.attr("cursor", "move");
 
-        content = that.addElement("g", {class: "content"});
+        var connectPointDragHandler = dragEventHandler(connectPoints);
+        connectPointDragHandler.dragStart(function (e) {
+            isConnectPointDragging = true;
+            if (onConnectPointDragStart) {
+                // TODO: read somehting about baseVal.value
+                var connectPointX = e.target.cx.baseVal.value;
+                var connectPointY = e.target.cy.baseVal.value;
+                onConnectPointDragStart(that, connectPointX, connectPointY);
+            }
+        });
+        connectPointDragHandler.dragMove(function (e, dx, dy) {
+            if (onConnectPointDragMove) {
+                onConnectPointDragMove(that, dx, dy);
+            }
+        });
+        connectPointDragHandler.dragEnd(function (e, dx, dy) {
+            isConnectPointDragging = false;
+            if (onConnectPointDragEnd) {
+                onConnectPointDragEnd(that, dx, dy);
+            }
+        });
 
-        // create border with resize handles
-        resizeBorder = that.addElement("g", {class: "resize-border"});
-        hideResizeBorder();
-        updateResizeBorder();
-        // resize border is visible only when mouse is on the node
+        connectPoints.mouseup(function (e) {
+            if (onConnectPointMouseUp) {
+                var connectPointX = e.target.cx.baseVal.value;
+                var connectPointY = e.target.cy.baseVal.value;
+                onConnectPointMouseUp(that, connectPointX, connectPointY);
+            }
+        });
+
+        // TODO: I should have some event box, this doesn't work well for non-rect shapes
         element.mouseenter(function (e) {
-            showResizeBorder();
+            if (!isResizing && !isConnectPointDragging && onMouseEnter) {
+                onMouseEnter(that);
+            }
         });
         element.mouseleave(function (e) {
-            hideResizeBorder();
+            if (!isResizing && !isConnectPointDragging && onMouseLeave) {
+                onMouseLeave(that);
+            }
+        });
+        element.mousemove(function (e) {
+            if (!isResizing && !isConnectPointDragging && onMouseMove) {
+                onMouseMove(that, e.clientX, e.clientY);
+            }
         });
 
-        node.change(onNodeChanged);
     }
 
-    function onNodeChanged() {
-        updateResizeBorder();
-    }
+    that.showResizeBorder = function () {
+        resizeBorder.attr("opacity", 1);
+    };
 
-    function updateResizeBorder() {
+    that.hideResizeBorder = function () {
+        resizeBorder.attr("opacity", 0);
+    };
+
+    function updateResizeBorder(rect) {
         resizeBorder.empty();
-        resizeBorder.append(svgHelper.createSvgElement("rect", {x: node.x - 2, y: node.y - 2, width: node.width + 4, height: node.height + 4, fill: "none", stroke: "black", 'stroke-dasharray': "4,4"}));
+        resizeBorder.append(svgHelper.createSvgElement("rect", {x: rect.x - 2, y: rect.y - 2, width: rect.width + 4, height: rect.height + 4, fill: "none", stroke: "black", 'stroke-dasharray': "4,4"}));
 
         // TODO: just one resize corner for now
-        var resizeHandle = svgHelper.pathBuilder().moveTo(node.x + node.width, node.y + node.height - CORNER_SIZE)
-            .lineTo(node.x + node.width, node.y + node.height)
-            .lineTo(node.x + node.width - CORNER_SIZE, node.y + node.height)
+        var resizeHandle = svgHelper.pathBuilder().moveTo(rect.x + rect.width, rect.y + rect.height - CORNER_SIZE)
+            .lineTo(rect.x + rect.width, rect.y + rect.height)
+            .lineTo(rect.x + rect.width - CORNER_SIZE, rect.y + rect.height)
             .attr({
                 "stroke-width": 7,
                 stroke: "red",
@@ -105,54 +151,93 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
             isResizing = false;
             if (onResizeDragEnd) {
                 onResizeDragEnd(that, dx, dy);
-                // TODO: IMHO problem dragHandleru, podivat se na to?
-                // we might end out of node when resizing. in such case mouseleave is not fired, make sure
-                // that we hide resize border
-                hideResizeBorder();
             }
         });
     }
 
-    function showResizeBorder() {
-        resizeBorder.attr("opacity", 1);
-    }
-
-    function hideResizeBorder() {
-        resizeBorder.attr("opacity", 0);
-    }
-
-
-    that.dragStart = function(handler) {
+    that.dragStart = function (handler) {
         onDragStart = handler;
     };
 
-    that.dragMove = function(handler) {
+    that.dragMove = function (handler) {
         onDragMove = handler;
     };
 
-    that.dragEnd = function(handler) {
+    that.dragEnd = function (handler) {
         onDragEnd = handler;
     };
 
-    that.resizeDragStart = function(handler) {
+    that.resizeDragStart = function (handler) {
         onResizeDragStart = handler;
     };
 
-    that.resizeDragMove = function(handler) {
+    that.resizeDragMove = function (handler) {
         onResizeDragMove = handler;
     };
 
-    that.resizeDragEnd = function(handler) {
+    that.resizeDragEnd = function (handler) {
         onResizeDragEnd = handler;
     };
 
-    // TODO: sam preview neudela IMHO, kdo bude soupat se sipkama?
+    that.connectPointDragStart = function (handler) {
+        onConnectPointDragStart = handler;
+    };
+
+    that.connectPointDragMove = function (handler) {
+        onConnectPointDragMove = handler;
+    };
+
+    that.connectPointDragEnd = function (handler) {
+        onConnectPointDragEnd = handler;
+    };
+
+    /**
+     * TODO: This event must be invoked BEFORE connectPointDragEnd, otherwise you won't be able to connect
+     * two nodes in one drag.
+     *
+     * @param handler
+     */
+    that.connectPointMouseUp = function (handler) {
+        onConnectPointMouseUp = handler;
+    };
+
+    that.mouseEnter = function (handler) {
+        onMouseEnter = handler;
+    };
+
+    that.mouseLeave = function (handler) {
+        onMouseLeave = handler;
+    };
+
+    that.mouseMove = function (handler) {
+        onMouseMove = handler;
+    };
+
+
+    // TODO: bude treba tahle optimalizace?
     that.previewMove = function (dx, dy) {
         if (dx !== 0 && dy !== 0) {
             element.attr("transform", "translate({dx},{dy})".supplant({dx: dx, dy: dy}));
         } else {
             element.removeAttr("transform");
         }
+    };
+
+    // TODO: stejne jako u lineView, zajimave
+    that.showConnectionPoints = function (points) {
+        points.forEach(function (point) {
+            var p = svgHelper.createSvgElement("circle", {cx: point.x, cy: point.y, r: 6, fill: "red", stroke:"blue"});
+            connectPoints.append(p);
+        });
+    };
+
+    that.hideConnectionPoints = function () {
+        connectPoints.empty();
+    };
+
+    that.updateView = function (spec) {
+        updateResizeBorder(spec);
+        eventBox.attr(spec);
     };
 
     /**
@@ -175,6 +260,12 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
         content.append(el);
     };
 
+    that.ellipse = function (spec) {
+        // TODO: validate spec
+        var el = svgHelper.createSvgElement("ellipse", spec);
+        content.append(el);
+    };
+
     /**
      * Adds text to node's content. If text coordinates are not set, text is added right after the last
      * rendered element.
@@ -185,6 +276,8 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
         var x = spec.x || PADDING;
         var y = spec.y || PADDING;
         var text = spec.text || spec;
+        // TODO: I still need node here, but tohle stejne nebude fungovat pro elipsu, renderer je ten, kdo
+        // muze rozhodnout, kde defaultne zacina text
         var el = svgHelper.createSvgElement("text", {
             x: node.x + x,
             y: node.y + y,

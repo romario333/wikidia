@@ -20,6 +20,7 @@ WIKIDIA.view.svg.dragEventHandler = function (element) {
         readyForDrag = true;
     });
 
+    // TODO: tady povesim pomerne hodne uplne stejnych handleru na body, nestacil by jeden?
     $(document.body).mousemove(function (e) {
         if (readyForDrag) {
             isDragged = true;

@@ -14,13 +14,13 @@ describe("rootView", function () {
     });
 
     it("can create child element without attributes", function () {
-        rootView.addElement("g");
+        rootView.createElement("g");
         expect(rootView._test.svg()).toEqual('<svg><g></g></svg>');
     });
 
     it("can create child element with attributes", function () {
-        rootView.addElement("text", {x: 10, y: 20, text: "test"});
-        rootView.addElement("g", {id: "testGroup"});
+        rootView.createElement("text", {x: 10, y: 20, text: "test"});
+        rootView.createElement("g", {id: "testGroup"});
         expect(rootView._test.svg()).toEqual('<svg><text x="10" y="20" text="test"></text><g id="testGroup"></g></svg>');
     });
 

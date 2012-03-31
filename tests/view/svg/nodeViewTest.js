@@ -15,8 +15,7 @@ describe("nodeView", function () {
 
     it("can draw rectangles", function () {
         nodeView.rect({x: 10, y: 20, width: 30, height: 40, rx: 1, ry: 2});
-        // note that x and y which we pass to nodeView are relative
-        expect(nodeView._test.contentSvg()).toEqual('<rect x="20" y="40" width="30" height="40" rx="1" ry="2"></rect>');
+        expect(nodeView._test.contentSvg()).toEqual('<rect x="10" y="20" width="30" height="40" rx="1" ry="2"></rect>');
     });
 
     it("can draw text", function () {

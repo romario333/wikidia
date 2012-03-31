@@ -7,24 +7,36 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     var moveCommand = WIKIDIA.presenter.moveCommand;
     var resizeCommand = WIKIDIA.presenter.resizeCommand;
 
-    var GRID_STEP = 10;
+    var renderers = {
+        node: WIKIDIA.presenter.nodeRenderer(),
+        useCase: WIKIDIA.presenter.useCaseNodeRenderer(),
+        line: WIKIDIA.presenter.lineRenderer(),
+        forItem: function (item) {
+            var kind = item.kind;
+            if (!this[kind]) {
+                throw new Error("Unknown kind '{kind}'".supplant({kind: kind}));
+            }
+            return this[kind];
+        }
+    };
+
+
+    var GRID_STEP = 15;
 
 
 
     var that = {},
         commandExecutor,
         items = [],
-        nodeRendererMap;
+        itemToCreate;
 
     function init() {
         // TODO: should be at the top, so I can clearly see dependencies
-        createRendererMap();
-
         commandExecutor = WIKIDIA.presenter.commandExecutor();
 
         diagramView.gridStep = GRID_STEP;
         diagram.nodes().forEach(function (node) {
-            addItem(node);
+            addNode(node);
         });
 
         diagramView.update();
@@ -41,15 +53,19 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         });
     }
 
-    function addItem(item) {
-        var nodeView = WIKIDIA.view.svg.nodeView(diagramView, item);
+    function addNode(node) {
+        // TODO: I should not pass node to view
+        var nodeView = WIKIDIA.view.svg.nodeView(diagramView, node);
 
-        items.push({
-            data: item,
+        var item = {
+            data: node,
             view: nodeView
-        });
+        };
 
-        item.change(onNodeChange);
+
+        items.push(item);
+
+        node.change(onNodeChange);
 
         // TODO: can be optimized (global DOM handler on diagram)
         nodeView.dragStart(onNodeDragStart);
@@ -58,14 +74,45 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         nodeView.resizeDragStart(onNodeResizeDragStart);
         nodeView.resizeDragMove(onNodeResizeDragMove);
         nodeView.resizeDragEnd(onNodeResizeDragEnd);
+        nodeView.connectPointDragStart(onNodeConnectPointDragStart);
+        nodeView.connectPointDragMove(onNodeConnectPointDragMove);
+        nodeView.connectPointDragEnd(onNodeConnectPointDragEnd);
+        nodeView.connectPointMouseUp(onNodeConnectPointMouseUp);
+
+        nodeView.mouseEnter(onNodeMouseEnter);
+        nodeView.mouseLeave(onNodeMouseLeave);
+        nodeView.mouseMove(onNodeMouseMove);
+
+        return item;
     }
 
-    function updateItem(node) {
-        var renderer = nodeRendererMap[node.kind];
-        if (!renderer) {
-            renderer = nodeRendererMap.default;
-        }
-        renderer.render(node.data, node.view);
+    function addLine(line) {
+        var lineView = WIKIDIA.view.svg.lineView(diagramView);
+
+        var item = {
+            data: line,
+            view: lineView
+        };
+
+        // TODO: je fakt vyhodny mit nodes i lines v jedny items kolekci? davam to tam jen kvuli hunch
+        items.push(item);
+
+        line.change(onLineChange);
+
+        lineView.mouseEnter(onLineMouseEnter);
+        lineView.mouseLeave(onLineMouseLeave);
+        lineView.connectPointDragStart(onLineConnectPointDragStart);
+        lineView.connectPointDragMove(onLineConnectPointDragMove);
+        lineView.connectPointDragEnd(onLineConnectPointDragEnd);
+        lineView.connectPointMouseUp(onLineConnectPointMouseUp);
+
+
+        return item;
+    }
+
+    function updateItem(item) {
+        var renderer = renderers.forItem(item.data);
+        renderer.render(item.data, item.view);
     }
 
     items.itemForView = function (view) {
@@ -76,7 +123,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
                 return this[i];
             }
         }
-        throw new Error("Node view not found.");
+        throw new Error("Item view not found.");
     };
 
     items.itemForData = function (data) {
@@ -86,18 +133,16 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
                 return this[i];
             }
         }
-        throw new Error("Node not found.");
+        throw new Error("Item not found.");
     };
 
-    function createRendererMap() {
-        nodeRendererMap = {
-            default: WIKIDIA.presenter.nodeRenderer()
-        };
+    // TODO: weird
+    function onNodeChange(node) {
+        updateItem(items.itemForData(node));
     }
 
-    function onNodeChange(node) {
-        // TODO: spatne, rethink
-        updateItem(items.itemForData(node));
+    function onLineChange(line) {
+        updateItem(items.itemForData(line));
     }
 
     var dragStartX, dragStartY;
@@ -152,8 +197,110 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         // and update model
         var snapped = snapToGrid({width: dx, height: dy});
 
-        //TODO:
+
         commandExecutor.execute(resizeCommand(node, dragStartWidth + snapped.width, dragStartHeight + snapped.height));
+
+        // TODO: why does not mouseLeave fire?
+        nodeView.hideResizeBorder();
+    }
+
+    function onNodeConnectPointDragStart(nodeView, connectPointX, connectPointY) {
+        dragStartX = connectPointX;
+        dragStartY = connectPointY;
+
+        var line = WIKIDIA.model.line({
+            x1: connectPointX,
+            y1: connectPointY,
+            x2: connectPointX,
+            y2: connectPointY
+        });
+        line.changeEventEnabled = false;
+        // TODO: to by chtelo zapouzdrit
+        itemToCreate = addLine(line);
+        whichEndOfLine = "2";
+    }
+
+    function onNodeConnectPointDragMove(nodeView, dx, dy) {
+        onLineConnectPointDragMove(itemToCreate.view, dx, dy);
+    }
+
+    function onNodeConnectPointMouseUp(nodeView, connectPointX, connectPointY) {
+        if (itemToCreate) {
+            var line = itemToCreate.data;
+            line.x2 = connectPointX;
+            line.y2 = connectPointY;
+        }
+    }
+
+    function onNodeConnectPointDragEnd(nodeView, dx, dy) {
+        var line = itemToCreate.data;
+        line.changeEventEnabled = true;
+        itemToCreate = undefined;
+    }
+
+    function onNodeMouseEnter(nodeView) {
+        nodeView.showResizeBorder();
+
+    }
+
+    function onNodeMouseLeave(nodeView) {
+        nodeView.hideResizeBorder();
+        nodeView.hideConnectionPoints();
+    }
+
+    function onNodeMouseMove(nodeView, x, y) {
+        var node = items.itemForView(nodeView);
+        var renderer = renderers.forItem(node.data);
+        renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
+    }
+
+    var whichEndOfLine; // TODO: to the top
+
+    function onLineConnectPointDragStart(lineView, connectPointX, connectPointY) {
+        // TODO: dragStartX uz nic moc nazev ted kdyz to pouzivam i tady
+        dragStartX = connectPointX;
+        dragStartY = connectPointY;
+
+        lineView.hideConnectionPoints();
+
+        var line = items.itemForView(lineView);
+        if (line.x1 === connectPointX && line.x2 === connectPointY) {
+            whichEndOfLine = "1";
+        } else {
+            whichEndOfLine = "2";
+        }
+
+        line.changeEventEnabled = false;
+    }
+
+    function onLineConnectPointDragMove(lineView, dx, dy) {
+        var line = items.itemForView(lineView).data;
+        var snapped = snapToGrid({x: dragStartX + dx, y: dragStartY + dy});
+        console.log("in = [{x}, {y}], snapped = [{sx}, {sy}]".supplant({x: dragStartX + dx, y: dragStartY + dy, sx: snapped.x, sy: snapped.y}));
+        console.dir(line);
+        line["x" + whichEndOfLine] = snapped.x;
+        line["y" + whichEndOfLine] = snapped.y;
+        line.fireChange();
+    }
+
+    function onLineConnectPointMouseUp(lineView, connectPointX, connectPointY) {
+    }
+
+    function onLineConnectPointDragEnd(lineView, dx, dy) {
+        var line = items.itemForView(lineView);
+        line.changeEventEnabled = true;
+    }
+
+    function onLineMouseEnter(lineView) {
+        var line = items.itemForView(lineView).data;
+        lineView.showConnectionPoints([
+            {x: line.x1, y: line.y1},
+            {x: line.x2, y: line.y2}
+        ]);
+    }
+
+    function onLineMouseLeave(lineView) {
+        lineView.hideConnectionPoints();
     }
 
     /**

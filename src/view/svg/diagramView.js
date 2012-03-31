@@ -11,12 +11,12 @@ WIKIDIA.view.svg.diagramView = function (rootView) {
 
     var gridStep = 100; // TODO: pokus
 
-    var element = rootView.addElement("g", {class: "diagram"});
+    var element = rootView.createElement("g", {class: "diagram"});
     var that = parent(element);
     var grid;
 
     function init() {
-        grid = that.addElement("g", {class: "grid"});
+        grid = that.createElement("g", {class: "grid"});
     }
 
     /**
