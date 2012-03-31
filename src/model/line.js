@@ -20,7 +20,7 @@ WIKIDIA.model.line = function (spec) {
                 },
                 set: function (value) {
                     var oldValue = observableProperties[propertyName];
-                    if (value !== oldValue && that.changeEventEnabled) {
+                    if (value !== oldValue && that.changeEventsEnabled) {
                         // value changed, fire change event
                         that.fireChange();
                     }
@@ -54,7 +54,7 @@ WIKIDIA.model.line = function (spec) {
         /**
          * If true, change events are fired.
          */
-        that.changeEventEnabled = true;
+        that.changeEventsEnabled = true;
 
         /**
          * Fires  change event. You want to use this typically when you disabled change events to do several changes
@@ -70,7 +70,7 @@ WIKIDIA.model.line = function (spec) {
         that._addConnection = function (item) {
             connections.push(item);
 
-            if (that.changeEventEnabled) {
+            if (that.changeEventsEnabled) {
                 that.fireChange();
             }
         };
@@ -80,6 +80,7 @@ WIKIDIA.model.line = function (spec) {
             item._addConnection(that);
         };
 
+
         that._removeConnection = function (item) {
             var i = connections.indexOf(item);
             if (i === -1) {
@@ -87,7 +88,7 @@ WIKIDIA.model.line = function (spec) {
             }
             connections.splice(i, 1);
 
-            if (that.changeEventEnabled) {
+            if (that.changeEventsEnabled) {
                 that.fireChange();
             }
         };

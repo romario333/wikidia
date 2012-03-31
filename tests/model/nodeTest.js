@@ -40,7 +40,7 @@ describe("nodeTest", function () {
         var node = WIKIDIA.model.node({x: 10});
         node.change(handler.change);
 
-        node.changeEventEnabled = false;
+        node.changeEventsEnabled = false;
         node.x = 20;
         expect(handler.change).not.toHaveBeenCalled();
 

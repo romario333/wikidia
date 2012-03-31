@@ -28,20 +28,20 @@ WIKIDIA.presenter.moveCommand = function (items) {
             if (item.data.isNode) {
                 var node = item.data;
                 var originalNode = originalData[item.oid];
-                node.changeEventEnabled  = false;
+                node.changeEventsEnabled  = false;
                 node.x = originalNode.x + that.dx;
                 node.y = originalNode.y + that.dy;
-                node.changeEventEnabled  = true;
+                node.changeEventsEnabled  = true;
                 node.fireChange();
             } else if (item.data.isLine) {
                 var line = item.data;
                 var originalLine = originalData[item.oid];
-                line.changeEventEnabled = false;
+                line.changeEventsEnabled = false;
                 line.x1 = originalLine.x1 + that.dx;
                 line.y1 = originalLine.y1 + that.dy;
                 line.x2 = originalLine.x2 + that.dx;
                 line.y2 = originalLine.y2 + that.dy;
-                line.changeEventEnabled  = true;
+                line.changeEventsEnabled  = true;
                 line.fireChange();
             } else {
                 throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.data.kind}));
@@ -54,20 +54,20 @@ WIKIDIA.presenter.moveCommand = function (items) {
             if (item.data.isNode) {
                 var node = item.data;
                 var originalNode = originalData[item.oid];
-                node.changeEventEnabled  = false;
+                node.changeEventsEnabled  = false;
                 node.x = originalNode.x;
                 node.y = originalNode.y;
-                node.changeEventEnabled  = true;
+                node.changeEventsEnabled  = true;
                 node.fireChange();
             } else if (item.data.isLine) {
                 var line = item.data;
                 var originalLine = originalData[item.oid];
-                line.changeEventEnabled = false;
+                line.changeEventsEnabled = false;
                 line.x1 = originalLine.x1;
                 line.y1 = originalLine.y1;
                 line.x2 = originalLine.x2;
                 line.y2 = originalLine.y2;
-                line.changeEventEnabled  = true;
+                line.changeEventsEnabled  = true;
                 line.fireChange();
             } else {
                 throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.data.kind}));
@@ -108,10 +108,10 @@ WIKIDIA.presenter.resizeNodeCommand = function (items) {
 
             var node = item.data;
             var originalNode = originalData[item.oid];
-            node.changeEventEnabled  = false;
+            node.changeEventsEnabled  = false;
             node.width = originalNode.width + that.dWidth;
             node.height = originalNode.height + that.dHeight;
-            node.changeEventEnabled  = true;
+            node.changeEventsEnabled  = true;
             node.fireChange();
         });
     };
@@ -124,10 +124,10 @@ WIKIDIA.presenter.resizeNodeCommand = function (items) {
 
             var node = item.data;
             var originalNode = originalData[item.oid];
-            node.changeEventEnabled  = false;
+            node.changeEventsEnabled  = false;
             node.width = originalNode.width;
             node.height = originalNode.height;
-            node.changeEventEnabled  = true;
+            node.changeEventsEnabled  = true;
             node.fireChange();
         });
     };
@@ -135,20 +135,25 @@ WIKIDIA.presenter.resizeNodeCommand = function (items) {
     return that;
 };
 
-WIKIDIA.presenter.addLineCommand = function (line, node) {
+WIKIDIA.presenter.addLineCommand = function (x1, y1) {
     "use strict";
 
     var that = {};
 
-    that.preview = function () {
+    that.x2 = x1;
+    that.y2 = y1;
 
+
+    that.preview = function () {
+        that.execute();
     };
 
-    that.cancel = function () {
-
+    that.cancelPreview = function () {
+        that.undo();
     };
 
     that.execute = function () {
+
 
     };
 

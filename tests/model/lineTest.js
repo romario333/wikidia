@@ -40,7 +40,7 @@ describe("lineTest", function () {
         var line = WIKIDIA.model.line({x: 10});
         line.change(handler.change);
 
-        line.changeEventEnabled = false;
+        line.changeEventsEnabled = false;
         line.x = 20;
         expect(handler.change).not.toHaveBeenCalled();
 

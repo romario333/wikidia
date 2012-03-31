@@ -75,6 +75,11 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     }
 
     function init() {
+        // TODO: popsat zakladni filozofii:
+        // 1) podle modelu se postavi views
+        // 2) veskere dalsi manipulace s views by se mela delat pokud mozno pres model pomoci observeru
+        //      (ale snazim se minimalizovat pocet observeru, v tuhle chvili je to snad jen diagramPresenter)
+
         // TODO: should be at the top, so I can clearly see dependencies
         commandExecutor = WIKIDIA.presenter.commandExecutor();
 
@@ -94,6 +99,9 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         diagramView.update();
 
         diagramView.click(onDiagramClick);
+
+        diagram.itemAdded(onItemAdded);
+        diagram.itemRemoved(onItemRemoved);
 
         items.forEach(function (item) {
             updateItem(item);
@@ -207,6 +215,20 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         throw new Error("Item not found.");
     };
 
+    function onItemAdded(diagram, item) {
+        if (item.isLine) {
+            addLine(item);
+        } else if (item.isNode) {
+            addNode(item);
+        } else {
+            throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.kind}));
+        }
+    }
+
+    function onItemRemoved(diagram, item) {
+        // TODO: remove view from diagramView
+    }
+
     // TODO: weird
     function onNodeChange(node) {
         updateItem(items.itemForData(node));
@@ -306,7 +328,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         var node = items.itemForView(nodeView);
         node.addConnection(line);
 
-        line.changeEventEnabled = false;
+        line.changeEventsEnabled = false;
         // TODO: to by chtelo zapouzdrit
         itemToCreate = addLine(line);
         whichEndOfLine = "2";
@@ -328,7 +350,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
 
     function onNodeConnectPointDragEnd(nodeView, dx, dy) {
         var line = itemToCreate.data;
-        line.changeEventEnabled = true;
+        line.changeEventsEnabled = true;
         itemToCreate = undefined;
     }
 
@@ -369,7 +391,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
             whichEndOfLine = "2";
         }
 
-        line.changeEventEnabled = false;
+        line.changeEventsEnabled = false;
     }
 
     function onLineConnectPointDragMove(lineView, dx, dy) {
@@ -387,7 +409,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
 
     function onLineConnectPointDragEnd(lineView, dx, dy) {
         var line = items.itemForView(lineView);
-        line.changeEventEnabled = true;
+        line.changeEventsEnabled = true;
     }
 
     function onLineMouseEnter(lineView) {
