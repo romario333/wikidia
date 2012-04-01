@@ -1,7 +1,7 @@
 var WIKIDIA = WIKIDIA || {};
 WIKIDIA.presenter = WIKIDIA.presenter || {};
 
-WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
+WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory) {
     "use strict";
 
     var utils = WIKIDIA.utils;
@@ -29,8 +29,8 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         items = [],
         selection,
         commandInProgress,
-        itemToCreate,
-        isCtrlKeyDown = false;
+        isCtrlKeyDown = false,
+        isCreatingLineFromNode = true;
 
     function multipleSelection() {
         var that = {};
@@ -84,6 +84,9 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         commandExecutor = WIKIDIA.presenter.commandExecutor();
 
         diagramView.gridStep = GRID_STEP;
+        diagramView.update();
+        diagramView.click(onDiagramClick);
+
         diagram.items().forEach(function (item) {
             if (item.isNode) {
                 addNode(item);
@@ -96,9 +99,6 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
 
         });
 
-        diagramView.update();
-
-        diagramView.click(onDiagramClick);
 
         diagram.itemAdded(onItemAdded);
         diagram.itemRemoved(onItemRemoved);
@@ -128,7 +128,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
 
     function addNode(node) {
         // TODO: I should not pass node to view
-        var nodeView = WIKIDIA.view.svg.nodeView(diagramView, node);
+        var nodeView = viewFactory.nodeView(diagramView, node);
 
         var item = utils.objectWithId();
         item.data = node;
@@ -162,7 +162,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     }
 
     function addLine(line) {
-        var lineView = WIKIDIA.view.svg.lineView(diagramView);
+        var lineView = viewFactory.lineView(diagramView);
 
         var item = utils.objectWithId();
         item.data = line;
@@ -316,6 +316,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     function onNodeConnectPointDragStart(nodeView, connectPointX, connectPointY) {
         var node = items.itemForView(nodeView).data;
         commandInProgress = WIKIDIA.presenter.createLineCommand(diagram, node, connectPointX, connectPointY);
+        isCreatingLineFromNode = true;
     }
 
     function onNodeConnectPointDragMove(nodeView, dx, dy) {
@@ -337,16 +338,16 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     function onNodeConnectPointDragEnd(nodeView, dx, dy) {
         commandInProgress.cancelPreview();
         commandExecutor.execute(commandInProgress);
+        isCreatingLineFromNode = false;
     }
 
     function onNodeMouseEnter(nodeView) {
-        console.log("node mouse enter");
-        nodeView.showResizeBorder();
-
+        if (isCtrlKeyDown) {
+            nodeView.showResizeBorder();
+        }
     }
 
     function onNodeMouseLeave(nodeView) {
-        console.log("node mouse leave");
         nodeView.hideResizeBorder();
         nodeView.hideConnectionPoints();
     }
@@ -354,12 +355,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     function onNodeMouseMove(nodeView, x, y) {
         var node = items.itemForView(nodeView);
         var renderer = renderers.forItem(node);
-        if (isCtrlKeyDown) {
-            renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
-        } else {
-            nodeView.hideConnectionPoints();
-        }
-
+        renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
     }
 
     var whichEndOfLine; // TODO: to the top
@@ -400,15 +396,19 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     }
 
     function onLineMouseEnter(lineView) {
-        var line = items.itemForView(lineView).data;
-        lineView.showConnectionPoints([
-            {x: line.x1, y: line.y1},
-            {x: line.x2, y: line.y2}
-        ]);
+        if (!isCreatingLineFromNode) {
+            var line = items.itemForView(lineView).data;
+            lineView.showConnectionPoints([
+                {x: line.x1, y: line.y1},
+                {x: line.x2, y: line.y2}
+            ]);
+        }
     }
 
     function onLineMouseLeave(lineView) {
-        lineView.hideConnectionPoints();
+        if (!isCreatingLineFromNode) {
+            lineView.hideConnectionPoints();
+        }
     }
 
     /**
@@ -440,7 +440,9 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
         return pointOrRect;
     }
 
-
+    that._test = {
+        items: items
+    };
 
     init();
 

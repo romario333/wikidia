@@ -1,6 +1,6 @@
 /*global WIKIDIA, describe, beforeEach, it, expect*/
 
-describe("jsonTest", function () {
+describe("json", function () {
     "use strict";
 
     it("can stringify with property getters and setters", function () {

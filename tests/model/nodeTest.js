@@ -1,24 +1,38 @@
 /*global WIKIDIA, describe, beforeEach, it, expect, spyOn*/
 
-describe("nodeTest", function () {
+describe("node", function () {
     "use strict";
 
     var handler;
+    var diagram;
 
     beforeEach(function () {
         handler = {change: function () {}};
         spyOn(handler, "change");
+        diagram = WIKIDIA.model.diagram();
     });
 
+    function createNode(spec) {
+        var node = WIKIDIA.model.node(spec);
+        diagram.addItem(node);
+        return node;
+    }
+
+    function createLine(spec) {
+        var line = WIKIDIA.model.line(spec);
+        diagram.addItem(line);
+        return line;
+    }
+
     it("has sane defaults", function () {
-        var node = WIKIDIA.model.node();
+        var node = createNode();
         expect(node.text).toEqual("");
         expect(node.x).toEqual(0);
         expect(node.y).toEqual(0);
     });
 
     it("fires change event when its property is changed", function () {
-        var node = WIKIDIA.model.node({x: 10});
+        var node = createNode({x: 10});
         node.change(handler.change);
 
         node.x = 10;
@@ -29,7 +43,7 @@ describe("nodeTest", function () {
         expect(handler.change).toHaveBeenCalledWith(node);
 
         // when you manipulate connections, change event should be fired
-        var line = WIKIDIA.model.line();
+        var line = createLine();
         node.addConnection(line);
         expect(handler.change).toHaveBeenCalledWith(node);
         node.removeConnection(line);
@@ -37,14 +51,14 @@ describe("nodeTest", function () {
     });
 
     it("doesn't fire change event when fireChange is false", function () {
-        var node = WIKIDIA.model.node({x: 10});
+        var node = createNode({x: 10});
         node.change(handler.change);
 
         node.changeEventsEnabled = false;
         node.x = 20;
         expect(handler.change).not.toHaveBeenCalled();
 
-        var line = WIKIDIA.model.line();
+        var line = createLine();
         node.addConnection(line);
         expect(handler.change).not.toHaveBeenCalled();
         node.removeConnection(line);
@@ -52,7 +66,7 @@ describe("nodeTest", function () {
     });
 
     it("allows you to fire change event manually", function () {
-        var node = WIKIDIA.model.node();
+        var node = createNode();
         node.change(handler.change);
 
         node.fireChange();
@@ -60,9 +74,9 @@ describe("nodeTest", function () {
     });
 
     it("allows you to add connection to line", function () {
-        var node = WIKIDIA.model.node();
-        var line1 = WIKIDIA.model.line();
-        var line2 = WIKIDIA.model.line();
+        var node = createNode();
+        var line1 = createLine();
+        var line2 = createLine();
 
         node.addConnection(line1);
         node.addConnection(line2);
@@ -74,9 +88,9 @@ describe("nodeTest", function () {
     });
 
     it("can create shallow copy of itself", function () {
-        var node = WIKIDIA.model.node({x: 1, y: 2, width: 3, height: 4, text: "original"});
-        var line1 = WIKIDIA.model.line();
-        var line2 = WIKIDIA.model.line();
+        var node = createNode({x: 1, y: 2, width: 3, height: 4, text: "original"});
+        var line1 = createLine();
+        var line2 = createLine();
         node.addConnection(line1);
         node.change(handler.change);
 
@@ -86,6 +100,7 @@ describe("nodeTest", function () {
         expect(nodeCopy.text).toEqual("copy");
         expect(node.text).toEqual("original");
 
+        nodeCopy.id = 100; // nodeCopy needs id, otherwise adding of connection would fail
         nodeCopy.addConnection(line2);
         expect(node.connections()[0]).toBe(nodeCopy.connections()[0]);
         expect(node.connections().length).toEqual(1);
@@ -95,4 +110,22 @@ describe("nodeTest", function () {
         expect(node._test.onChangeHandlers.length).toEqual(1);
         expect(nodeCopy._test.onChangeHandlers.length).toEqual(2);
     });
+
+    it("connection to item without id cannot be added", function () {
+        var node1 = WIKIDIA.model.node();
+        var node2 = WIKIDIA.model.node();
+
+        node1.id = 1;
+        node2.id = null;
+        expect(function () {
+            node1.addConnection(node2);
+        }).toThrow("Cannot add connection to item, it has no id set.");
+
+        node1.id = null;
+        node2.id = 1;
+        expect(function () {
+            node1.addConnection(node2);
+        }).toThrow("Cannot add connection to item, it has no id set.");
+    });
+
 });

@@ -1,6 +1,6 @@
 /*global WIKIDIA, describe, beforeEach, it, expect, spyOn*/
 
-describe("diagramTest", function () {
+describe("diagram", function () {
     "use strict";
 
     var diagram;
@@ -62,7 +62,27 @@ describe("diagramTest", function () {
         expect(handler.itemAdded).toHaveBeenCalledWith(diagram, node);
         diagram.removeItem(node);
         expect(handler.itemRemoved).toHaveBeenCalledWith(diagram, node);
-
-
     });
+
+    it("every item is given unique id when it's added to diagram, and this id is unset when it is removed from diagram", function () {
+        var node = WIKIDIA.model.node();
+        var line = WIKIDIA.model.line();
+
+        expect(node.id).toBeNull();
+        expect(line.id).toBeNull();
+
+        diagram.addItem(node);
+        diagram.addItem(line);
+
+        expect(node.id).not.toBeNull();
+        expect(line.id).not.toBeNull();
+        expect(node.id).not.toEqual(line.id);
+
+        diagram.removeItem(node);
+        diagram.removeItem(line);
+
+        expect(node.id).toBeNull();
+        expect(line.id).toBeNull();
+    });
+
 });

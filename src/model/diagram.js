@@ -7,9 +7,12 @@ WIKIDIA.model.diagram = function () {
     var that = {},
         items = [],
         onItemAddedHandlers = [],
-        onItemRemovedHandlers = [];
+        onItemRemovedHandlers = [],
+        lastId = 0;
 
     that.addItem = function (item) {
+        lastId++;
+        item.id = lastId;
         items.push(item);
         if (that.changeEventsEnabled) {
             that.fireItemAdded(item);
@@ -22,6 +25,7 @@ WIKIDIA.model.diagram = function () {
             throw new Error("Item '{item}' not found in connections.".supplant({item: item}));
         }
         items.splice(i, 1);
+        item.id = null;
         if (that.changeEventsEnabled) {
             that.fireItemRemoved(item);
         }

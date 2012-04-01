@@ -291,17 +291,16 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
 
     that.PADDING = PADDING;
 
-    that._test = {
-        contentSvg: function () {
-            var svg = "", i;
-            var el = content[0]; // unwrap from jQuery
+    that._test = {};
+    that._test.contentSvg = function () {
+        var svg = "", i;
+        var el = content[0]; // unwrap from jQuery
 
-            for (i = 0; i < el.childNodes.length; i++) {
-                svg += svgHelper.printSvg(el.childNodes[i]);
-            }
-
-            return svg;
+        for (i = 0; i < el.childNodes.length; i++) {
+            svg += svgHelper.printSvg(el.childNodes[i]);
         }
+
+        return svg;
     };
 
     //TODO:

@@ -14,7 +14,7 @@ WIKIDIA.model.node = function (spec) {
     // inner constructor (I need this to support cloning) TODO: :-( maybe pseudo-privacy would be easier
     function nodeInner (spec, connections, onChangeHandlers) {
 
-        var that = utils.objectWithId(),
+        var that = WIKIDIA.model.item(),
             observableProperties = {};
 
         // TODO: how fast will this be compared to function call and simple property access?
@@ -74,6 +74,10 @@ WIKIDIA.model.node = function (spec) {
         // TODO: DRY
         // TODO: this method should be shared only by line and node
         that._addConnection = function (item) {
+            if (!item.id) {
+                throw new Error("Cannot add connection to item, it has no id set.");
+            }
+
             connections.push(item);
 
             if (that.changeEventsEnabled) {
@@ -89,6 +93,7 @@ WIKIDIA.model.node = function (spec) {
         that._removeConnection = function (item) {
             var i = connections.indexOf(item);
             if (i === -1) {
+                // TODO: make sure I have sane string representation of item for these error
                 throw new Error("Item '{item}' not found in connections.".supplant({item: item}));
             }
             connections.splice(i, 1);

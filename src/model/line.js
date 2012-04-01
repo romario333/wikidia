@@ -11,7 +11,7 @@ WIKIDIA.model.line = function (spec) {
 
     // inner constructor (I need this to support cloning)
     function lineInner(spec, connections, onChangeHandlers) {
-        var that = utils.objectWithId(),
+        var that = WIKIDIA.model.item(),
             observableProperties = {};
 
         // TODO: DRY
@@ -70,6 +70,10 @@ WIKIDIA.model.line = function (spec) {
 
         // TODO: this method should be shared only by line and node
         that._addConnection = function (item) {
+            if (!item.id) {
+                throw new Error("Cannot add connection to item, it has no id set.");
+            }
+
             connections.push(item);
 
             if (that.changeEventsEnabled) {
