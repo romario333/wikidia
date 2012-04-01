@@ -1,6 +1,8 @@
 var WIKIDIA = WIKIDIA || {};
 WIKIDIA.presenter = WIKIDIA.presenter || {};
 
+// TODO: it would be probably better not to store whole items in originalData
+
 WIKIDIA.presenter.moveCommand = function (items) {
     "use strict";
 
@@ -203,6 +205,7 @@ WIKIDIA.presenter.createLineCommand = function (diagram, node, x1, y1) {
         that.connectTo(node);
     }
 
+    // TODO: I should be able to undo connection
     that.connectTo = function (item) {
         console.log("Connecting line to node {nodeId}.".supplant({nodeId: item.oid}));
         line.addConnection(item);
@@ -237,4 +240,45 @@ WIKIDIA.presenter.createLineCommand = function (diagram, node, x1, y1) {
     return that;
 };
 
-// TODO: moveLinePointCommand
+WIKIDIA.presenter.moveLinePointCommand = function (line, whichPoint) {
+    "use strict";
+
+    var that = {},
+        originalLine;
+
+    originalLine = line.copyShallow();
+
+    that.dx = 0;
+    that.dy = 0;
+
+    that.connectTo = function (item) {
+        console.log("Connecting line to node {nodeId}.".supplant({nodeId: item.oid}));
+        line.addConnection(item);
+    };
+
+    that.preview = function () {
+        that.execute();
+    };
+
+    that.cancelPreview = function () {
+        that.undo();
+    };
+
+    that.execute = function () {
+        line.changeEventsEnabled = false;
+        line["x" + whichPoint] = originalLine["x" + whichPoint] + that.dx;
+        line["y" + whichPoint] = originalLine["y" + whichPoint] + that.dy;
+        line.changeEventsEnabled = true;
+        line.fireChange();
+    };
+
+    that.undo = function () {
+        line.changeEventsEnabled = false;
+        line["x" + whichPoint] = originalLine["x" + whichPoint];
+        line["y" + whichPoint] = originalLine["y" + whichPoint];
+        line.changeEventsEnabled = true;
+        line.fireChange();
+    };
+
+    return that;
+};

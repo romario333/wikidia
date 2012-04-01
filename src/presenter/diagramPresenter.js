@@ -169,7 +169,6 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
         item.view = lineView;
         item.isSelected = false;
 
-        // TODO: je fakt vyhodny mit nodes i lines v jedny items kolekci? davam to tam jen kvuli hunch
         items.push(item);
 
         line.change(onLineChange);
@@ -265,8 +264,6 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
 
     }
 
-    var dragStartX, dragStartY;
-
     function onNodeDragStart(nodeView) {
         commandInProgress = WIKIDIA.presenter.moveCommand(selection.items());
     }
@@ -338,6 +335,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
     function onNodeConnectPointDragEnd(nodeView, dx, dy) {
         commandInProgress.cancelPreview();
         commandExecutor.execute(commandInProgress);
+        commandInProgress = null;
         isCreatingLineFromNode = false;
     }
 
@@ -358,41 +356,36 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
         renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
     }
 
-    var whichEndOfLine; // TODO: to the top
-
     function onLineConnectPointDragStart(lineView, connectPointX, connectPointY) {
-        // TODO: dragStartX uz nic moc nazev ted kdyz to pouzivam i tady
-        dragStartX = connectPointX;
-        dragStartY = connectPointY;
-
         lineView.hideConnectionPoints();
 
-        var line = items.itemForView(lineView);
+        var whichPoint;
+        var line = items.itemForView(lineView).data;
         if (line.x1 === connectPointX && line.x2 === connectPointY) {
-            whichEndOfLine = "1";
+            whichPoint = "1";
         } else {
-            whichEndOfLine = "2";
+            whichPoint = "2";
         }
 
-        line.changeEventsEnabled = false;
+        commandInProgress = WIKIDIA.presenter.moveLinePointCommand(line, whichPoint);
     }
 
     function onLineConnectPointDragMove(lineView, dx, dy) {
-        var line = items.itemForView(lineView).data;
-        var snapped = snapToGrid({x: dragStartX + dx, y: dragStartY + dy});
-        console.log("in = [{x}, {y}], snapped = [{sx}, {sy}]".supplant({x: dragStartX + dx, y: dragStartY + dy, sx: snapped.x, sy: snapped.y}));
-        console.dir(line);
-        line["x" + whichEndOfLine] = snapped.x;
-        line["y" + whichEndOfLine] = snapped.y;
-        line.fireChange();
+        var snapped = snapToGrid({x: dx, y: dy});
+        commandInProgress.dx = snapped.x;
+        commandInProgress.dy = snapped.y;
+        commandInProgress.preview();
     }
 
     function onLineConnectPointMouseUp(lineView, connectPointX, connectPointY) {
+        var line = items.itemForView(lineView).data;
+        commandInProgress.connectTo(line);
     }
 
     function onLineConnectPointDragEnd(lineView, dx, dy) {
-        var line = items.itemForView(lineView);
-        line.changeEventsEnabled = true;
+        commandInProgress.cancelPreview();
+        commandExecutor.execute(commandInProgress);
+        commandInProgress = null;
     }
 
     function onLineMouseEnter(lineView) {
