@@ -14,7 +14,7 @@ WIKIDIA.model.node = function (spec) {
     // inner constructor (I need this to support cloning) TODO: :-( maybe pseudo-privacy would be easier
     function nodeInner (spec, connections, onChangeHandlers) {
 
-        var that = {},
+        var that = utils.objectWithId(),
             observableProperties = {};
 
         // TODO: how fast will this be compared to function call and simple property access?

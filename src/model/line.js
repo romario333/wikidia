@@ -4,12 +4,14 @@ WIKIDIA.model = WIKIDIA.model || {};
 WIKIDIA.model.line = function (spec) {
     "use strict";
 
+    var utils = WIKIDIA.utils;
+
     var connections = [],
         onChangeHandlers = [];
 
     // inner constructor (I need this to support cloning)
     function lineInner(spec, connections, onChangeHandlers) {
-        var that = {},
+        var that = utils.objectWithId(),
             observableProperties = {};
 
         // TODO: DRY

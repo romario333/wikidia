@@ -314,44 +314,29 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     }
 
     function onNodeConnectPointDragStart(nodeView, connectPointX, connectPointY) {
-        dragStartX = connectPointX;
-        dragStartY = connectPointY;
-
-        var line = WIKIDIA.model.line({
-            x1: connectPointX,
-            y1: connectPointY,
-            x2: connectPointX,
-            y2: connectPointY
-        });
-        diagram.addItem(line);
-
-        var node = items.itemForView(nodeView);
-        node.addConnection(line);
-
-        line.changeEventsEnabled = false;
-        // TODO: to by chtelo zapouzdrit
-        itemToCreate = addLine(line);
-        whichEndOfLine = "2";
-
-        // TODO: neni hotove
+        var node = items.itemForView(nodeView).data;
+        commandInProgress = WIKIDIA.presenter.createLineCommand(diagram, node, connectPointX, connectPointY);
     }
 
     function onNodeConnectPointDragMove(nodeView, dx, dy) {
-        onLineConnectPointDragMove(itemToCreate.view, dx, dy);
+        var snapped = snapToGrid({x: dx, y: dy});
+        commandInProgress.x2 = commandInProgress.x1 + snapped.x;
+        commandInProgress.y2 = commandInProgress.y1 + snapped.y;
+        commandInProgress.preview();
     }
 
     function onNodeConnectPointMouseUp(nodeView, connectPointX, connectPointY) {
-        if (itemToCreate) {
-            var line = itemToCreate.data;
-            line.x2 = connectPointX;
-            line.y2 = connectPointY;
-        }
+        // TODO: musi bezet pred onNodeConnectPointDragEnd, jak to vynutit nebo testovat?
+        var node = items.itemForView(nodeView).data;
+        commandInProgress.connectTo(node);
+        commandInProgress.x2 = connectPointX;
+        commandInProgress.y2 = connectPointY;
     }
 
+    // TODO: tady se mi dx a dy v dragEnd uplne nehodi, muzu se spolehnout, ze dostanu dragMove s finalni souradnici?
     function onNodeConnectPointDragEnd(nodeView, dx, dy) {
-        var line = itemToCreate.data;
-        line.changeEventsEnabled = true;
-        itemToCreate = undefined;
+        commandInProgress.cancelPreview();
+        commandExecutor.execute(commandInProgress);
     }
 
     function onNodeMouseEnter(nodeView) {
