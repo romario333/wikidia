@@ -25,17 +25,17 @@ WIKIDIA.view.svg.lineView = function (diagramView, node) {
         connectPoints.attr("cursor", "default");
 
         element.mouseenter(function (e) {
-            if (!isConnectPointDragging && onMouseEnter) {
+            if (onMouseEnter) {
                 onMouseEnter(that);
             }
         });
         element.mouseleave(function (e) {
-            if (!isConnectPointDragging && onMouseLeave) {
+            if (onMouseLeave) {
                 onMouseLeave(that);
             }
         });
         element.mousemove(function (e) {
-            if (!isConnectPointDragging && onMouseMove) {
+            if (onMouseMove) {
                 onMouseMove(that, e.clientX, e.clientY);
             }
         });

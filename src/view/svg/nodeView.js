@@ -25,7 +25,7 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
     var element = diagramView.createElement("g", {class: "node"});
     var that = parent(element);
 
-    var content, eventBox, resizeBorder, connectPoints;
+    var content, eventBox, resizeBorder, connectPoint;
     var onDragStart, onDragMove, onDragEnd;
     var onResizeDragStart, onResizeDragMove, onResizeDragEnd;
     // TODO: join nebo joint?
@@ -40,8 +40,9 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
         content = that.createElement("g", {class: "content"});
         eventBox = that.createElement("rect", {class: "eventBox", opacity: 0, fill: "blue"});
         resizeBorder = that.createElement("g", {class: "resize-border", opacity: 0});
-        connectPoints = that.createElement("g", {class: "connect-points"});
-        connectPoints.attr("cursor", "default");
+        connectPoint = that.createElement("circle", {class: "connect-point", cx: 0, cy: 0, r: 6, fill: "red", stroke:"blue", display: "none"});
+        connectPoint.attr("cursor", "default");
+
 
         var dragHandler = dragEventHandler(element);
         dragHandler.dragStart(function (e) {
@@ -60,7 +61,7 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
             }
         });
 
-        var connectPointDragHandler = dragEventHandler(connectPoints);
+        var connectPointDragHandler = dragEventHandler(connectPoint);
         connectPointDragHandler.dragStart(function (e) {
             isConnectPointDragging = true;
             if (onConnectPointDragStart) {
@@ -82,7 +83,7 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
             }
         });
 
-        connectPoints.mouseup(function (e) {
+        connectPoint.mouseup(function (e) {
             if (onConnectPointMouseUp) {
                 var connectPointX = e.target.cx.baseVal.value;
                 var connectPointY = e.target.cy.baseVal.value;
@@ -91,17 +92,17 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
         });
 
         element.mouseenter(function (e) {
-            if (!isResizing && !isConnectPointDragging && onMouseEnter) {
+            if (!isResizing && onMouseEnter) {
                 onMouseEnter(that);
             }
         });
         element.mouseleave(function (e) {
-            if (!isResizing && !isConnectPointDragging && onMouseLeave) {
+            if (!isResizing && onMouseLeave) {
                 onMouseLeave(that);
             }
         });
         element.mousemove(function (e) {
-            if (!isResizing && !isConnectPointDragging && onMouseMove) {
+            if (!isResizing && onMouseMove) {
                 onMouseMove(that, e.clientX, e.clientY);
             }
         });
@@ -222,15 +223,14 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
     };
 
     // TODO: stejne jako u lineView, zajimave
-    that.showConnectionPoints = function (points) {
-        points.forEach(function (point) {
-            var p = svgHelper.createSvgElement("circle", {cx: point.x, cy: point.y, r: 6, fill: "red", stroke:"blue"});
-            connectPoints.append(p);
-        });
+    that.showConnectionPoint = function (point) {
+        console.log("showConnectionPoints");
+        connectPoint.attr({cx: point.x, cy: point.y, display: "block"});
     };
 
     that.hideConnectionPoints = function () {
-        connectPoints.empty();
+        console.log("hideConnectionPoints");
+        connectPoint.attr({display: "none"});
     };
 
     that.updateView = function (spec) {

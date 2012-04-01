@@ -340,11 +340,13 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram) {
     }
 
     function onNodeMouseEnter(nodeView) {
+        console.log("node mouse enter");
         nodeView.showResizeBorder();
 
     }
 
     function onNodeMouseLeave(nodeView) {
+        console.log("node mouse leave");
         nodeView.hideResizeBorder();
         nodeView.hideConnectionPoints();
     }

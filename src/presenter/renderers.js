@@ -45,7 +45,7 @@ WIKIDIA.presenter.nodeRenderer = function () {
 
         nodeView.hideConnectionPoints();
         if (nearestPoint) {
-            nodeView.showConnectionPoints([nearestPoint]);
+            nodeView.showConnectionPoint(nearestPoint);
         }
     };
 
