@@ -43,6 +43,7 @@ describe("node", function () {
         expect(handler.change).toHaveBeenCalledWith(node);
 
         // when you manipulate connections, change event should be fired
+        handler.change.reset();
         var line = createLine();
         node.addConnection(line);
         expect(handler.change).toHaveBeenCalledWith(node);
@@ -54,7 +55,7 @@ describe("node", function () {
         var node = createNode({x: 10});
         node.change(handler.change);
 
-        node.changeEventsEnabled = false;
+        node.changeEventsEnabled(false);
         node.x = 20;
         expect(handler.change).not.toHaveBeenCalled();
 
@@ -87,29 +88,29 @@ describe("node", function () {
         expect(connections).toContain(line2);
     });
 
-    it("can create shallow copy of itself", function () {
-        var node = createNode({x: 1, y: 2, width: 3, height: 4, text: "original"});
-        var line1 = createLine();
-        var line2 = createLine();
-        node.addConnection(line1);
-        node.change(handler.change);
-
-        var nodeCopy = node.copyShallow();
-
-        nodeCopy.text = "copy";
-        expect(nodeCopy.text).toEqual("copy");
-        expect(node.text).toEqual("original");
-
-        nodeCopy.id = 100; // nodeCopy needs id, otherwise adding of connection would fail
-        nodeCopy.addConnection(line2);
-        expect(node.connections()[0]).toBe(nodeCopy.connections()[0]);
-        expect(node.connections().length).toEqual(1);
-        expect(nodeCopy.connections().length).toEqual(2);
-
-        nodeCopy.change(handler.change);
-        expect(node._test.onChangeHandlers.length).toEqual(1);
-        expect(nodeCopy._test.onChangeHandlers.length).toEqual(2);
-    });
+//    it("can create shallow copy of itself", function () {
+//        var node = createNode({x: 1, y: 2, width: 3, height: 4, text: "original"});
+//        var line1 = createLine();
+//        var line2 = createLine();
+//        node.addConnection(line1);
+//        node.change(handler.change);
+//
+//        var nodeCopy = node.copyShallow();
+//
+//        nodeCopy.text = "copy";
+//        expect(nodeCopy.text).toEqual("copy");
+//        expect(node.text).toEqual("original");
+//
+//        nodeCopy.id = 100; // nodeCopy needs id, otherwise adding of connection would fail
+//        nodeCopy.addConnection(line2);
+//        expect(node.connections()[0]).toBe(nodeCopy.connections()[0]);
+//        expect(node.connections().length).toEqual(1);
+//        expect(nodeCopy.connections().length).toEqual(2);
+//
+//        nodeCopy.change(handler.change);
+//        expect(node._test.onChangeHandlers.length).toEqual(1);
+//        expect(nodeCopy._test.onChangeHandlers.length).toEqual(2);
+//    });
 
     it("connection to item without id cannot be added", function () {
         var node1 = WIKIDIA.model.node();

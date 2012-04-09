@@ -39,7 +39,7 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
         element.attr("cursor", "move");
         content = that.createElement("g", {class: "content"});
         eventBox = that.createElement("rect", {class: "eventBox", opacity: 0, fill: "blue"});
-        resizeBorder = that.createElement("g", {class: "resize-border", opacity: 0});
+        resizeBorder = that.createElement("g", {class: "resize-border", display: "none"});
         connectPoint = that.createElement("circle", {class: "connect-point", cx: 0, cy: 0, r: 6, fill: "red", stroke:"blue", display: "none"});
         connectPoint.attr("cursor", "default");
 
@@ -110,11 +110,13 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
     }
 
     that.showResizeBorder = function () {
-        resizeBorder.attr("opacity", 1);
+        console.log("showResizeBorder");
+        resizeBorder.attr("display", "block");
     };
 
     that.hideResizeBorder = function () {
-        resizeBorder.attr("opacity", 0);
+        console.log("hideResizeBorder");
+        resizeBorder.attr("display", "none");
     };
 
     function updateResizeBorder(rect) {
@@ -224,12 +226,10 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
 
     // TODO: stejne jako u lineView, zajimave
     that.showConnectionPoint = function (point) {
-        console.log("showConnectionPoints");
         connectPoint.attr({cx: point.x, cy: point.y, display: "block"});
     };
 
     that.hideConnectionPoints = function () {
-        console.log("hideConnectionPoints");
         connectPoint.attr({display: "none"});
     };
 

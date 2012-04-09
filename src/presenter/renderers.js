@@ -92,10 +92,10 @@ WIKIDIA.presenter.lineRenderer = function () {
         var lineView = item.view;
 
         lineView.clear();
-        lineView.updateView({x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2});
+        lineView.updateView({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y});
         lineView.isSelected(item.isSelected);
 
-        lineView.line({x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2, stroke: "black"});
+        lineView.line({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y, stroke: "black"});
         // TODO: text
     };
 

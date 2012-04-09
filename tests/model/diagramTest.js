@@ -49,14 +49,14 @@ describe("diagram", function () {
         diagram.itemAdded(handler.itemAdded);
         diagram.itemRemoved(handler.itemRemoved);
 
-        diagram.changeEventsEnabled = false;
+        diagram.changeEventsEnabled(false);
 
         diagram.addItem(node);
         expect(handler.itemAdded).not.toHaveBeenCalled();
         diagram.removeItem(node);
         expect(handler.itemRemoved).not.toHaveBeenCalled();
 
-        diagram.changeEventsEnabled = true;
+        diagram.changeEventsEnabled(true);
 
         diagram.addItem(node);
         expect(handler.itemAdded).toHaveBeenCalledWith(diagram, node);
@@ -83,6 +83,8 @@ describe("diagram", function () {
 
         expect(node.id).toBeNull();
         expect(line.id).toBeNull();
+
+        // TODO: test points
     });
 
 });

@@ -284,9 +284,6 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
         commandInProgress = null;
     }
 
-    // TODO: delete
-    var dragStartWidth, dragStartHeight;
-
     function onNodeResizeDragStart(nodeView) {
         commandInProgress = WIKIDIA.presenter.resizeNodeCommand(selection.items());
     }
@@ -326,7 +323,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
     function onNodeConnectPointMouseUp(nodeView, connectPointX, connectPointY) {
         // TODO: musi bezet pred onNodeConnectPointDragEnd, jak to vynutit nebo testovat?
         var node = items.itemForView(nodeView).data;
-        commandInProgress.connectTo(node);
+        commandInProgress.itemToConnect = node;
         commandInProgress.x2 = connectPointX;
         commandInProgress.y2 = connectPointY;
     }
@@ -359,15 +356,9 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
     function onLineConnectPointDragStart(lineView, connectPointX, connectPointY) {
         lineView.hideConnectionPoints();
 
-        var whichPoint;
         var line = items.itemForView(lineView).data;
-        if (line.x1 === connectPointX && line.x2 === connectPointY) {
-            whichPoint = "1";
-        } else {
-            whichPoint = "2";
-        }
-
-        commandInProgress = WIKIDIA.presenter.moveLinePointCommand(line, whichPoint);
+        var point = line.pointAt(connectPointX, connectPointY);
+        commandInProgress = WIKIDIA.presenter.moveLinePointCommand(point);
     }
 
     function onLineConnectPointDragMove(lineView, dx, dy) {
@@ -379,7 +370,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
 
     function onLineConnectPointMouseUp(lineView, connectPointX, connectPointY) {
         var line = items.itemForView(lineView).data;
-        commandInProgress.connectTo(line);
+        commandInProgress.itemToConnect = line.pointAt(connectPointX, connectPointY);
     }
 
     function onLineConnectPointDragEnd(lineView, dx, dy) {
@@ -391,10 +382,7 @@ WIKIDIA.presenter.diagramPresenter = function (diagramView, diagram, viewFactory
     function onLineMouseEnter(lineView) {
         if (!isCreatingLineFromNode) {
             var line = items.itemForView(lineView).data;
-            lineView.showConnectionPoints([
-                {x: line.x1, y: line.y1},
-                {x: line.x2, y: line.y2}
-            ]);
+            lineView.showConnectionPoints(line.points());
         }
     }
 

@@ -8,13 +8,20 @@ WIKIDIA.model.diagram = function () {
         items = [],
         onItemAddedHandlers = [],
         onItemRemovedHandlers = [],
+        changeEventsEnabled = true,
         lastId = 0;
 
     that.addItem = function (item) {
-        lastId++;
-        item.id = lastId;
+        item.id = ++lastId;
+
+        if (item.isLine) {
+            item.points().forEach(function (point) { // TODO: put to line via some generic callback?
+                point.id = ++lastId;
+            });
+        }
+
         items.push(item);
-        if (that.changeEventsEnabled) {
+        if (changeEventsEnabled) {
             that.fireItemAdded(item);
         }
     };
@@ -26,7 +33,14 @@ WIKIDIA.model.diagram = function () {
         }
         items.splice(i, 1);
         item.id = null;
-        if (that.changeEventsEnabled) {
+
+        if (item.isLine) {
+            item.points().forEach(function (point) {
+                point.id = null;
+            });
+        }
+
+        if (changeEventsEnabled) {
             that.fireItemRemoved(item);
         }
     };
@@ -35,7 +49,13 @@ WIKIDIA.model.diagram = function () {
         return items;
     };
 
-    that.changeEventsEnabled = true;
+    that.changeEventsEnabled = function (value) {
+        if (arguments.length === 0) {
+            return changeEventsEnabled;
+        } else {
+            changeEventsEnabled = value;
+        }
+    };
 
     that.itemAdded = function (handler) {
         onItemAddedHandlers.push(handler);

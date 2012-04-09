@@ -1,132 +1,74 @@
 var WIKIDIA = WIKIDIA || {};
 WIKIDIA.presenter = WIKIDIA.presenter || {};
 
-// TODO: it would be probably better not to store whole items in originalData
-
 WIKIDIA.presenter.moveCommand = function (items) {
     "use strict";
 
     var that = {},
-        originalData = [];
-
-    items.forEach(function (item) {
-        // TODO: index always by same thing (by data id)
-        originalData[item.oid] = item.data.copyShallow();
-        // we have to backup connected lines for nodes too
-        if (item.data.isNode) {
-            item.data.connections().forEach(function (connection) {
-                originalData[connection.oid] = connection.copyShallow();
-            });
-        }
-    });
-
-    function isBetween(value, from, to) {
-        return value >= from && value <= to;
-    }
-
-    // TODO: stalo by za uvahu predelat, aby prijimalo x a y?
+        lastPreviewDx = 0,
+        lastPreviewDy = 0;
     that.dx = 0;
     that.dy = 0;
 
     that.preview = function () {
-        that.execute();
+        move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
+        lastPreviewDx = that.dx;
+        lastPreviewDy = that.dy;
     };
 
     that.cancelPreview = function () {
-        that.undo();
+        move(-that.dx, -that.dy);
     };
 
     that.execute = function () {
+        move(that.dx, that.dy);
+    };
+
+    that.undo = function () {
+        move(-that.dx, -that.dy);
+    };
+
+    function move(dx, dy) {
+        console.log("move {dx}, {dy}".supplant({dx: dx, dy: dy}));
         items.forEach(function (item) {
             if (item.data.isNode) {
                 var node = item.data;
-                var originalNode = originalData[item.oid];
-                node.changeEventsEnabled  = false;
-                node.x = originalNode.x + that.dx;
-                node.y = originalNode.y + that.dy;
-                node.changeEventsEnabled  = true;
+                node.changeEventsEnabled(false);
+                node.x += dx;
+                node.y += dy;
+                node.changeEventsEnabled(true);
                 node.fireChange();
 
                 // TODO: I will have to do the same for resize command
                 // update lines connected to node
                 node.connections().forEach(function (connection) {
-                    if (connection.isLine) {
-                        // TODO: ugly way how to find which end of line is connected to this node
-                        var originalLine = originalData[connection.oid];
-                        var whichEnd;
-                        if (isBetween(originalLine.x1, originalNode.x, originalNode.x + originalNode.width) && isBetween(originalLine.y1, originalNode.y, originalNode.y + originalNode.height)) {
-                            whichEnd = "1";
-                        } else {
-                            whichEnd = "2";
-                        }
-                        console.log("whichEnd=" + whichEnd);
-
+                    if (connection.isLinePoint) {
                         // update line to match new node position
-                        var line = connection;
-                        line.changeEventsEnabled = false;
-                        line["x" + whichEnd] = originalLine["x" + whichEnd] + that.dx;
-                        line["y" + whichEnd] = originalLine["y" + whichEnd] + that.dy;
-                        line.changeEventsEnabled = true;
-                        line.fireChange();
+                        var point = connection;
+                        point.line.changeEventsEnabled(false);
+                        point.x += dx;
+                        point.y += dy;
+                        point.line.changeEventsEnabled(true);
+                        point.line.fireChange();
                     }
                 });
 
 
             } else if (item.data.isLine) {
                 var line = item.data;
-                var originalLine = originalData[item.oid];
-                line.changeEventsEnabled = false;
-                line.x1 = originalLine.x1 + that.dx;
-                line.y1 = originalLine.y1 + that.dy;
-                line.x2 = originalLine.x2 + that.dx;
-                line.y2 = originalLine.y2 + that.dy;
-                line.changeEventsEnabled  = true;
-                line.fireChange();
-            } else {
-                throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.data.kind}));
-            }
-        });
-    };
-
-    that.undo = function () {
-        items.forEach(function (item) {
-            if (item.data.isNode) {
-                var node = item.data;
-                var originalNode = originalData[item.oid];
-                node.changeEventsEnabled  = false;
-                node.x = originalNode.x;
-                node.y = originalNode.y;
-                node.changeEventsEnabled  = true;
-                node.fireChange();
-                // restore lines connected to node
-                node.connections().forEach(function (connection) {
-                    if (connection.isLine) {
-                        var line = connection;
-                        var originalLine = originalData[connection.oid];
-                        line.changeEventsEnabled = false;
-                        line.x1 = originalLine.x1;
-                        line.y1 = originalLine.y1;
-                        line.x2 = originalLine.x2;
-                        line.y2 = originalLine.y2;
-                        line.changeEventsEnabled  = true;
-                        line.fireChange();
-                    }
+                line.changeEventsEnabled(false);
+                line.points().forEach(function (point) {
+                    point.x += dx;
+                    point.y += dy;
                 });
-            } else if (item.data.isLine) {
-                var line = item.data;
-                var originalLine = originalData[item.oid];
-                line.changeEventsEnabled = false;
-                line.x1 = originalLine.x1;
-                line.y1 = originalLine.y1;
-                line.x2 = originalLine.x2;
-                line.y2 = originalLine.y2;
-                line.changeEventsEnabled  = true;
+                line.changeEventsEnabled(true);
                 line.fireChange();
             } else {
                 throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.data.kind}));
             }
         });
-    };
+    }
+
 
     return that;
 };
@@ -135,55 +77,44 @@ WIKIDIA.presenter.resizeNodeCommand = function (items) {
     "use strict";
 
     var that = {},
-        originalData = [];
-
-    // TODO: DRY: bulkCommand?
-    items.forEach(function (item) {
-        originalData[item.oid] = item.data.copyShallow();
-    });
+        lastDWidth = 0,
+        lastDHeight = 0;
 
     that.dWidth = 0;
     that.dHeight = 0;
 
     that.preview = function () {
-        that.execute();
+        resize(that.dWidth - lastDWidth, that.dHeight - lastDHeight);
+        lastDWidth = that.dWidth;
+        lastDHeight = that.dHeight;
     };
 
     that.cancelPreview = function () {
-        that.undo();
+        resize(-that.dWidth, -that.dHeight);
     };
 
     that.execute = function () {
-        items.forEach(function (item) {
-            if (!item.data.isNode) {
-                throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.data.kind}));
-            }
-
-            var node = item.data;
-            var originalNode = originalData[item.oid];
-            node.changeEventsEnabled  = false;
-            node.width = originalNode.width + that.dWidth;
-            node.height = originalNode.height + that.dHeight;
-            node.changeEventsEnabled  = true;
-            node.fireChange();
-        });
+        resize(that.dWidth, that.dHeight);
     };
 
     that.undo = function () {
+        resize(-that.dWidth, -that.dHeight);
+    };
+
+    function resize(dWidth, dHeight) {
         items.forEach(function (item) {
             if (!item.data.isNode) {
                 throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.data.kind}));
             }
 
             var node = item.data;
-            var originalNode = originalData[item.oid];
-            node.changeEventsEnabled  = false;
-            node.width = originalNode.width;
-            node.height = originalNode.height;
-            node.changeEventsEnabled  = true;
+            node.changeEventsEnabled(false);
+            node.width += dWidth;
+            node.height += dHeight;
+            node.changeEventsEnabled(true);
             node.fireChange();
         });
-    };
+    }
 
     return that;
 };
@@ -194,91 +125,130 @@ WIKIDIA.presenter.createLineCommand = function (diagram, node, x1, y1) {
     var that = {},
         line;
 
-    function init() {
-        that.x1 = x1;
-        that.y1 = y1;
-        that.x2 = x1;
-        that.y2 = y1;
+    that.x1 = x1;
+    that.y1 = y1;
+    that.x2 = x1;
+    that.y2 = y1;
+    that.itemToConnect = null;
 
-        line = WIKIDIA.model.line();
-        diagram.addItem(line);
-        that.connectTo(node);
-    }
-
-    // TODO: I should be able to undo connection
-    that.connectTo = function (item) {
-        console.log("Connecting line to node {nodeId}.".supplant({nodeId: item.oid}));
-        line.addConnection(item);
-    };
+    line = WIKIDIA.model.line();
+    diagram.addItem(line);
 
     that.preview = function () {
-        that.execute();
+        line.changeEventsEnabled(false);
+        line.points(0).x = that.x1;
+        line.points(0).y = that.y1;
+        line.points(1).x = that.x2;
+        line.points(1).y = that.y2;
+        line.changeEventsEnabled(true);
+        line.fireChange();
     };
 
     that.cancelPreview = function () {
-        that.undo();
     };
 
     that.execute = function () {
-        line.changeEventsEnabled = false;
-        line.x1 = that.x1;
-        line.y1 = that.y1;
-        line.x2 = that.x2;
-        line.y2 = that.y2;
-        line.changeEventsEnabled = true;
+        line.changeEventsEnabled(false);
+        line.points(0).x = that.x1;
+        line.points(0).y = that.y1;
+        line.points(1).x = that.x2;
+        line.points(1).y = that.y2;
+
+        // connect starting point of the line to the node from which it was created by dragging
+        line.points(0).addConnection(node);
+        // if end point was provided, connect line to it too
+        if (that.itemToConnect) {
+            line.points(1).addConnection(that.itemToConnect);
+        }
+
+        line.changeEventsEnabled(true);
         line.fireChange();
     };
 
     that.undo = function () {
         // TODO:
         //diagram.removeItem(line);
-
+        // TODO: I should remove connections (or they should ideally remove automatically)
     };
-
-    init();
 
     return that;
 };
 
-WIKIDIA.presenter.moveLinePointCommand = function (line, whichPoint) {
+WIKIDIA.presenter.moveLinePointCommand = function (point) {
     "use strict";
 
     var that = {},
-        originalLine;
-
-    originalLine = line.copyShallow();
+        lastPreviewDx = 0,
+        lastPreviewDy = 0,
+        wasConnectedToItem;
 
     that.dx = 0;
     that.dy = 0;
+    that.connectToItem = null;
 
-    that.connectTo = function (item) {
-        console.log("Connecting line to node {nodeId}.".supplant({nodeId: item.oid}));
-        line.addConnection(item);
-    };
+
+    // I'm assuming that point can have only one connection at a time
+    if (point.connections().length > 1) {
+        // TODO: if this is true then I should have this invariant in point#addConnection
+        throw new Error("More that one connection on point '{id}'.".supplant(point));
+    }
+
+    if (point.connections().length === 1) {
+        wasConnectedToItem = point.connections(0);
+    }
 
     that.preview = function () {
-        that.execute();
+        move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
+        lastPreviewDx = that.dx;
+        lastPreviewDy = that.dy;
     };
 
     that.cancelPreview = function () {
-        that.undo();
+        move(-that.dx, -that.dy);
     };
 
     that.execute = function () {
-        line.changeEventsEnabled = false;
-        line["x" + whichPoint] = originalLine["x" + whichPoint] + that.dx;
-        line["y" + whichPoint] = originalLine["y" + whichPoint] + that.dy;
-        line.changeEventsEnabled = true;
-        line.fireChange();
+        move(that.dx, that.dy);
+
+        // update connections
+        point.line.changeEventsEnabled(false);
+
+        if (wasConnectedToItem) {
+            point.removeConnection(wasConnectedToItem);
+        }
+        if (that.connectToItem) {
+            point.addConnection(that.connectToItem);
+        }
+
+        point.line.changeEventsEnabled(true);
+        point.line.fireChange();
     };
 
     that.undo = function () {
-        line.changeEventsEnabled = false;
-        line["x" + whichPoint] = originalLine["x" + whichPoint];
-        line["y" + whichPoint] = originalLine["y" + whichPoint];
-        line.changeEventsEnabled = true;
-        line.fireChange();
+        move(-that.dx, -that.dy);
+
+        // restore connections
+        point.line.changeEventsEnabled(false);
+
+        if (wasConnectedToItem) {
+            point.addConnection(wasConnectedToItem);
+        }
+        if (that.connectToItem) {
+            point.removeConnection(that.connectToItem);
+        }
+
+        point.line.changeEventsEnabled(true);
+        point.line.fireChange();
+
     };
+
+    function move(dx, dy) {
+        point.line.changeEventsEnabled(false);
+        point.x += dx;
+        point.y += dy;
+        point.line.changeEventsEnabled(true);
+        point.line.fireChange();
+    }
 
     return that;
 };

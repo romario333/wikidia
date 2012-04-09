@@ -4,125 +4,92 @@ WIKIDIA.model = WIKIDIA.model || {};
 WIKIDIA.model.line = function (spec) {
     "use strict";
 
-    var utils = WIKIDIA.utils;
+    var that = WIKIDIA.model.item(),
+        points = [];
 
-    var connections = [],
-        onChangeHandlers = [];
+    spec = spec || {};
 
-    // inner constructor (I need this to support cloning)
-    function lineInner(spec, connections, onChangeHandlers) {
-        var that = WIKIDIA.model.item(),
-            observableProperties = {};
+    // line has always two points right now, in the future it should be possible to add or remove arbitrary
+    // number of points
+    points.push(point({x: spec.x1 || 0, y: spec.y1 || 0}, that));
+    points.push(point({x: spec.x2 || 0, y: spec.y2 || 0}, that));
 
-        // TODO: DRY
-        function addObservableProperty(propertyName, defaultValue) {
-            Object.defineProperty(that, propertyName, {
-                get: function () {
-                    return observableProperties[propertyName];
-                },
-                set: function (value) {
-                    var oldValue = observableProperties[propertyName];
-                    if (value !== oldValue && that.changeEventsEnabled) {
-                        // value changed, fire change event
-                        that.fireChange();
-                    }
-                    observableProperties[propertyName] = value;
-                }
-            });
+    // TODO: quick, not very effective implementation
+    // rebroadcast point change events as line change events
+    points.forEach(function (point) {
+        point.change(function () {
+            if (that.changeEventsEnabled()) {
+                that.fireChange();
+            }
+        });
 
-            observableProperties[propertyName] = defaultValue;
+        // remove change event related functions from point's interface, I want my clients to use line's interface
+        delete point.change;
+        delete point.changeEventsEnabled;
+        delete point.fireChange;
+    });
+
+
+    that._addObservableProperty("text", spec.text || "");
+    that._addObservableProperty("kind", spec.kind || "line");
+
+    that.points = function (i) {
+        // TODO: clients should not be able to add / remove points
+        if (arguments.length === 0) {
+            return points;
+        } else {
+            return points[i];
         }
+    };
 
-        spec = spec || {};
-
-        addObservableProperty("text", spec.text || "");
-        addObservableProperty("x1", spec.x1 || 0);
-        addObservableProperty("y1", spec.y1 || 0);
-        addObservableProperty("x2", spec.x2 || 0);
-        addObservableProperty("y2", spec.y2 || 0);
-        addObservableProperty("kind", spec.kind || "line");
-
-        // TODO: DRY (a pokud nebudu pouzivat, tak pryc)
-        /**
-         * Binds an event handler to the "change" event. This handler is called when any property
-         * is changed. You can disable firing of this event using {@link that.changeEventEnabled} property.
-         *
-         * @param handler
-         */
-        that.change = function (handler) {
-            onChangeHandlers.push(handler);
-        };
-
-        /**
-         * If true, change events are fired.
-         */
-        that.changeEventsEnabled = true;
-
-        /**
-         * Fires  change event. You want to use this typically when you disabled change events to do several changes
-         * and now want to notify observers about changes.
-         */
-        that.fireChange = function () {
-            onChangeHandlers.forEach(function (handler) {
-                handler(that);
-            });
-        };
-
-        // TODO: this method should be shared only by line and node
-        that._addConnection = function (item) {
-            if (!item.id) {
-                throw new Error("Cannot add connection to item, it has no id set.");
+    // TODO: rename na pointAt
+    /**
+     * Returns line point at the specified coordinates. Fails if no such point exists.
+     *
+     * @param x
+     * @param y
+     */
+    that.pointAt = function (x, y) {
+        for (var i = 0; i < points.length; i++) {
+            var p = points[i];
+            if (p.x === x && p.y === y) {
+                return p;
             }
+        }
+        throw new Error("Point [{x}, {y}] not found on line with id '{line}'.".supplant({x: x, y: y, line: that.id}));
+    };
 
-            connections.push(item);
+    that.addConnection = function (item) {
+        throw new Error("You can't connect to line directly, use function on its point instead.");
+    };
 
-            if (that.changeEventsEnabled) {
-                that.fireChange();
-            }
-        };
+    that.removeConnection = function (item) {
+        throw new Error("You can't disconnect from line directly, use function on its point instead.");
+    };
 
-        that.addConnection = function (item) {
-            that._addConnection(item);
-            item._addConnection(that);
-        };
+    that.connections = function () {
+        throw new Error("You can't get list of line connections directly, use function on its point instead.");
+    };
 
+    that.isLine = true;
 
-        that._removeConnection = function (item) {
-            var i = connections.indexOf(item);
-            if (i === -1) {
-                throw new Error("Item '{item}' not found in connections.".supplant({item: item}));
-            }
-            connections.splice(i, 1);
+    /**
+     * Point cannot exist on itself, it is always a part of the line.
+     *
+     * @param spec
+     */
+    function point(spec, line) {
+        var that = WIKIDIA.model.item();
 
-            if (that.changeEventsEnabled) {
-                that.fireChange();
-            }
-        };
+        that._addObservableProperty("x", spec.x || 0);
+        that._addObservableProperty("y", spec.y || 0);
 
-        that.removeConnection = function (item) {
-            that._removeConnection(item);
-            item._removeConnection(that);
-        };
-
-        that.connections = function () {
-            // TODO: how to enforce addConnection for connections manipulation?
-            return connections;
-        };
-
-        that.copyShallow = function () {
-            var connectionsCopy = connections.slice();
-            var onChangeHandlersCopy = onChangeHandlers.slice();
-            return lineInner(observableProperties, connectionsCopy, onChangeHandlersCopy);
-        };
-
-        that.isLine = true;
-
-        that._test = {
-            onChangeHandlers: onChangeHandlers
-        };
+        that.isLinePoint = true;
+        that.line = line;
 
         return that;
     }
 
-    return lineInner(spec, connections, onChangeHandlers);
+
+    return that;
 };

@@ -42,9 +42,11 @@
 
     <script type="text/javascript">
 
+        var diagram;
+
         $(document).ready(function () {
 
-            var diagram = WIKIDIA.model.diagram();
+            diagram = WIKIDIA.model.diagram();
             diagram.addItem(WIKIDIA.model.node({x: 0, y: 0, text: "no kind node"}));
             diagram.addItem(WIKIDIA.model.node({x: 0, y: 0, text: "use-case node", kind: "useCase"}));
 

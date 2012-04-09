@@ -1,136 +1,25 @@
 var WIKIDIA = WIKIDIA || {};
 WIKIDIA.model = WIKIDIA.model || {};
 
+// TODO: I will need cloning support in the future, consider using pseudo-privacy
 WIKIDIA.model.node = function (spec) {
     "use strict";
 
     var DEFAULT_SIZE = 90;
 
-    var utils = WIKIDIA.utils;
+    var that = WIKIDIA.model.item();
 
-    var connections = [],
-        onChangeHandlers = [];
+    spec = spec || {};
 
-    // inner constructor (I need this to support cloning) TODO: :-( maybe pseudo-privacy would be easier
-    function nodeInner (spec, connections, onChangeHandlers) {
+    // TODO: tady bych mel proste vytvorit objekt, ktery ma automaticky vsechny properties observable?
+    that._addObservableProperty("text", spec.text || "");
+    that._addObservableProperty("x", spec.x || 0);
+    that._addObservableProperty("y", spec.y || 0);
+    that._addObservableProperty("width", spec.width || DEFAULT_SIZE);
+    that._addObservableProperty("height", spec.height || DEFAULT_SIZE);
+    that._addObservableProperty("kind", spec.kind || "node");
 
-        var that = WIKIDIA.model.item(),
-            observableProperties = {};
+    that.isNode = true;
 
-        // TODO: how fast will this be compared to function call and simple property access?
-        function addObservableProperty(propertyName, defaultValue) {
-            Object.defineProperty(that, propertyName, {
-                get: function () {
-                    return observableProperties[propertyName];
-                },
-                set: function (value) {
-                    var oldValue = observableProperties[propertyName];
-                    if (value !== oldValue && that.changeEventsEnabled) {
-                        // value changed, fire change event
-                        that.fireChange();
-                    }
-                    observableProperties[propertyName] = value;
-                }
-            });
-
-            observableProperties[propertyName] = defaultValue;
-        }
-
-        spec = spec || {};
-
-        // TODO: tady bych mel proste vytvorit objekt, ktery ma automaticky vsechny properties observable?
-        addObservableProperty("text", spec.text || "");
-        addObservableProperty("x", spec.x || 0);
-        addObservableProperty("y", spec.y || 0);
-        addObservableProperty("width", spec.width || DEFAULT_SIZE);
-        addObservableProperty("height", spec.height || DEFAULT_SIZE);
-        addObservableProperty("kind", spec.kind || "node");
-
-        /**
-         * Binds an event handler to the "change" event. This handler is called when any property
-         * is changed. You can disable firing of this event using {@link that.changeEventEnabled} property.
-         *
-         * @param handler
-         */
-        that.change = function (handler) {
-            onChangeHandlers.push(handler);
-        };
-
-        /**
-         * If true, change events are fired.
-         */
-        that.changeEventsEnabled = true;
-
-        /**
-         * Fires  change event. You want to use this typically when you disabled change events to do several changes
-         * and now want to notify observers about changes.
-         */
-        that.fireChange = function () {
-            onChangeHandlers.forEach(function (handler) {
-                handler(that);
-            });
-        };
-
-        // TODO: DRY
-        // TODO: this method should be shared only by line and node
-        that._addConnection = function (item) {
-            if (!item.id) {
-                throw new Error("Cannot add connection to item, it has no id set.");
-            }
-
-            connections.push(item);
-
-            if (that.changeEventsEnabled) {
-                that.fireChange();
-            }
-        };
-
-        that.addConnection = function (item) {
-            that._addConnection(item);
-            item._addConnection(that);
-        };
-
-        that._removeConnection = function (item) {
-            var i = connections.indexOf(item);
-            if (i === -1) {
-                // TODO: make sure I have sane string representation of item for these error
-                throw new Error("Item '{item}' not found in connections.".supplant({item: item}));
-            }
-            connections.splice(i, 1);
-
-            if (that.changeEventsEnabled) {
-                that.fireChange();
-            }
-        };
-
-        that.removeConnection = function (item) {
-            that._removeConnection(item);
-            item._removeConnection(that);
-        };
-
-        that.connections = function () {
-            // TODO: how to enforce addConnection for connections manipulation?
-            return connections;
-        };
-
-        that.copyShallow = function () {
-            var connectionsCopy = connections.slice();
-            var onChangeHandlersCopy = onChangeHandlers.slice();
-            return nodeInner(observableProperties, connectionsCopy, onChangeHandlersCopy);
-        };
-
-        that.toJSON = function () {
-            return JSON.stringify(observableProperties);
-        };
-
-        that.isNode = true;
-
-        that._test = {
-            onChangeHandlers: onChangeHandlers
-        };
-
-        return that;
-    }
-
-    return nodeInner(spec, connections, onChangeHandlers);
+    return that;
 };
