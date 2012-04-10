@@ -25,23 +25,43 @@ WIKIDIA.presenter.nodeRenderer = function () {
     that.showNearbyConnectionPoint = function (node, nodeView, x, y, gridStep) {
         var nearestPoint;
 
-        var py;
-        // TODO: this is just quick hacky way, think about how to do this properly
+        var cx1, cx2, cy1, cy2;
+
+        var candidates = [];
+
         if (Math.abs(x - node.x) < gridStep) {
-            for (py = node.y; py <= node.y + node.height; py += gridStep) {
-                if (nearestPoint === undefined || Math.abs(py - y) < Math.abs(nearestPoint.y - y)) {
-                    nearestPoint = {x: node.x, y: py};
-                }
-            }
+            cy1 = Math.floor(y / gridStep) * gridStep;
+            cy2 = cy1 + gridStep;
+            candidates.push({x: node.x, y: cy1});
+            candidates.push({x: node.x, y: cy2});
+        }
+        if (Math.abs(x - (node.x + node.width)) < gridStep) {
+            cy1 = Math.floor(y / gridStep) * gridStep;
+            cy2 = cy1 + gridStep;
+            candidates.push({x: node.x + node.width, y: cy1});
+            candidates.push({x: node.x + node.width, y: cy2});
+        }
+        if (Math.abs(y - node.y) < gridStep) {
+            cx1 = Math.floor(x / gridStep) * gridStep;
+            cx2 = cx1 + gridStep;
+            candidates.push({x: cx1, y: node.y});
+            candidates.push({x: cx2, y: node.y});
+        }
+        if (Math.abs(y - (node.y + node.height)) < gridStep) {
+            cx1 = Math.floor(x / gridStep) * gridStep;
+            cx2 = cx1 + gridStep;
+            candidates.push({x: cx1, y: node.y + node.height});
+            candidates.push({x: cx2, y: node.y + node.height});
         }
 
-        if (Math.abs(x - (node.x + node.width)) < gridStep) {
-            for (py = node.y; py <= node.y + node.height; py += gridStep) {
-                if (nearestPoint === undefined || Math.abs(py - y) < Math.abs(nearestPoint.y - y)) {
-                    nearestPoint = {x: node.x + node.width, y: py};
-                }
+        var minDistanceSquared = Infinity;
+        candidates.forEach(function (c) {
+            var distanceSquared = Math.pow(Math.abs(c.x - x), 2) + Math.pow(Math.abs(c.y - y), 2);
+            if (distanceSquared < minDistanceSquared) {
+                nearestPoint = c;
+                minDistanceSquared = distanceSquared;
             }
-        }
+        });
 
         nodeView.hideConnectionPoints();
         if (nearestPoint) {

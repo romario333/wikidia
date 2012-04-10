@@ -12,6 +12,7 @@ WIKIDIA.view.svg = WIKIDIA.view.svg || {};
  *
  * @param diagramView
  */
+// TODO: why is that node here?
 WIKIDIA.view.svg.nodeView = function (diagramView, node) {
     "use strict";
 
@@ -103,7 +104,8 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
         });
         element.mousemove(function (e) {
             if (!isResizing && onMouseMove) {
-                onMouseMove(that, e.clientX, e.clientY);
+                // TODO: kde beru jistotu, ze je tohle spravne? offset vuci cemu?
+                onMouseMove(that, e.offsetX, e.offsetY);
             }
         });
 
@@ -235,7 +237,8 @@ WIKIDIA.view.svg.nodeView = function (diagramView, node) {
 
     that.updateView = function (spec) {
         updateResizeBorder(spec);
-        eventBox.attr(spec);
+        // TODO: should be derived from GRID_STEP (let's say 1/3 of it)
+        eventBox.attr({x: spec.x - 5, y: spec.y - 5, width: spec.width + 10, height: spec.height + 10});
     };
 
     that.isSelected = function(selected) {

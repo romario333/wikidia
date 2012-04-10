@@ -36,7 +36,8 @@ WIKIDIA.view.svg.lineView = function (diagramView) {
         });
         element.mousemove(function (e) {
             if (!isConnectPointDragging && onMouseMove) {
-                onMouseMove(that, e.clientX, e.clientY);
+                // TODO: kde beru jistotu, ze je tohle spravne? offset vuci cemu?
+                onMouseMove(that, e.offsetX, e.offsetY);
             }
         });
 
