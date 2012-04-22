@@ -40,11 +40,11 @@ describe("line", function () {
         var point1 = line.points(0);
         var point2 = line.points(1);
 
-        expect(line.point(1, 2)).toBe(point1);
-        expect(line.point(3, 4)).toBe(point2);
+        expect(line.pointAt(1, 2)).toBe(point1);
+        expect(line.pointAt(3, 4)).toBe(point2);
 
         expect(function () {
-            line.point(-1, -2);
+            line.pointAt(-1, -2);
         }).toThrow("Point [-1, -2] not found on line with id '1'.");
     });
 
@@ -95,20 +95,19 @@ describe("line", function () {
         expect(handler.change).toHaveBeenCalledWith(line);
     });
 
-    it("point does not have change event related methods", function () {
+    it("you can't use change methods on point", function () {
         var line = createLine();
         expect(function () {
             line.points(0).change(function () {});
-        }).toThrow("Object #<Object> has no method 'change'");
+        }).toThrow("You can't use change observing properties on point, use properties on line instead.");
 
         expect(function () {
             line.points(0).fireChange();
-        }).toThrow("Object #<Object> has no method 'fireChange'");
+        }).toThrow("You can't use change observing properties on point, use properties on line instead.");
 
         expect(function () {
             line.points(0).changeEventsEnabled(false);
-        }).toThrow("Object #<Object> has no method 'changeEventsEnabled'");
-
+        }).toThrow("You can't use change observing properties on point, use properties on line instead.");
     });
 
     it("you can't connect directly to line", function () {

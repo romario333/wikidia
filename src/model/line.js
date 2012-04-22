@@ -24,9 +24,9 @@ WIKIDIA.model.line = function (spec) {
         });
 
         // remove change event related functions from point's interface, I want my clients to use line's interface
-        delete point.change;
-        delete point.changeEventsEnabled;
-        delete point.fireChange;
+        point.change = function () { throw new Error("You can't use change observing properties on point, use properties on line instead."); };
+        point.fireChange = function () { throw new Error("You can't use change observing properties on point, use properties on line instead."); };
+        point.changeEventsEnabled = function () { throw new Error("You can't use change observing properties on point, use properties on line instead."); };
     });
 
 
@@ -42,7 +42,6 @@ WIKIDIA.model.line = function (spec) {
         }
     };
 
-    // TODO: rename na pointAt
     /**
      * Returns line point at the specified coordinates. Fails if no such point exists.
      *
