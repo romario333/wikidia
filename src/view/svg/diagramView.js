@@ -13,9 +13,10 @@ WIKIDIA.view.svg.diagramView = function (rootView) {
 
     var element = rootView.createElement("g", {class: "diagram"});
     var that = parent(element);
-    var grid;
+    var eventBox, grid;
 
     function init() {
+        eventBox = that.createElement("rect", {class: "eventBox", opacity: 0, fill: "blue", width: "100%", height: "100%"});
         grid = that.createElement("g", {class: "grid"});
 
         // disable text selection (it collides with diagram manipulation)

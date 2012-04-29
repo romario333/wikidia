@@ -28,6 +28,9 @@ WIKIDIA.view.svg.dragEventHandler = function (element) {
             if (onDragStart) {
                 onDragStart(e);
             }
+            // we have to disable click event temporarily, because mouseup on the same element later will produce click and we
+            // don't want to fire click handlers
+            removeClickHandlers(e.target);
         }
         if (isDragged) {
             if (onDragMove) {
@@ -47,8 +50,43 @@ WIKIDIA.view.svg.dragEventHandler = function (element) {
                 var dy = e.clientY - dragStartY;
                 onDragEnd(e, dx, dy);
             }
+
+            // TODO: this is terrible, there must be easier way
+            $(e.target).one("click", function (e) {
+                e.stopImmediatePropagation();
+            });
+            restoreClickHandlers();
+
         }
     });
+
+    // TODO: I doubt that this is part of jQuery's API
+    var clickTarget;
+    var clickEvents;
+    function removeClickHandlers(element) {
+        if (clickTarget) {
+            restoreClickHandlers();
+        }
+
+        clickTarget = $(element);
+        if (clickTarget.data("events") && clickTarget.data("events").click) {
+            clickEvents = clickTarget.data("events").click.slice();
+        }
+        console.dir(clickEvents);
+        clickTarget.off("click");
+    }
+
+    function restoreClickHandlers() {
+        console.log("restore");
+        console.dir(clickEvents);
+        if (clickEvents) {
+            clickEvents.forEach(function (clickEvent) {
+                clickTarget.on(clickEvent.type, clickEvent.selector, clickEvent.data, clickEvent.handler);
+            });
+            clickTarget = undefined;
+            clickEvents = undefined;
+        }
+    }
 
     var that = {
         dragStart: function (handler) {
