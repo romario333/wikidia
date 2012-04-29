@@ -38,7 +38,7 @@ WIKIDIA.view.svg.dragEventHandler = function (element) {
         }
     });
 
-    $(document.body).mouseup(function (e) {
+    $(document).mouseup(function (e) {
         readyForDrag = false;
         if (isDragged) {
             isDragged = false;

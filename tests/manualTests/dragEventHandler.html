@@ -5,38 +5,80 @@
     <title>Wikidia Demo</title>
 
     <script type="text/javascript" src="../../lib/jquery-1.7.1.js"></script>
+    <script type="text/javascript" src="../../src/utils.js"></script>
+    <script type="text/javascript" src="../../src/model/diagram.js"></script>
+    <script type="text/javascript" src="../../src/model/item.js"></script>
+    <script type="text/javascript" src="../../src/model/node.js"></script>
+    <script type="text/javascript" src="../../src/model/line.js"></script>
+    <script type="text/javascript" src="../../src/view/svg/svgViewFactory.js"></script>
+    <script type="text/javascript" src="../../src/view/svg/svgHelper.js"></script>
     <script type="text/javascript" src="../../src/view/svg/dragEventHandler.js"></script>
+    <script type="text/javascript" src="../../src/view/svg/view.js"></script>
+    <script type="text/javascript" src="../../view/svg/rootView.js"></script>
+    <script type="text/javascript" src="../../view/svg/diagramView.js"></script>
+    <script type="text/javascript" src="../../view/svg/nodeView.js"></script>
+    <script type="text/javascript" src="../../view/svg/lineView.js"></script>
+    <script type="text/javascript" src="../../presenter/commandExecutor.js"></script>
+    <script type="text/javascript" src="../../presenter/commands.js"></script>
+    <script type="text/javascript" src="../../presenter/renderers.js"></script>
+    <script type="text/javascript" src="../../presenter/diagramPresenter.js"></script>
+
+
+    <style type="text/css">
+        svg
+        {
+            width: 100%;
+            height: 700px;
+        }
+    </style>
 </head>
 <body>
 
-<div id="draggable" style="width: 100%; height: 100%;">
-    dragMe
+<div id="diagram" style="width: 100%; height: 100%;">
 </div>
 
 <script type="text/javascript">
 
-    var draggable;
+    var diagram;
 
     $(document).ready(function () {
 
-        draggable = WIKIDIA.view.svg.dragEventHandler($("#draggable"));
+        diagram = WIKIDIA.model.diagram();
+        diagram.addItem(WIKIDIA.model.node({x: 0, y: 0, text: "drag me"}));
 
-        draggable.dragStart(function (e) {
+        var viewFactory = WIKIDIA.view.svg.svgViewFactory();
+        var rootView = viewFactory.rootView($("#diagram"));
+        var diagramView = viewFactory.diagramView(rootView, diagram);
+
+        var diagramPresenter = WIKIDIA.presenter.diagramPresenter(diagramView, diagram, viewFactory);
+
+        $("#printJSON").click(function () {
+            console.log(diagram.toJSON());
+        });
+
+        diagram.dragStart(function (e) {
             console.log("drag start");
         });
 
-        draggable.dragMove(function (e, dx, dy) {
+        diagram.dragMove(function (e, dx, dy) {
             console.log("drag move");
         });
 
-        draggable.dragEnd(function (e, dx, dy) {
+        diagram.dragEnd(function (e, dx, dy) {
             console.log("drag end");
         });
 
-//        $("#draggable").click(function (e) {
-//            console.log("click");
-//        });
+        diagram.mouseDown(function (e) {
+            console.log("mouseDown");
+        });
 
+        diagram.mouseUp(function (e) {
+            console.log("mouseUp");
+        });
+
+        diagram.click(function (e) {
+            console.log("click");
+        });
     });
 
 </script>
