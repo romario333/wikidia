@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Wikidia Demo</title>
+
+    <script type="text/javascript" src="../../lib/jquery-1.7.1.js"></script>
+    <script type="text/javascript" src="../../src/view/svg/dragEventHandler.js"></script>
+</head>
+<body>
+
+<div id="draggable" style="width: 100%; height: 100%;">
+    dragMe
+</div>
+
+<script type="text/javascript">
+
+    var draggable;
+
+    $(document).ready(function () {
+
+        draggable = WIKIDIA.view.svg.dragEventHandler($("#draggable"));
+
+        draggable.dragStart(function (e) {
+            console.log("drag start");
+        });
+
+        draggable.dragMove(function (e, dx, dy) {
+            console.log("drag move");
+        });
+
+        draggable.dragEnd(function (e, dx, dy) {
+            console.log("drag end");
+        });
+
+//        $("#draggable").click(function (e) {
+//            console.log("click");
+//        });
+
+    });
+
+</script>
+
+</body>
+</html>
