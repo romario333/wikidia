@@ -1,219 +1,223 @@
 /*global WIKIDIA, describe, beforeEach, it, expect, spyOn*/
-
-describe("line", function () {
+define(function(require, exports, module) {
     "use strict";
 
-    var handler;
-    var diagram;
+    var model = require("model");
 
-    beforeEach(function () {
-        handler = {change: function () {}};
-        spyOn(handler, "change");
-        diagram = WIKIDIA.model.diagram();
-    });
+    describe("line", function () {
+        var handler;
+        var diagram;
 
-    function createNode(spec) {
-        var node = WIKIDIA.model.node(spec);
-        diagram.addItem(node);
-        return node;
-    }
-
-    function createLine(spec) {
-        var line = WIKIDIA.model.line(spec);
-        diagram.addItem(line);
-        return line;
-    }
-
-    it("has sane defaults", function () {
-        var line = createLine();
-        expect(line.text).toEqual("");
-        expect(line.points().length).toEqual(2);
-        line.points().forEach(function (point) {
-            expect(point.x).toEqual(0);
-            expect(point.y).toEqual(0);
-            expect(point.line).toBe(line);
+        beforeEach(function () {
+            handler = {change: function () {}};
+            spyOn(handler, "change");
+            diagram = model.diagram();
         });
-    });
 
-    it("can return point by its coordinates", function () {
-        var line = createLine({x1: 1, y1: 2, x2: 3, y2: 4});
-        var point1 = line.points(0);
-        var point2 = line.points(1);
+        function createNode(spec) {
+            var node = model.node(spec);
+            diagram.addItem(node);
+            return node;
+        }
 
-        expect(line.pointAt(1, 2)).toBe(point1);
-        expect(line.pointAt(3, 4)).toBe(point2);
+        function createLine(spec) {
+            var line = model.line(spec);
+            diagram.addItem(line);
+            return line;
+        }
 
-        expect(function () {
-            line.pointAt(-1, -2);
-        }).toThrow("Point [-1, -2] not found on line with id '1'.");
-    });
+        it("has sane defaults", function () {
+            var line = createLine();
+            expect(line.text).toEqual("");
+            expect(line.points().length).toEqual(2);
+            line.points().forEach(function (point) {
+                expect(point.x).toEqual(0);
+                expect(point.y).toEqual(0);
+                expect(point.line).toBe(line);
+            });
+        });
 
-    it("fires change event when its property is changed", function () {
-        var line = createLine({text: "test"});
-        line.change(handler.change);
+        it("can return point by its coordinates", function () {
+            var line = createLine({x1: 1, y1: 2, x2: 3, y2: 4});
+            var point1 = line.points(0);
+            var point2 = line.points(1);
 
-        line.text = "test";
-        // value hasn't changed, no change event should be fired
-        expect(handler.change).not.toHaveBeenCalled();
+            expect(line.pointAt(1, 2)).toBe(point1);
+            expect(line.pointAt(3, 4)).toBe(point2);
 
-        line.text = "changed";
-        expect(handler.change).toHaveBeenCalledWith(line);
-    });
+            expect(function () {
+                line.pointAt(-1, -2);
+            }).toThrow("Point [-1, -2] not found on line with id '1'.");
+        });
 
-    it("fires change event for line when point is manipulated", function () {
-        var line = createLine({text: "test"});
-        line.change(handler.change);
+        it("fires change event when its property is changed", function () {
+            var line = createLine({text: "test"});
+            line.change(handler.change);
 
-        line.points(0).x = 10;
-        expect(handler.change).toHaveBeenCalledWith(line);
-    });
+            line.text = "test";
+            // value hasn't changed, no change event should be fired
+            expect(handler.change).not.toHaveBeenCalled();
 
-    it("doesn't fire change event when fireChange is false", function () {
-        var line = createLine({text: "test"});
-        line.change(handler.change);
+            line.text = "changed";
+            expect(handler.change).toHaveBeenCalledWith(line);
+        });
 
-        line.changeEventsEnabled(false);
-        line.text = "changed";
-        expect(handler.change).not.toHaveBeenCalled();
+        it("fires change event for line when point is manipulated", function () {
+            var line = createLine({text: "test"});
+            line.change(handler.change);
 
-        var node = createNode();
-        line.points(0).addConnection(node);
-        expect(handler.change).not.toHaveBeenCalled();
-        line.points(0).removeConnection(node);
-        expect(handler.change).not.toHaveBeenCalled();
+            line.points(0).x = 10;
+            expect(handler.change).toHaveBeenCalledWith(line);
+        });
 
-        line.points(0).x = 10;
-        expect(handler.change).not.toHaveBeenCalled();
-    });
+        it("doesn't fire change event when fireChange is false", function () {
+            var line = createLine({text: "test"});
+            line.change(handler.change);
 
-    it("allows you to fire change event manually", function () {
-        var line = createLine();
-        line.change(handler.change);
+            line.changeEventsEnabled(false);
+            line.text = "changed";
+            expect(handler.change).not.toHaveBeenCalled();
 
-        line.changeEventsEnabled(false);
-        line.fireChange();
-        expect(handler.change).toHaveBeenCalledWith(line);
-    });
+            var node = createNode();
+            line.points(0).addConnection(node);
+            expect(handler.change).not.toHaveBeenCalled();
+            line.points(0).removeConnection(node);
+            expect(handler.change).not.toHaveBeenCalled();
 
-    it("you can't use change methods on point", function () {
-        var line = createLine();
-        expect(function () {
-            line.points(0).change(function () {});
-        }).toThrow("You can't use change observing properties on point, use properties on line instead.");
+            line.points(0).x = 10;
+            expect(handler.change).not.toHaveBeenCalled();
+        });
 
-        expect(function () {
-            line.points(0).fireChange();
-        }).toThrow("You can't use change observing properties on point, use properties on line instead.");
+        it("allows you to fire change event manually", function () {
+            var line = createLine();
+            line.change(handler.change);
 
-        expect(function () {
-            line.points(0).changeEventsEnabled(false);
-        }).toThrow("You can't use change observing properties on point, use properties on line instead.");
-    });
+            line.changeEventsEnabled(false);
+            line.fireChange();
+            expect(handler.change).toHaveBeenCalledWith(line);
+        });
 
-    it("you can't connect directly to line", function () {
-        var line = createLine();
-        var node = createNode();
+        it("you can't use change methods on point", function () {
+            var line = createLine();
+            expect(function () {
+                line.points(0).change(function () {});
+            }).toThrow("You can't use change observing properties on point, use properties on line instead.");
 
-        expect(function () {
-            line.addConnection(node);
-        }).toThrow("You can't connect to line directly, use function on its point instead.");
-    });
+            expect(function () {
+                line.points(0).fireChange();
+            }).toThrow("You can't use change observing properties on point, use properties on line instead.");
 
-    it("allows you to add connection to other line point or node", function () {
-        var line = createLine();
-        var line1 = createLine();
-        var node = createNode();
+            expect(function () {
+                line.points(0).changeEventsEnabled(false);
+            }).toThrow("You can't use change observing properties on point, use properties on line instead.");
+        });
 
-        line.points(0).addConnection(line1.points(0));
-        line.points(0).addConnection(node);
+        it("you can't connect directly to line", function () {
+            var line = createLine();
+            var node = createNode();
 
-        var connections = line.points(0).connections();
-        expect(connections.length).toEqual(2);
-        expect(connections).toContain(line1.points(0));
-        expect(connections).toContain(node);
-    });
+            expect(function () {
+                line.addConnection(node);
+            }).toThrow("You can't connect to line directly, use function on its point instead.");
+        });
 
-    it("connections are added on both sides of connection", function () {
-        var node = createNode();
-        var line = createLine();
-        var nodeHandler = {change: function () {}};
-        spyOn(nodeHandler, "change");
-        var lineHandler = {change: function () {}};
-        spyOn(lineHandler, "change");
+        it("allows you to add connection to other line point or node", function () {
+            var line = createLine();
+            var line1 = createLine();
+            var node = createNode();
 
-        node.change(nodeHandler.change);
-        line.change(lineHandler.change);
+            line.points(0).addConnection(line1.points(0));
+            line.points(0).addConnection(node);
 
-        node.addConnection(line.points(0));
+            var connections = line.points(0).connections();
+            expect(connections.length).toEqual(2);
+            expect(connections).toContain(line1.points(0));
+            expect(connections).toContain(node);
+        });
 
-        expect(nodeHandler.change).toHaveBeenCalledWith(node);
-        expect(lineHandler.change).toHaveBeenCalledWith(line);
+        it("connections are added on both sides of connection", function () {
+            var node = createNode();
+            var line = createLine();
+            var nodeHandler = {change: function () {}};
+            spyOn(nodeHandler, "change");
+            var lineHandler = {change: function () {}};
+            spyOn(lineHandler, "change");
 
-        expect(node.connections()).toContain(line.points(0));
-        expect(line.points(0).connections()).toContain(node);
-    });
+            node.change(nodeHandler.change);
+            line.change(lineHandler.change);
 
-    it("connections are removed on both sides of connection", function () {
-        var node = createNode();
-        var line = createLine();
-        node.addConnection(line.points(0));
+            node.addConnection(line.points(0));
 
-        var nodeHandler = {change: function () {}};
-        spyOn(nodeHandler, "change");
-        var lineHandler = {change: function () {}};
-        spyOn(lineHandler, "change");
+            expect(nodeHandler.change).toHaveBeenCalledWith(node);
+            expect(lineHandler.change).toHaveBeenCalledWith(line);
 
-        node.change(nodeHandler.change);
-        line.change(lineHandler.change);
+            expect(node.connections()).toContain(line.points(0));
+            expect(line.points(0).connections()).toContain(node);
+        });
 
-        node.removeConnection(line.points(0));
+        it("connections are removed on both sides of connection", function () {
+            var node = createNode();
+            var line = createLine();
+            node.addConnection(line.points(0));
 
-        expect(nodeHandler.change).toHaveBeenCalledWith(node);
-        expect(lineHandler.change).toHaveBeenCalledWith(line);
+            var nodeHandler = {change: function () {}};
+            spyOn(nodeHandler, "change");
+            var lineHandler = {change: function () {}};
+            spyOn(lineHandler, "change");
 
-        expect(node.connections()).not.toContain(line);
-        expect(line.points(0).connections()).not.toContain(node);
-    });
+            node.change(nodeHandler.change);
+            line.change(lineHandler.change);
 
-//    it("can create shallow copy of itself", function () {
-//        var line = createLine({x1: 1, y1: 2, x2: 3, y2: 4, text: "original"});
-//        var line1 = createLine();
-//        var line2 = createLine();
-//        line.addConnection(line1);
-//        line.change(handler.change);
-//
-//        var lineCopy = line.copyShallow();
-//
-//        lineCopy.text = "copy";
-//        expect(lineCopy.text).toEqual("copy");
-//        expect(line.text).toEqual("original");
-//
-//        lineCopy.id = 100; // lineCopy needs id, otherwise adding of connection would fail
-//        lineCopy.addConnection(line2);
-//        expect(line.connections()[0]).toBe(lineCopy.connections()[0]);
-//        expect(line.connections().length).toEqual(1);
-//        expect(lineCopy.connections().length).toEqual(2);
-//
-//        lineCopy.change(handler.change);
-//        expect(line._test.onChangeHandlers.length).toEqual(1);
-//        expect(lineCopy._test.onChangeHandlers.length).toEqual(2);
-//    });
+            node.removeConnection(line.points(0));
 
-    it("connection to item without id cannot be added", function () {
-        var line1 = WIKIDIA.model.line();
-        var line2 = WIKIDIA.model.line();
+            expect(nodeHandler.change).toHaveBeenCalledWith(node);
+            expect(lineHandler.change).toHaveBeenCalledWith(line);
 
-        line1.points(0).id = 1;
-        line2.points(0).id = null;
-        expect(function () {
-            line1.points(0).addConnection(line2.points(0));
-        }).toThrow("Cannot add connection to item, it has no id set.");
+            expect(node.connections()).not.toContain(line);
+            expect(line.points(0).connections()).not.toContain(node);
+        });
 
-        line1.points(0).id = null;
-        line2.points(0).id = 1;
-        expect(function () {
-            line1.points(0).addConnection(line2.points(0));
-        }).toThrow("Cannot add connection to item, it has no id set.");
+    //    it("can create shallow copy of itself", function () {
+    //        var line = createLine({x1: 1, y1: 2, x2: 3, y2: 4, text: "original"});
+    //        var line1 = createLine();
+    //        var line2 = createLine();
+    //        line.addConnection(line1);
+    //        line.change(handler.change);
+    //
+    //        var lineCopy = line.copyShallow();
+    //
+    //        lineCopy.text = "copy";
+    //        expect(lineCopy.text).toEqual("copy");
+    //        expect(line.text).toEqual("original");
+    //
+    //        lineCopy.id = 100; // lineCopy needs id, otherwise adding of connection would fail
+    //        lineCopy.addConnection(line2);
+    //        expect(line.connections()[0]).toBe(lineCopy.connections()[0]);
+    //        expect(line.connections().length).toEqual(1);
+    //        expect(lineCopy.connections().length).toEqual(2);
+    //
+    //        lineCopy.change(handler.change);
+    //        expect(line._test.onChangeHandlers.length).toEqual(1);
+    //        expect(lineCopy._test.onChangeHandlers.length).toEqual(2);
+    //    });
+
+        it("connection to item without id cannot be added", function () {
+            var line1 = model.line();
+            var line2 = model.line();
+
+            line1.points(0).id = 1;
+            line2.points(0).id = null;
+            expect(function () {
+                line1.points(0).addConnection(line2.points(0));
+            }).toThrow("Cannot add connection to item, it has no id set.");
+
+            line1.points(0).id = null;
+            line2.points(0).id = 1;
+            expect(function () {
+                line1.points(0).addConnection(line2.points(0));
+            }).toThrow("Cannot add connection to item, it has no id set.");
+        });
+
     });
 
 });

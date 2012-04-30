@@ -1,29 +1,30 @@
 /*global WIKIDIA, describe, beforeEach, it, expect*/
-
-describe("nodeView", function () {
+define(function(require, exports, module) {
     "use strict";
 
-    var nodeView;
+    var view = require("view");
+    var model = require("model");
 
-    beforeEach(function () {
-        var rootView = WIKIDIA.view.svg.rootView($("<div></div>"));
-        var diagramView = WIKIDIA.view.svg.diagramView(rootView);
-        var node = WIKIDIA.model.node({x: 10, y: 20});
+    describe("nodeView", function () {
+        var nodeView;
 
-        nodeView = WIKIDIA.view.svg.nodeView(diagramView, node);
+        beforeEach(function () {
+            var rootView = view.rootView($("<div></div>"));
+            var diagramView = view.diagramView(rootView);
+            var node = model.node({x: 10, y: 20});
+
+            nodeView = view.nodeView(diagramView, node);
+        });
+
+        it("can draw rectangles", function () {
+            nodeView.rect({x: 10, y: 20, width: 30, height: 40, rx: 1, ry: 2});
+            expect(nodeView._test.contentSvg()).toEqual('<rect x="10" y="20" width="30" height="40" rx="1" ry="2"></rect>');
+        });
+
+        it("can draw text", function () {
+            nodeView.text("test");
+            //expect(nodeView._test.contentSvg()).toEqual('<text ')
+        });
     });
-
-    it("can draw rectangles", function () {
-        nodeView.rect({x: 10, y: 20, width: 30, height: 40, rx: 1, ry: 2});
-        expect(nodeView._test.contentSvg()).toEqual('<rect x="10" y="20" width="30" height="40" rx="1" ry="2"></rect>');
-    });
-
-    it("can draw text", function () {
-        nodeView.text("test");
-        //expect(nodeView._test.contentSvg()).toEqual('<text ')
-    });
-
-
-
 
 });

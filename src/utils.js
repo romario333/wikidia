@@ -1,28 +1,5 @@
-var WIKIDIA = WIKIDIA || {};
-WIKIDIA.utils = WIKIDIA.utils || {};
-
-(function () {
+define(function (require) {
     "use strict";
-
-    var module = WIKIDIA.utils;
-
-    module.objectWithId = function f () {
-        if (!f.lastId) {
-            f.lastId = 0;
-        }
-        f.lastId++;
-        return {oid: f.lastId};
-    };
-
-    // TODO: testy pro tyhle dva, navic bych rekl ze s private vars to nebude fungovat, prozkoumat
-    module.copyShallow = function (object) {
-        return jQuery.extend({}, object);
-    };
-
-    module.copyDeep = function (object) {
-        return jQuery.extend(true, {}, object);
-    };
-
 
     if (!String.prototype.supplant) {
         String.prototype.supplant = function (o) {
@@ -35,4 +12,25 @@ WIKIDIA.utils = WIKIDIA.utils || {};
         };
     }
 
-})();
+    return {
+
+        objectWithId: function f () {
+            if (!f.lastId) {
+                f.lastId = 0;
+            }
+            f.lastId++;
+            return {oid: f.lastId};
+        },
+
+        // TODO: testy pro tyhle dva, navic bych rekl ze s private vars to nebude fungovat, prozkoumat
+        copyShallow: function (object) {
+            return jQuery.extend({}, object);
+        },
+
+        copyDeep: function (object) {
+            return jQuery.extend(true, {}, object);
+        }
+
+    };
+
+});

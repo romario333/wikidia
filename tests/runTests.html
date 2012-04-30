@@ -10,41 +10,17 @@
     <script type="text/javascript" src="lib/jasmine-1.1.0/jasmine.js"></script>
     <script type="text/javascript" src="lib/jasmine-1.1.0/jasmine-html.js"></script>
 
-    <!-- include test files here... -->
-    <script type="text/javascript" src="utilsTest.js"></script>
-    <script type="text/javascript" src="playground/propertiesTest.js"></script>
-    <script type="text/javascript" src="playground/jsonTest.js"></script>
-    <script type="text/javascript" src="model/diagramTest.js"></script>
-    <script type="text/javascript" src="model/nodeTest.js"></script>
-    <script type="text/javascript" src="model/lineTest.js"></script>
-    <script type="text/javascript" src="view/svg/rootViewTest.js"></script>
-    <script type="text/javascript" src="view/svg/nodeViewTest.js"></script>
-    <script type="text/javascript" src="presenter/nodeRendererTest.js"></script>
-    <script type="text/javascript" src="presenter/diagramPresenterTest.js"></script>
-
-    <!-- include source files here... -->
     <script type="text/javascript" src="../lib/jquery-1.7.1.js"></script>
-    <script type="text/javascript" src="../src/utils.js"></script>
-    <script type="text/javascript" src="../src/model/diagram.js"></script>
-    <script type="text/javascript" src="../src/model/item.js"></script>
-    <script type="text/javascript" src="../src/model/node.js"></script>
-    <script type="text/javascript" src="../src/model/line.js"></script>
-    <script type="text/javascript" src="../src/view/svg/svgViewFactory.js"></script>
-    <script type="text/javascript" src="../src/view/svg/dragEventHandler.js"></script>
-    <script type="text/javascript" src="../src/view/svg/svgHelper.js"></script>
-    <script type="text/javascript" src="../src/view/svg/view.js"></script>
-    <script type="text/javascript" src="../src/view/svg/rootView.js"></script>
-    <script type="text/javascript" src="../src/view/svg/diagramView.js"></script>
-    <script type="text/javascript" src="../src/view/svg/nodeView.js"></script>
-    <script type="text/javascript" src="../src/view/svg/lineView.js"></script>
-    <script type="text/javascript" src="../src/presenter/commands.js"></script>
-    <script type="text/javascript" src="../src/presenter/commandExecutor.js"></script>
-    <script type="text/javascript" src="../src/presenter/renderers.js"></script>
-    <script type="text/javascript" src="../src/presenter/diagramPresenter.js"></script>
-
-
+    <script data-main="main.js" src="../lib/require-1.0.8.js"></script>
 
     <script type="text/javascript">
+        require.config({
+            baseUrl: "../src",
+            paths: {
+                "test": "../tests"
+            }
+        });
+
         (function () {
             var jasmineEnv = jasmine.getEnv();
             jasmineEnv.updateInterval = 1000;

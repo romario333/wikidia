@@ -1,24 +1,23 @@
-var WIKIDIA = WIKIDIA || {};
-WIKIDIA.presenter = WIKIDIA.presenter || {};
-
-WIKIDIA.presenter.commandExecutor = function () {
+define(function(require) {
     "use strict";
 
-    var that = {},
-        commandQueue = [];
+    return function () {
+        var that = {},
+            commandQueue = [];
 
-    that.execute = function (command) {
-        commandQueue.push(command);
-        command.execute();
+        that.execute = function (command) {
+            commandQueue.push(command);
+            command.execute();
+        };
+
+        that.undo = function (command) {
+            if (commandQueue.length > 0) {
+                commandQueue.pop().undo();
+            }
+        };
+
+        // TODO: redo
+
+        return that;
     };
-
-    that.undo = function (command) {
-        if (commandQueue.length > 0) {
-            commandQueue.pop().undo();
-        }
-    };
-
-    // TODO: redo
-
-    return that;
-};
+});

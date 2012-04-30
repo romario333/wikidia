@@ -1,24 +1,21 @@
-var WIKIDIA = WIKIDIA || {};
-WIKIDIA.view = WIKIDIA.view || {};
-WIKIDIA.view.svg = WIKIDIA.view.svg || {};
-
-
-WIKIDIA.view.svg.rootView = function (container) {
+define(function(require) {
     "use strict";
 
-    var parent = WIKIDIA.view.svg.view;
-    var svgHelper = WIKIDIA.view.svg.svgHelper;
+    return function (container) {
+        var parent = require("./viewBase");
+        var svgHelper = require("./svgHelper");
 
-    var element = $(svgHelper.createSvgElement("svg"));
-    var that = parent(element);
+        var element = $(svgHelper.createSvgElement("svg"));
+        var that = parent(element);
 
-    container.append(element);
+        container.append(element);
 
-    that._test = {
-        svg: function () {
-            return svgHelper.printSvg(element);
-        }
+        that._test = {
+            svg: function () {
+                return svgHelper.printSvg(element);
+            }
+        };
+
+        return that;
     };
-
-    return that;
-};
+});

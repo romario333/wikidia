@@ -5,23 +5,7 @@
     <title>Wikidia Demo</title>
 
     <script type="text/javascript" src="lib/jquery-1.7.1.js"></script>
-    <script type="text/javascript" src="src/utils.js"></script>
-    <script type="text/javascript" src="src/model/diagram.js"></script>
-    <script type="text/javascript" src="src/model/item.js"></script>
-    <script type="text/javascript" src="src/model/node.js"></script>
-    <script type="text/javascript" src="src/model/line.js"></script>
-    <script type="text/javascript" src="src/view/svg/svgViewFactory.js"></script>
-    <script type="text/javascript" src="src/view/svg/svgHelper.js"></script>
-    <script type="text/javascript" src="src/view/svg/dragEventHandler.js"></script>
-    <script type="text/javascript" src="src/view/svg/view.js"></script>
-    <script type="text/javascript" src="src/view/svg/rootView.js"></script>
-    <script type="text/javascript" src="src/view/svg/diagramView.js"></script>
-    <script type="text/javascript" src="src/view/svg/nodeView.js"></script>
-    <script type="text/javascript" src="src/view/svg/lineView.js"></script>
-    <script type="text/javascript" src="src/presenter/commandExecutor.js"></script>
-    <script type="text/javascript" src="src/presenter/commands.js"></script>
-    <script type="text/javascript" src="src/presenter/renderers.js"></script>
-    <script type="text/javascript" src="src/presenter/diagramPresenter.js"></script>
+    <script data-main="src/main.js" src="lib/require-1.0.8.js"></script>
 
     <style type="text/css">
         svg
@@ -41,26 +25,6 @@
     </div>
 
     <script type="text/javascript">
-
-        var diagram;
-
-        $(document).ready(function () {
-
-            diagram = WIKIDIA.model.diagram();
-            diagram.addItem(WIKIDIA.model.node({x: 0, y: 0, text: "no kind node"}));
-            diagram.addItem(WIKIDIA.model.node({x: 0, y: 0, text: "use-case node", kind: "useCase"}));
-
-            var viewFactory = WIKIDIA.view.svg.svgViewFactory();
-            var rootView = viewFactory.rootView($("#diagram"));
-            var diagramView = viewFactory.diagramView(rootView, diagram);
-
-            var diagramPresenter = WIKIDIA.presenter.diagramPresenter(diagramView, diagram, viewFactory);
-
-            $("#printJSON").click(function () {
-                console.log(diagram.toJSON());
-            });
-
-        });
 
     </script>
 
