@@ -47,7 +47,6 @@ define(function (require) {
             });
         }
 
-        // TODO: this method should be shared only by line and node
         that._addConnection = function (item) {
             if (!item.id) {
                 throw new Error("Cannot add connection to item, it has no id set.");
@@ -68,8 +67,7 @@ define(function (require) {
         that._removeConnection = function (item) {
             var i = connections.indexOf(item);
             if (i === -1) {
-                // TODO: make sure I have sane string representation of item for these error
-                throw new Error("Item '{item}' not found in connections.".supplant({item:item}));
+                throw new Error("Item '{itemId}' not found in connections of item '{thisId}'.".supplant({itemId:item.id, thisId: that.id}));
             }
             connections.splice(i, 1);
 
@@ -87,12 +85,10 @@ define(function (require) {
             if (arguments.length === 1) {
                 return connections[arguments[0]];
             } else {
-                // TODO: how to enforce addConnection for connections manipulation?
-                return connections;
+                return connections.slice();
             }
         };
 
-        // TODO: protected method
         that._addObservableProperty = function (propertyName, defaultValue) {
             Object.defineProperty(that, propertyName, {
                 get:function () {

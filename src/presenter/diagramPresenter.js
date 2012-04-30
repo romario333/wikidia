@@ -25,8 +25,6 @@ define(function(require) {
 
         var GRID_STEP = 15;
 
-
-
         var that = {},
             commandExecutor,
             items = [],
@@ -34,48 +32,6 @@ define(function(require) {
             commandInProgress,
             isCtrlKeyDown = false,
             isCreatingLineFromNode = true;
-
-        function multipleSelection() {
-            var that = {};
-            var items = [];
-
-            that.addOrRemove = function (item) {
-
-                if (item.isSelected) {
-                    that.remove(item);
-                } else {
-                    that.add(item);
-                }
-
-            };
-
-            that.add = function (item) {
-                items.push(item);
-                item.isSelected = true;
-                updateItem(item);
-            };
-
-            that.remove = function (item) {
-                var i = items.indexOf(item);
-                items.splice(i, 1);
-                item.isSelected = false;
-                updateItem(item);
-            };
-
-            that.select = function (item) {
-                var selected;
-                while ((selected = items.pop())) {
-                    selected.isSelected = false;
-                    updateItem(selected);
-                }
-                that.add(item);
-            };
-
-            that.items = function () {
-                return items;
-            };
-            return that;
-        }
 
         function init() {
             // TODO: popsat zakladni filozofii:
@@ -95,7 +51,6 @@ define(function(require) {
                 } else if (item.isLine) {
                     addLine(item);
                 } else {
-                    // TODO: tady trochu boli, ze nemam class
                     throw new Error("Don't know what this item is: " + item.kind);
                 }
 
@@ -112,7 +67,7 @@ define(function(require) {
             selection = multipleSelection();
 
             $(document).keydown(function (e) {
-                if (e.which === 17) {  // TODO: e.ctrlKey does not work here
+                if (e.which === 17) {  // FIXME: e.ctrlKey does not work here
                     isCtrlKeyDown = true;
                 }
             });
@@ -129,8 +84,7 @@ define(function(require) {
         }
 
         function addNode(node) {
-            // TODO: I should not pass node to view
-            var nodeView = view.nodeView(diagramView, node);
+            var nodeView = view.nodeView(diagramView);
 
             var item = utils.objectWithId();
             item.data = node;
@@ -230,7 +184,6 @@ define(function(require) {
             // TODO: remove view from diagramView
         }
 
-        // TODO: weird
         function onNodeChange(node) {
             updateItem(items.itemForData(node));
         }
@@ -240,26 +193,28 @@ define(function(require) {
         }
 
         function onDiagramClick(view) {
-            console.dir(view);
-            console.log("diagram click");
+            selection.clear();
         }
 
         function onItemMouseDown(view) {
             var item = items.itemForView(view);
 
+            // simple selection is done on mouse-down, so I can just mouse-down an item and drag it immediately
             if (!isCtrlKeyDown) {
-                selection.select(item);
+                if (!item.isSelected) {
+                    selection.select(item);
+                }
             }
         }
 
         function onItemClick(view) {
-            // TODO: think about this
-            // on click, when I do this in mousedown, I can't properly resize multiple nodes
             var item = items.itemForView(view);
+
+            // multiple selection is handled on-click, because I want to support this scenario:
+            //      user ctrl-clicks on second item (adds it to multiple selection) and wants to drag it immediately
             if (isCtrlKeyDown) {
                 selection.addOrRemove(item);
             }
-
         }
 
         function onItemDoubleClick(view) {
@@ -352,7 +307,9 @@ define(function(require) {
         function onNodeMouseMove(nodeView, x, y) {
             var node = items.itemForView(nodeView);
             var renderer = itemRenderers.forItem(node);
-            renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
+            if (!isCtrlKeyDown) {
+                renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
+            }
         }
 
         function onLineConnectPointDragStart(lineView, connectPointX, connectPointY) {
@@ -401,7 +358,6 @@ define(function(require) {
          */
         function snapToGrid(pointOrRect) {
             var snapCoordinateToGrid = function (c, gridStep) {
-                // TODO: je to spatne, obcas skoci pryc
                 var c1 = Math.floor(c / gridStep) * gridStep;
                 var c2 = c1 + gridStep;
                 if (Math.abs(c - c2) < Math.abs(c - c1)) {
@@ -421,6 +377,52 @@ define(function(require) {
             }
 
             return pointOrRect;
+        }
+
+        function multipleSelection() {
+            var that = {};
+            var items = [];
+
+            that.addOrRemove = function (item) {
+
+                if (item.isSelected) {
+                    that.remove(item);
+                } else {
+                    that.add(item);
+                }
+
+            };
+
+            that.add = function (item) {
+                items.push(item);
+                item.isSelected = true;
+                updateItem(item);
+            };
+
+            that.remove = function (item) {
+                var i = items.indexOf(item);
+                items.splice(i, 1);
+                item.isSelected = false;
+                updateItem(item);
+            };
+
+            that.select = function (item) {
+                that.clear();
+                that.add(item);
+            };
+
+            that.clear = function () {
+                var selected;
+                while ((selected = items.pop())) {
+                    selected.isSelected = false;
+                    updateItem(selected);
+                }
+            };
+
+            that.items = function () {
+                return items;
+            };
+            return that;
         }
 
         that._test = {

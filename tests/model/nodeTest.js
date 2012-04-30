@@ -90,46 +90,30 @@ define(function(require, exports, module) {
             expect(connections).toContain(line2);
         });
 
-    //    it("can create shallow copy of itself", function () {
-    //        var node = createNode({x: 1, y: 2, width: 3, height: 4, text: "original"});
-    //        var line1 = createLine();
-    //        var line2 = createLine();
-    //        node.addConnection(line1);
-    //        node.change(handler.change);
-    //
-    //        var nodeCopy = node.copyShallow();
-    //
-    //        nodeCopy.text = "copy";
-    //        expect(nodeCopy.text).toEqual("copy");
-    //        expect(node.text).toEqual("original");
-    //
-    //        nodeCopy.id = 100; // nodeCopy needs id, otherwise adding of connection would fail
-    //        nodeCopy.addConnection(line2);
-    //        expect(node.connections()[0]).toBe(nodeCopy.connections()[0]);
-    //        expect(node.connections().length).toEqual(1);
-    //        expect(nodeCopy.connections().length).toEqual(2);
-    //
-    //        nodeCopy.change(handler.change);
-    //        expect(node._test.onChangeHandlers.length).toEqual(1);
-    //        expect(nodeCopy._test.onChangeHandlers.length).toEqual(2);
-    //    });
+//        it("can create copy of itself", function () {
+//            var node = createNode({x: 1, y: 2, width: 3, height: 4, text: "original"});
+//            var line1 = createLine();
+//            var line2 = createLine();
+//            node.addConnection(line1);
+//            node.change(handler.change);
+//
+//            var nodeCopy = node.copyShallow();
+//
+//            nodeCopy.text = "copy";
+//            expect(nodeCopy.text).toEqual("copy");
+//            expect(node.text).toEqual("original");
+//
+//            nodeCopy.id = 100; // nodeCopy needs id, otherwise adding of connection would fail
+//            nodeCopy.addConnection(line2);
+//            expect(node.connections()[0]).toBe(nodeCopy.connections()[0]);
+//            expect(node.connections().length).toEqual(1);
+//            expect(nodeCopy.connections().length).toEqual(2);
+//
+//            nodeCopy.change(handler.change);
+//            expect(node._test.onChangeHandlers.length).toEqual(1);
+//            expect(nodeCopy._test.onChangeHandlers.length).toEqual(2);
+//        });
 
-        it("connection to item without id cannot be added", function () {
-            var node1 = model.node();
-            var node2 = model.node();
-
-            node1.id = 1;
-            node2.id = null;
-            expect(function () {
-                node1.addConnection(node2);
-            }).toThrow("Cannot add connection to item, it has no id set.");
-
-            node1.id = null;
-            node2.id = 1;
-            expect(function () {
-                node1.addConnection(node2);
-            }).toThrow("Cannot add connection to item, it has no id set.");
-        });
 
     });
 

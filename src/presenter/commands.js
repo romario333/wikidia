@@ -30,7 +30,6 @@ define(function(require) {
             };
 
             function move(dx, dy) {
-                console.log("move {dx}, {dy}".supplant({dx: dx, dy: dy}));
                 items.forEach(function (item) {
                     if (item.data.isNode) {
                         var node = item.data;
@@ -40,7 +39,6 @@ define(function(require) {
                         node.changeEventsEnabled(true);
                         node.fireChange();
 
-                        // TODO: I will have to do the same for resize command
                         // update lines connected to node
                         node.connections().forEach(function (connection) {
                             if (connection.isLinePoint) {
@@ -112,6 +110,21 @@ define(function(require) {
                     node.height += dHeight;
                     node.changeEventsEnabled(true);
                     node.fireChange();
+
+                    // TODO: DRY? (it's in moveCommand too)
+                    // update lines connected to node
+                    node.connections().forEach(function (connection) {
+                        if (connection.isLinePoint) {
+                            // update line to match new node position
+                            var point = connection;
+                            point.line.changeEventsEnabled(false);
+                            point.x += dWidth;
+                            point.y += dHeight;
+                            point.line.changeEventsEnabled(true);
+                            point.line.fireChange();
+                        }
+                    });
+
                 });
             }
 

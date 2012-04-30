@@ -20,15 +20,6 @@ define(function (require) {
             }
             f.lastId++;
             return {oid: f.lastId};
-        },
-
-        // TODO: testy pro tyhle dva, navic bych rekl ze s private vars to nebude fungovat, prozkoumat
-        copyShallow: function (object) {
-            return jQuery.extend({}, object);
-        },
-
-        copyDeep: function (object) {
-            return jQuery.extend(true, {}, object);
         }
 
     };

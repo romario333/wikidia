@@ -34,9 +34,8 @@ define(function (require) {
         that._addObservableProperty("kind", spec.kind || "line");
 
         that.points = function (i) {
-            // TODO: clients should not be able to add / remove points
             if (arguments.length === 0) {
-                return points;
+                return points.slice();
             } else {
                 return points[i];
             }

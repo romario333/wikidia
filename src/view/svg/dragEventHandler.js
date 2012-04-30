@@ -69,13 +69,10 @@ define(function(require) {
             if (clickTarget.data("events") && clickTarget.data("events").click) {
                 clickEvents = clickTarget.data("events").click.slice();
             }
-            console.dir(clickEvents);
             clickTarget.off("click");
         }
 
         function restoreClickHandlers() {
-            console.log("restore");
-            console.dir(clickEvents);
             if (clickEvents) {
                 clickEvents.forEach(function (clickEvent) {
                     clickTarget.on(clickEvent.type, clickEvent.selector, clickEvent.data, clickEvent.handler);

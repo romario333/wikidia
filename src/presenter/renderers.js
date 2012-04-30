@@ -10,6 +10,8 @@ define(function(require) {
         nodeRenderer: function () {
             var that = {};
 
+            that.TEXT_PADDING = 5;
+
             that.render = function (item) {
                 var node = item.data;
                 var nodeView = item.view;
@@ -19,7 +21,7 @@ define(function(require) {
                 nodeView.isSelected(item.isSelected);
 
                 nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: "#A1BF36", stroke: "black"});
-                nodeView.text(node.text);
+                nodeView.text({x: node.x + that.TEXT_PADDING, y: node.y + that.TEXT_PADDING, text: node.text});
             };
 
             that.showNearbyConnectionPoint = function (node, nodeView, x, y, gridStep) {
@@ -94,7 +96,7 @@ define(function(require) {
                     fill: "#A1BF36",
                     stroke: "black"
                 });
-                nodeView.text(node.text);
+                nodeView.text({x: node.x + that.TEXT_PADDING, y: node.y + that.TEXT_PADDING, text: node.text});
             };
 
             return that;

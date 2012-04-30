@@ -135,47 +135,7 @@ define(function(require, exports, module) {
             expect(connections).toContain(node);
         });
 
-        it("connections are added on both sides of connection", function () {
-            var node = createNode();
-            var line = createLine();
-            var nodeHandler = {change: function () {}};
-            spyOn(nodeHandler, "change");
-            var lineHandler = {change: function () {}};
-            spyOn(lineHandler, "change");
 
-            node.change(nodeHandler.change);
-            line.change(lineHandler.change);
-
-            node.addConnection(line.points(0));
-
-            expect(nodeHandler.change).toHaveBeenCalledWith(node);
-            expect(lineHandler.change).toHaveBeenCalledWith(line);
-
-            expect(node.connections()).toContain(line.points(0));
-            expect(line.points(0).connections()).toContain(node);
-        });
-
-        it("connections are removed on both sides of connection", function () {
-            var node = createNode();
-            var line = createLine();
-            node.addConnection(line.points(0));
-
-            var nodeHandler = {change: function () {}};
-            spyOn(nodeHandler, "change");
-            var lineHandler = {change: function () {}};
-            spyOn(lineHandler, "change");
-
-            node.change(nodeHandler.change);
-            line.change(lineHandler.change);
-
-            node.removeConnection(line.points(0));
-
-            expect(nodeHandler.change).toHaveBeenCalledWith(node);
-            expect(lineHandler.change).toHaveBeenCalledWith(line);
-
-            expect(node.connections()).not.toContain(line);
-            expect(line.points(0).connections()).not.toContain(node);
-        });
 
     //    it("can create shallow copy of itself", function () {
     //        var line = createLine({x1: 1, y1: 2, x2: 3, y2: 4, text: "original"});
@@ -200,23 +160,6 @@ define(function(require, exports, module) {
     //        expect(line._test.onChangeHandlers.length).toEqual(1);
     //        expect(lineCopy._test.onChangeHandlers.length).toEqual(2);
     //    });
-
-        it("connection to item without id cannot be added", function () {
-            var line1 = model.line();
-            var line2 = model.line();
-
-            line1.points(0).id = 1;
-            line2.points(0).id = null;
-            expect(function () {
-                line1.points(0).addConnection(line2.points(0));
-            }).toThrow("Cannot add connection to item, it has no id set.");
-
-            line1.points(0).id = null;
-            line2.points(0).id = 1;
-            expect(function () {
-                line1.points(0).addConnection(line2.points(0));
-            }).toThrow("Cannot add connection to item, it has no id set.");
-        });
 
     });
 

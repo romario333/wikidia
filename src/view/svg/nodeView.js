@@ -1,3 +1,4 @@
+/*global define*/
 define(function(require) {
     "use strict";
     /**
@@ -9,12 +10,8 @@ define(function(require) {
      *
      * @param diagramView
      */
-    // TODO: why is that node here?
-    return function (diagramView, node) {
-        "use strict";
-
+    return function (diagramView) {
         var CORNER_SIZE = 15;
-        var PADDING = 5;
 
         var parent = require("./viewBase");
         var svgHelper = require("./svgHelper");
@@ -109,12 +106,10 @@ define(function(require) {
         }
 
         that.showResizeBorder = function () {
-            console.log("showResizeBorder");
             resizeBorder.attr("display", "block");
         };
 
         that.hideResizeBorder = function () {
-            console.log("hideResizeBorder");
             resizeBorder.attr("display", "none");
         };
 
@@ -268,28 +263,15 @@ define(function(require) {
             content.append(el);
         };
 
-        /**
-         * Adds text to node's content. If text coordinates are not set, text is added right after the last
-         * rendered element.
-         *
-         * @param spec
-         */
         that.text = function (spec) {
-            var x = spec.x || PADDING;
-            var y = spec.y || PADDING;
-            var text = spec.text || spec;
-            // TODO: I still need node here, but tohle stejne nebude fungovat pro elipsu, renderer je ten, kdo
-            // muze rozhodnout, kde defaultne zacina text
             var el = svgHelper.createSvgElement("text", {
-                x: node.x + x,
-                y: node.y + y,
+                x: spec.x,
+                y: spec.y,
                 'alignment-baseline': 'text-before-edge'
             });
-            el.text(text);
+            el.text(spec.text);
             content.append(el);
         };
-
-        that.PADDING = PADDING;
 
         that._test = {};
         that._test.contentSvg = function () {

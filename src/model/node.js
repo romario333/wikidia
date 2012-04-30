@@ -3,7 +3,6 @@ define(function (require) {
 
     var item = require("model/item");
 
-    // TODO: I will need cloning support in the future, consider using pseudo-privacy
     return function (spec) {
         var DEFAULT_SIZE = 90;
 
@@ -11,7 +10,6 @@ define(function (require) {
 
         spec = spec || {};
 
-        // TODO: tady bych mel proste vytvorit objekt, ktery ma automaticky vsechny properties observable?
         that._addObservableProperty("text", spec.text || "");
         that._addObservableProperty("x", spec.x || 0);
         that._addObservableProperty("y", spec.y || 0);

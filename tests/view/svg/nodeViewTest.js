@@ -13,7 +13,7 @@ define(function(require, exports, module) {
             var diagramView = view.diagramView(rootView);
             var node = model.node({x: 10, y: 20});
 
-            nodeView = view.nodeView(diagramView, node);
+            nodeView = view.nodeView(diagramView);
         });
 
         it("can draw rectangles", function () {
