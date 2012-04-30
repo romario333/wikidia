@@ -10,6 +10,14 @@ define(function(require) {
 
         container.append(element);
 
+        that.containerWidth = function () {
+            return container.width();
+        };
+
+        that.containerHeight = function () {
+            return container.height();
+        };
+
         that._test = {
             svg: function () {
                 return svgHelper.printSvg(element);

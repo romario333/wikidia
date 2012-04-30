@@ -259,6 +259,36 @@ define(function(require) {
             }
 
             return that;
+        },
+
+        editItemCommand: function (item) {
+            var that = {},
+                oldText = item.data.text;
+
+            that.newText = oldText;
+
+            that.execute = function () {
+                item.data.text = that.newText;
+                // TODO: this should not be necessary
+                item.fireChange();
+            };
+
+            that.undo = function () {
+                item.data.text = oldText;
+            };
+
+            return that;
+        },
+
+        // TODO:
+        deleteItemCommand: function (diagram, item) {
+            var that = {},
+                itemConnections = item.connections();
+
+
+            that.execute = function () {
+                diagram.removeItem(item.data);
+            };
         }
     };
 });

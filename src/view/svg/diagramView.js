@@ -6,8 +6,6 @@ define(function(require) {
         var parent = require("./viewBase");
         var svgHelper = require("./svgHelper");
 
-        var gridStep = 100; // TODO: pokus
-
         var element = rootView.createElement("g", {class: "diagram"});
         var that = parent(element);
         var eventBox, grid;
@@ -33,8 +31,8 @@ define(function(require) {
             // draw grid
             grid.empty();
             if (that.gridStep !== 0) {
-                var diagramWidth = rootView.element().innerWidth();
-                var diagramHeight = rootView.element().innerHeight();
+                var diagramWidth = rootView.containerWidth();
+                var diagramHeight = rootView.containerHeight();
                 var x, y, line;
                 for (x = 0; x < diagramWidth; x += that.gridStep) {
                     line = svgHelper.createSvgElement("line", {x1: x, y1: 0, x2: x, y2: diagramHeight, stroke: "blue", opacity: 0.5});

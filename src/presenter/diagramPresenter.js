@@ -6,7 +6,8 @@ define(function(require) {
     var renderers = require("presenter/renderers");
     var commandExec = require("presenter/commandExecutor");
 
-    return function (diagramView, diagram) {
+    // TODO: for now nodeEditView is just a jQuery wrapper around textarea
+    return function (diagramView, diagram, itemEditView) {
         var utils = require("utils");
 
         var itemRenderers = {
@@ -59,6 +60,10 @@ define(function(require) {
 
             diagram.itemAdded(onItemAdded);
             diagram.itemRemoved(onItemRemoved);
+
+            itemEditView.change(onItemEditViewChange);
+            itemEditView.focus(onItemEditViewFocus);
+            itemEditView.blur(onItemEditViewBlur);
 
             items.forEach(function (item) {
                 updateItem(item);
@@ -170,14 +175,15 @@ define(function(require) {
             throw new Error("Item not found.");
         };
 
-        function onItemAdded(diagram, item) {
-            if (item.isLine) {
-                addLine(item);
-            } else if (item.isNode) {
-                addNode(item);
+        function onItemAdded(diagram, data) {
+            if (data.isLine) {
+                addLine(data);
+            } else if (data.isNode) {
+                addNode(data);
             } else {
-                throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.kind}));
+                throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: data.kind}));
             }
+            updateItem(items.itemForData(data));
         }
 
         function onItemRemoved(diagram, item) {
@@ -219,6 +225,26 @@ define(function(require) {
 
         function onItemDoubleClick(view) {
 
+        }
+
+        function onItemSelectionChange(item) {
+            console.log("onItemSelectionChange");
+            if (!selection.isMultiple() && item.isSelected) {
+                commandInProgress = commands.editItemCommand(item);
+                //itemEditView.val(item.data.text);
+            }
+        }
+
+        function onItemEditViewChange(e) {
+            console.log("onItemEditViewChange");
+        }
+
+        function onItemEditViewFocus(e) {
+            console.log("onItemEditViewFocus");
+        }
+
+        function onItemEditViewBlur(e) {
+            console.log("onItemEditViewBlur");
         }
 
         function onNodeDragStart(nodeView) {
@@ -380,51 +406,56 @@ define(function(require) {
         }
 
         function multipleSelection() {
-            var that = {};
             var items = [];
 
-            that.addOrRemove = function (item) {
+            return {
+                addOrRemove: function (item) {
 
-                if (item.isSelected) {
-                    that.remove(item);
-                } else {
-                    that.add(item);
+                    if (item.isSelected) {
+                        this.remove(item);
+                    } else {
+                        this.add(item);
+                    }
+
+                },
+
+                add: function (item) {
+                    items.push(item);
+                    item.isSelected = true;
+                    onItemSelectionChange(item);
+                    updateItem(item);
+                },
+
+                remove: function (item) {
+                    var i = items.indexOf(item);
+                    items.splice(i, 1);
+                    item.isSelected = false;
+                    onItemSelectionChange(item);
+                    updateItem(item);
+                },
+
+                select: function (item) {
+                    this.clear();
+                    this.add(item);
+                },
+
+                clear: function () {
+                    var selected;
+                    while ((selected = items.pop())) {
+                        selected.isSelected = false;
+                        onItemSelectionChange(selected);
+                        updateItem(selected);
+                    }
+                },
+                items: function () {
+                    return items.slice();
+                },
+
+                isMultiple: function () {
+                    return items.length > 1;
                 }
-
             };
-
-            that.add = function (item) {
-                items.push(item);
-                item.isSelected = true;
-                updateItem(item);
-            };
-
-            that.remove = function (item) {
-                var i = items.indexOf(item);
-                items.splice(i, 1);
-                item.isSelected = false;
-                updateItem(item);
-            };
-
-            that.select = function (item) {
-                that.clear();
-                that.add(item);
-            };
-
-            that.clear = function () {
-                var selected;
-                while ((selected = items.pop())) {
-                    selected.isSelected = false;
-                    updateItem(selected);
-                }
-            };
-
-            that.items = function () {
-                return items;
-            };
-            return that;
         }
-
         that._test = {
             items: items
         };
@@ -432,5 +463,6 @@ define(function(require) {
         init();
 
         return that;
+
     };
 });

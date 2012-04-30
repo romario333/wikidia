@@ -7,6 +7,8 @@ define(function(require, exports, module) {
 
     $(document).ready(function () {
 
+        $("#demo").height($(document).height());
+
         var diagram = model.diagram();
         diagram.addItem(model.node({x: 0, y: 0, text: "node1"}));
         diagram.addItem(model.node({x: 0, y: 90, text: "node2"}));
@@ -14,8 +16,9 @@ define(function(require, exports, module) {
 
         var rootView = view.rootView($("#diagram"));
         var diagramView = view.diagramView(rootView, diagram);
+        var nodeEditView = $("#nodeEdit");
 
-        var presenter = diagramPresenter(diagramView, diagram);
+        var presenter = diagramPresenter(diagramView, diagram, nodeEditView);
 
         $("#addNode").click(function () {
             diagram.addItem(model.node());

@@ -11,6 +11,10 @@ define(function(require) {
             lastId = 0;
 
         that.addItem = function (item) {
+            if (!item.isLine && !item.isNode) {
+                throw new Error("Only nodes and lines can be added to diagram");
+            }
+
             item.id = ++lastId;
 
             if (item.isLine) {
@@ -26,10 +30,18 @@ define(function(require) {
         };
 
         that.removeItem = function (item) {
+            if (!item.isLine && !item.isNode) {
+                throw new Error("Only nodes and lines can be removed from diagram");
+            }
+
             var i = items.indexOf(item);
             if (i === -1) {
-                throw new Error("Item '{item}' not found in connections.".supplant({item: item}));
+                throw new Error("Item '{itemId}' not found in diagram.".supplant({itemId: item.id}));
             }
+
+            // remove item's connection before removing it from diagram
+            item.disconnect();
+
             items.splice(i, 1);
             item.id = null;
 

@@ -8,7 +8,6 @@ define(function(require) {
 
         var onClick, onDoubleClick, onMouseDown, onMouseUp;
 
-
         element.click(function (e) {
             e.stopPropagation();
             if (onClick) {
