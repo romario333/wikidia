@@ -324,21 +324,24 @@ define(function(require) {
                 oldText = item.data.text;
 
             that.newText = oldText;
+            that.isEditItemCommand = true;
 
             that.execute = function () {
                 item.data.text = that.newText;
-                // TODO: this should not be necessary
-                item.fireChange();
             };
 
             that.undo = function () {
                 item.data.text = oldText;
             };
 
+            that.hasChanged = function () {
+                return that.newText !== item.data.text;
+            };
+
             return that;
         },
 
-        // TODO: supress change event
+        // TODO: suppress change event
         deleteItemsCommand: function (diagram, items) {
             var that = {},
                 oldConnections = [];

@@ -61,7 +61,6 @@ define(function(require) {
             diagram.itemAdded(onItemAdded);
             diagram.itemRemoved(onItemRemoved);
 
-            itemEditView.change(onItemEditViewChange);
             itemEditView.focus(onItemEditViewFocus);
             itemEditView.blur(onItemEditViewBlur);
 
@@ -156,8 +155,6 @@ define(function(require) {
 
         function updateItem(item) {
             var renderer = itemRenderers.forItem(item);
-            console.log("renderer for item:");
-            console.dir(renderer);
             renderer.render(item);
         }
 
@@ -189,8 +186,6 @@ define(function(require) {
         };
 
         function onItemAdded(diagram, data) {
-            console.log("item added");
-            console.dir(data);
             if (data.isLine) {
                 addLine(data);
             } else if (data.isNode) {
@@ -202,7 +197,6 @@ define(function(require) {
         }
 
         function onItemRemoved(diagram, data) {
-            console.log("item removed");
             var item = items.itemForData(data);
             item.view.remove();
             items.remove(item);
@@ -247,22 +241,23 @@ define(function(require) {
 
         function onItemSelectionChange(item) {
             console.log("onItemSelectionChange");
-            if (!selection.isMultiple() && item.isSelected) {
-                commandInProgress = commands.editItemCommand(item);
-                //itemEditView.val(item.data.text);
-            }
-        }
+            stopEditing();
 
-        function onItemEditViewChange(e) {
-            console.log("onItemEditViewChange");
+            if (!selection.isMultiple() && item.isSelected) {
+                itemEditView.val(item.data.text);
+            } else {
+                itemEditView.val("");
+            }
         }
 
         function onItemEditViewFocus(e) {
             console.log("onItemEditViewFocus");
+            startEditing();
         }
 
         function onItemEditViewBlur(e) {
             console.log("onItemEditViewBlur");
+            stopEditing();
         }
 
         function onNodeDragStart(nodeView) {
@@ -395,6 +390,29 @@ define(function(require) {
             }
         }
 
+        function startEditing() {
+            if (commandInProgress && !commandInProgress.isEditItemCommand) {
+                // some other command in progress, throw it away, we're going to edit now
+                commandInProgress = null;
+            }
+
+            if (!commandInProgress) {
+                if (selection.items().length === 1) {
+                    commandInProgress = commands.editItemCommand(selection.items(0));
+                }
+            }
+        }
+
+        function stopEditing() {
+            if (commandInProgress && commandInProgress.isEditItemCommand) {
+                commandInProgress.newText = itemEditView.val();
+                if (commandInProgress.hasChanged()) {
+                    commandExecutor.execute(commandInProgress);
+                    commandInProgress = null;
+                }
+            }
+        }
+
         /**
          * Snaps specified point (or rect) to the diagram's grid and returns it.
          *
@@ -465,8 +483,12 @@ define(function(require) {
                         updateItem(selected);
                     }
                 },
-                items: function () {
-                    return items.slice();
+                items: function (index) {
+                    if (arguments.length === 0) {
+                        return items.slice();
+                    } else {
+                        return items[index];
+                    }
                 },
 
                 isMultiple: function () {
