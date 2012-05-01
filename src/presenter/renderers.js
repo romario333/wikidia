@@ -1,6 +1,113 @@
 define(function(require) {
     "use strict";
 
+    var utils = require("utils");
+
+
+    // note that chain should always start with renderChain
+    function renderChain(next) {
+        return {
+            rect: function (spec) {
+                spec = spec ? utils.copyShallow(spec) : {};
+                next.rect(spec);
+            },
+            line: function (spec) {
+                spec = spec ? utils.copyShallow(spec) : {};
+                next.line(spec);
+            },
+            text: function (spec) {
+                spec = spec ? utils.copyShallow(spec) : {};
+                return next.text(spec);
+            }
+        };
+    }
+
+    function verticalFlow(next) {
+        var lastY = 0;
+        var TEXT_PADDING = 5;
+
+        return {
+            rect: function (spec) {
+                if (!spec.y) {
+                    spec.y = lastY;
+                }
+                next.rect(spec);
+                lastY += spec.height;
+            },
+            line: function (spec) {
+                if (!spec.y1) {
+                    spec.y1 = lastY;
+                }
+                if (!spec.y2) {
+                    spec.y2 = lastY;
+                }
+                next.line(spec);
+            },
+            text: function (spec) {
+                if (!spec.y) {
+                    spec.y = lastY;
+                }
+                spec.x = spec.x ? spec.x + TEXT_PADDING : TEXT_PADDING;
+                spec.y += TEXT_PADDING;
+                var textSize = next.text(spec);
+                lastY += textSize.height + (2 * TEXT_PADDING);
+                return textSize;
+            }
+        };
+    }
+
+    function relative(next, dx, dy) {
+        return {
+            rect: function (spec) {
+                spec.x = spec.x ? spec.x + dx : dx;
+                spec.y = spec.y ? spec.y + dy : dy;
+                return next.rect(spec);
+            },
+            line: function (spec) {
+                spec.x1 = spec.x1 ? spec.x1 + dx : dx;
+                spec.y1 = spec.y1 ? spec.y1 + dy : dy;
+                spec.x2 = spec.x2 ? spec.x2 + dx : dx;
+                spec.y2 = spec.y2 ? spec.y2 + dy : dy;
+                return next.line(spec);
+            },
+            text: function (spec) {
+                spec.x = spec.x ? spec.x + dx : dx;
+                spec.y = spec.y ? spec.y + dy : dy;
+                return next.text(spec);
+            }
+        };
+    }
+
+    /**
+     * Parses text and returns:
+     * 1) Object with properties set via {{property=value}}.
+     * 2) Array of text lines (minus properties from point 1).
+     *
+     * @param text
+     */
+    function parseRenderText(text) {
+        var res = {
+            lines: [],
+            properties: {}
+        };
+
+        var lines = text.split("\n");
+        lines.forEach(function (line) {
+            // TODO: I should allow escaping of {{
+            var m = line.match(/^\{\{([^=]+)=([^}]+)\}\}$/);
+            if (m === null) {
+                // just ordinary line with text
+                res.lines.push(line);
+            } else {
+                // line with property, add it to properties
+                res.properties[m[1]] = m[2];
+            }
+        });
+
+        return res;
+    }
+
+
     return {
 
         /**
@@ -12,7 +119,16 @@ define(function(require) {
 
             that.TEXT_PADDING = 5;
 
-            that.render = function (item) {
+            /**
+             * You should always call this function before render. It returns <code>renderInfo</code>
+             * object, which contains parsed properties ({{property=value}}) and lines of text. You can
+             * freely modify this object.
+             *
+             * @param item
+             * @return {Object}
+             * @private
+             */
+            that._render = function(item) {
                 var node = item.data;
                 var nodeView = item.view;
 
@@ -20,8 +136,28 @@ define(function(require) {
                 nodeView.updateView({x: node.x, y: node.y, width: node.width, height: node.height});
                 nodeView.isSelected(item.isSelected);
 
-                nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: "white", stroke: "black"});
-                nodeView.text({x: node.x + that.TEXT_PADDING, y: node.y + that.TEXT_PADDING, text: node.text});
+                var parsedText = parseRenderText(node.text);
+                var fillColor = parsedText.properties.fill || "white";
+                var strokeColor = parsedText.properties.stroke || "black";
+
+                return {
+                    lines: parsedText.lines,
+                    properties: parsedText.properties,
+                    fillColor: fillColor,
+                    strokeColor: strokeColor
+                };
+            };
+
+            that.render = function (item) {
+                var renderInfo = that._render(item);
+
+                var node = item.data;
+                var nodeView = item.view;
+
+                nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: renderInfo.fillColor, stroke: renderInfo.strokeColor});
+
+                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y)));
+                render.text({lines: renderInfo.lines});
             };
 
             that.showNearbyConnectionPoint = function (node, nodeView, x, y, gridStep) {
@@ -74,16 +210,39 @@ define(function(require) {
             return that;
         },
 
+        classNodeRenderer: function () {
+            var that = this.nodeRenderer();
+
+            that.render = function (item) {
+                var renderInfo = that._render(item);
+
+                var node = item.data;
+                var nodeView = item.view;
+
+                nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: renderInfo.fillColor, stroke: renderInfo.strokeColor});
+
+                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y)));
+
+                renderInfo.lines.forEach(function (line) {
+                    if (line === "--") {
+                        render.line({x1: 0, x2: node.width, stroke: renderInfo.strokeColor});
+                    } else {
+                        render.text({text: line});
+                    }
+                });
+            };
+
+            return that;
+        },
+
         useCaseNodeRenderer: function () {
             var that = this.nodeRenderer();
 
             that.render = function (item) {
+                var renderInfo = that._render(item);
+
                 var node = item.data;
                 var nodeView = item.view;
-
-                nodeView.clear();
-                nodeView.updateView({x: node.x, y: node.y, width: node.width, height: node.height});
-                nodeView.isSelected(item.isSelected);
 
                 var halfWidth = node.width / 2;
                 var halfHeight = node.height / 2;
@@ -93,10 +252,14 @@ define(function(require) {
                     cy: node.y + halfHeight,
                     rx: halfWidth,
                     ry: halfHeight,
-                    fill: "#5f9ea0",
-                    stroke: "black"
+                    fill: renderInfo.fillColor,
+                    stroke: renderInfo.strokeColor
                 });
-                nodeView.text({x: node.x + that.TEXT_PADDING, y: node.y + that.TEXT_PADDING, text: node.text});
+
+                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y)));
+
+                // TODO: for now let's cheat
+                render.text({x: 20, y: 20, lines: renderInfo.lines});
             };
 
             return that;

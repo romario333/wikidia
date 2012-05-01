@@ -12,6 +12,7 @@ define(function(require) {
 
         var itemRenderers = {
             node: renderers.nodeRenderer(),
+            class: renderers.classNodeRenderer(),
             useCase: renderers.useCaseNodeRenderer(),
             line: renderers.lineRenderer(),
             forItem: function (item) {

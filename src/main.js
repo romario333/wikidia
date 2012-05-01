@@ -10,9 +10,9 @@ define(function(require, exports, module) {
         $("#demo").height($(document).height());
 
         var diagram = model.diagram();
-        diagram.addItem(model.node({x: 0, y: 0, text: "node1"}));
-        diagram.addItem(model.node({x: 0, y: 90, text: "node2"}));
-        diagram.addItem(model.node({x: 90, y: 90, text: "use-case node", kind: "useCase"}));
+        diagram.addItem(model.node({x: 30, y: 30, width: 180, height: 90, text: "simple node"}));
+        diagram.addItem(model.node({x: 255, y: 30, width: 180, height: 135, text: "class\n--\n- property1\n- property2\n--\n+ doSomething()\n{{fill=#7fffd4}}", kind: "class"}));
+        diagram.addItem(model.node({x: 30, y: 210, width: 180, height: 90, text: "use-case\n{{fill=lightgray}}", kind: "useCase"}));
 
         var rootView = view.rootView($("#diagram"));
         var diagramView = view.diagramView(rootView, diagram);

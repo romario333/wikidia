@@ -248,6 +248,11 @@ define(function(require) {
             content.append(el);
         };
 
+        that.line = function (spec) {
+            var el = svgHelper.createSvgElement("line", spec);
+            content.append(el);
+        };
+
         that.ellipse = function (spec) {
             // TODO: validate spec
             var el = svgHelper.createSvgElement("ellipse", spec);
@@ -255,13 +260,28 @@ define(function(require) {
         };
 
         that.text = function (spec) {
-            var el = svgHelper.createSvgElement("text", {
-                x: spec.x,
-                y: spec.y,
-                'alignment-baseline': 'text-before-edge'
+            var textElement = svgHelper.createSvgElement("text");
+
+            // TODO: optimize? It would probably be considerably faster to construct text out of DOM
+            content.append(textElement);
+
+            var lines = spec.lines || [spec.text];
+            var lastY = spec.y;
+            lines.forEach(function (line) {
+                var lineSpan = svgHelper.createSvgElement("tspan", {
+                    x: spec.x,
+                    y: lastY,
+                    'alignment-baseline': 'text-before-edge'
+                });
+                lineSpan.text(line);
+                textElement.append(lineSpan);
+                lastY += lineSpan.height();
             });
-            el.text(spec.text);
-            content.append(el);
+
+            return {
+                width: textElement.width(),
+                height: textElement.height()
+            };
         };
 
         that._test = {};
