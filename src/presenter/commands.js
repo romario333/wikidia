@@ -3,21 +3,59 @@ define(function(require) {
 
     var model = require("model");
 
+    /**
+     * Fills nodes and points arrays from items. Makes sure that duplicate line points
+     * are added only once.
+     *
+     * @param items
+     * @param nodes
+     * @param linePoints
+     */
+    function fillNodesAndPointsFromItems(nodes, linePoints, items) {
+        items.forEach(function (item) {
+            if (item.data.isNode) {
+                var node = item.data;
+                nodes.push(node);
+                node.connections().forEach(function (connection) {
+                    if (connection.isLinePoint) {
+                        addLinePoint(connection);
+                    }
+                });
+            } else if (item.data.isLine) {
+                item.data.points().forEach(function (point) {
+                    addLinePoint(point);
+                });
+            } else {
+                throw new Error("Don't know how to handle this item.");
+            }
+        });
+
+        function addLinePoint(point) {
+            if (!linePoints[point.id]) {
+                linePoints[point.id] = point;
+            }
+        }
+    }
+
     return {
         moveCommand: function (items) {
             var that = {},
                 lastPreviewDx = 0,
-                lastPreviewDy = 0;
+                lastPreviewDy = 0,
+                nodes = [],
+                linePoints = [];
             that.dx = 0;
             that.dy = 0;
 
-            var previewMoveEnabled = false;
+            that.isMoveCommand = true;
+
+            var previewMoveEnabled = true;
+
+            fillNodesAndPointsFromItems(nodes, linePoints, items);
 
             that.preview = function () {
                 if (previewMoveEnabled) {
-                    items.forEach(function (item) {
-                        previewMove();
-                    });
+                    previewMove();
                 } else {
                     move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
                 }
@@ -40,92 +78,50 @@ define(function(require) {
 
             that.undo = function () {
                 move(-that.dx, -that.dy);
+                return items;
             };
 
+            function move(dx, dy) {
+                nodes.forEach(function (node) {
+                    node.changeEventsEnabled(false);
+                    node.x += dx;
+                    node.y += dy;
+                    node.changeEventsEnabled(true);
+                    node.fireChange();
+                });
+
+                updateLinePoints(dx, dy);
+            }
+
+            function updateLinePoints(dx, dy) {
+                linePoints.forEach(function (point) {
+                    point.line.changeEventsEnabled(false);
+                    point.x += dx;
+                    point.y += dy;
+                    point.line.changeEventsEnabled(true);
+                    point.line.fireChange();
+                });
+            }
+
+            // TODO: I'm still not sure that I'll need this optimization
             function previewMove() {
                 items.forEach(function (item) {
-
                     if (item.data.isNode) {
                         item.view.previewMove(that.dx, that.dy);
-
-                        item.data.connections().forEach(function (connection) {
-                            if (connection.isLinePoint) {
-                                // I can't do preview on this line, because I don't know whether I'm moving its all points
-                                var point = connection;
-                                point.line.changeEventsEnabled(false);
-                                point.x += that.dx - lastPreviewDx;
-                                point.y += that.dy - lastPreviewDy;
-                                point.line.changeEventsEnabled(true);
-                                point.line.fireChange();
-                            }
-                        });
                     }
-
                 });
+                updateLinePoints(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
             }
 
-            // TODO: ugly and I'm still not sure that I'll need this optimalization
+
             function cancelPreviewMove() {
                 items.forEach(function (item) {
-
                     if (item.data.isNode) {
                         item.view.cancelPreviewMove();
-
-                        item.data.connections().forEach(function (connection) {
-                            if (connection.isLinePoint) {
-                                // I can't do preview on this line, because I don't know whether I'm moving its all points
-                                var point = connection;
-                                point.line.changeEventsEnabled(false);
-                                point.x -= that.dx;
-                                point.y -= that.dy;
-                                point.line.changeEventsEnabled(true);
-                                point.line.fireChange();
-                            }
-                        });
-                    }
-
-                });
-            }
-
-            function move(dx, dy) {
-                items.forEach(function (item) {
-                    if (item.data.isNode) {
-                        var node = item.data;
-                        node.changeEventsEnabled(false);
-                        node.x += dx;
-                        node.y += dy;
-                        node.changeEventsEnabled(true);
-                        node.fireChange();
-
-                        // update lines connected to node
-                        node.connections().forEach(function (connection) {
-                            if (connection.isLinePoint) {
-                                // update line to match new node position
-                                var point = connection;
-                                point.line.changeEventsEnabled(false);
-                                point.x += dx;
-                                point.y += dy;
-                                point.line.changeEventsEnabled(true);
-                                point.line.fireChange();
-                            }
-                        });
-
-
-                    } else if (item.data.isLine) {
-                        var line = item.data;
-                        line.changeEventsEnabled(false);
-                        line.points().forEach(function (point) {
-                            point.x += dx;
-                            point.y += dy;
-                        });
-                        line.changeEventsEnabled(true);
-                        line.fireChange();
-                    } else {
-                        throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.data.kind}));
                     }
                 });
+                updateLinePoints(-that.dx, -that.dy);
             }
-
 
             return that;
         },
@@ -133,10 +129,16 @@ define(function(require) {
         resizeNodeCommand: function (items) {
             var that = {},
                 lastDWidth = 0,
-                lastDHeight = 0;
+                lastDHeight = 0,
+                nodes = [],
+                linePoints = [];
 
             that.dWidth = 0;
             that.dHeight = 0;
+
+            that.isResizeNodeCommand = true;
+
+            fillNodesAndPointsFromItems(nodes, linePoints, items);
 
             that.preview = function () {
                 resize(that.dWidth - lastDWidth, that.dHeight - lastDHeight);
@@ -154,35 +156,24 @@ define(function(require) {
 
             that.undo = function () {
                 resize(-that.dWidth, -that.dHeight);
+                return items;
             };
 
             function resize(dWidth, dHeight) {
-                items.forEach(function (item) {
-                    if (!item.data.isNode) {
-                        throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.data.kind}));
-                    }
-
-                    var node = item.data;
+                nodes.forEach(function (node) {
                     node.changeEventsEnabled(false);
                     node.width += dWidth;
                     node.height += dHeight;
                     node.changeEventsEnabled(true);
                     node.fireChange();
+                });
 
-                    // TODO: DRY? (it's in moveCommand too)
-                    // update lines connected to node
-                    node.connections().forEach(function (connection) {
-                        if (connection.isLinePoint) {
-                            // update line to match new node position
-                            var point = connection;
-                            point.line.changeEventsEnabled(false);
-                            point.x += dWidth;
-                            point.y += dHeight;
-                            point.line.changeEventsEnabled(true);
-                            point.line.fireChange();
-                        }
-                    });
-
+                linePoints.forEach(function (point) {
+                    point.line.changeEventsEnabled(false);
+                    point.x += dWidth;
+                    point.y += dHeight;
+                    point.line.changeEventsEnabled(true);
+                    point.line.fireChange();
                 });
             }
 
@@ -237,6 +228,7 @@ define(function(require) {
                 // TODO:
                 //diagram.removeItem(line);
                 // TODO: I should remove connections (or they should ideally remove automatically)
+                return [];
             };
 
             return that;
@@ -306,6 +298,8 @@ define(function(require) {
                 point.line.changeEventsEnabled(true);
                 point.line.fireChange();
 
+                // TODO: should return item with affected line
+                return [];
             };
 
             function move(dx, dy) {
@@ -332,6 +326,7 @@ define(function(require) {
 
             that.undo = function () {
                 item.data.text = oldText;
+                return [item];
             };
 
             that.hasChanged = function () {
@@ -351,8 +346,8 @@ define(function(require) {
                 items.forEach(function (item) {
                     var data = item.data;
                     // backup connections of item we are going to delete (it will be disconnected when removed from diagram)
-                    if (data.isLinePoint) {
-                        data.points.forEach(function (point) {
+                    if (data.isLine) {
+                        data.points().forEach(function (point) {
                             point.connections().forEach(function (connectedTo) {
                                 oldConnections.push({from: point, to: connectedTo});
                             });
@@ -378,6 +373,7 @@ define(function(require) {
                     connection.from.addConnection(connection.to);
                 });
 
+                return items;
             };
 
             return that;

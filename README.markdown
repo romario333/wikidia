@@ -13,3 +13,6 @@ This project is in very early phase, right now there is not much to see.
 
 ## What I don't like on UMLLet
 * size of text in notes is too large, should be smaller than text in nodes
+
+##Bugs
+* Elements are not selected when delete items is undone.

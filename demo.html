@@ -24,10 +24,21 @@
             position: absolute; right: 10px; top: 10px; width: 33%; height: 100%
         }
 
+        #quickHelp
+        {
+            border: 1px solid black;
+            background-color: #87cefa;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            padding: 5px;
+        }
+
+
         #nodeEdit
         {
-            width: 100%; height: 80%;
+            width: 100%; height: 70%;
         }
+
     </style>
 
 </head>
@@ -37,6 +48,13 @@
         <div id="diagram">
         </div>
         <div id="controlPanel">
+            <div id="quickHelp">
+                Hold CTRL to select multiple elements.
+                <br/>
+                Hold CTRL and drag lower right corner to resize elements.
+                <br/>
+                Drag and drop red circles to create lines.
+            </div>
             <input id="addNode" type="button" value="Add Node" />
             <input id="addUseCase" type="button" value="Add Use-Case" />
             <hr/>

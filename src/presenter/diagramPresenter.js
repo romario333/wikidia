@@ -82,7 +82,8 @@ define(function(require) {
                 }
 
                 if (e.ctrlKey === true && e.which === 90) {
-                    commandExecutor.undo();
+                    var affectedItems = commandExecutor.undo();
+                    selection.select(affectedItems);
                 }
 
                 if (e.which === 46 && selection.items().length > 0) { // DEL
@@ -347,6 +348,10 @@ define(function(require) {
             var node = items.itemForView(nodeView);
             var renderer = itemRenderers.forItem(node);
             if (!isCtrlKeyDown) {
+                if (commandInProgress && commandInProgress.isMoveCommand) {
+                    // TODO: temp fix - connection points show erratically when moving with translate optimization enabled
+                    return;
+                }
                 renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
             }
         }
@@ -470,9 +475,16 @@ define(function(require) {
                     updateItem(item);
                 },
 
-                select: function (item) {
+                select: function (items) {
                     this.clear();
-                    this.add(item);
+                    if (Array.isArray(items)) {
+                        var selectionThis = this;
+                        items.forEach(function (item) {
+                            selectionThis.add(item);
+                        });
+                    } else {
+                        this.add(items);
+                    }
                 },
 
                 clear: function () {

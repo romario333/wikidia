@@ -10,9 +10,14 @@ define(function(require) {
             command.execute();
         };
 
+        /**
+         * Undoes last command and returns affected items.
+         *
+         * @param command
+         */
         that.undo = function (command) {
             if (commandQueue.length > 0) {
-                commandQueue.pop().undo();
+                return commandQueue.pop().undo();
             }
         };
 

@@ -20,7 +20,7 @@ define(function(require) {
                 nodeView.updateView({x: node.x, y: node.y, width: node.width, height: node.height});
                 nodeView.isSelected(item.isSelected);
 
-                nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: "#A1BF36", stroke: "black"});
+                nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: "white", stroke: "black"});
                 nodeView.text({x: node.x + that.TEXT_PADDING, y: node.y + that.TEXT_PADDING, text: node.text});
             };
 
@@ -93,7 +93,7 @@ define(function(require) {
                     cy: node.y + halfHeight,
                     rx: halfWidth,
                     ry: halfHeight,
-                    fill: "#A1BF36",
+                    fill: "#5f9ea0",
                     stroke: "black"
                 });
                 nodeView.text({x: node.x + that.TEXT_PADDING, y: node.y + that.TEXT_PADDING, text: node.text});
