@@ -2,6 +2,7 @@ define(function (require) {
     "use strict";
 
     var item = require("model/item");
+    var utils = require("utils");
 
     return function (spec) {
         var DEFAULT_SIZE = 90;
@@ -10,12 +11,12 @@ define(function (require) {
 
         spec = spec || {};
 
-        that._addObservableProperty("text", spec.text || "");
-        that._addObservableProperty("x", spec.x || 0);
-        that._addObservableProperty("y", spec.y || 0);
-        that._addObservableProperty("width", spec.width || DEFAULT_SIZE);
-        that._addObservableProperty("height", spec.height || DEFAULT_SIZE);
-        that._addObservableProperty("kind", spec.kind || "node");
+        utils.addObservableProperty(that, "text", spec.text || "");
+        utils.addObservableProperty(that, "x", spec.x || 0);
+        utils.addObservableProperty(that, "y", spec.y || 0);
+        utils.addObservableProperty(that, "width", spec.width || DEFAULT_SIZE);
+        utils.addObservableProperty(that, "height", spec.height || DEFAULT_SIZE);
+        utils.addObservableProperty(that, "kind", spec.kind || "node");
 
         that.isNode = true;
 

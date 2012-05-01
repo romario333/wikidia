@@ -11,14 +11,27 @@ define(function(require) {
             that.dx = 0;
             that.dy = 0;
 
+            var previewMoveEnabled = false;
+
             that.preview = function () {
-                move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
+                if (previewMoveEnabled) {
+                    items.forEach(function (item) {
+                        previewMove();
+                    });
+                } else {
+                    move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
+                }
                 lastPreviewDx = that.dx;
                 lastPreviewDy = that.dy;
             };
 
             that.cancelPreview = function () {
-                move(-that.dx, -that.dy);
+                if (previewMoveEnabled) {
+                    cancelPreviewMove();
+                } else {
+                    move(-that.dx, -that.dy);
+                }
+
             };
 
             that.execute = function () {
@@ -28,6 +41,51 @@ define(function(require) {
             that.undo = function () {
                 move(-that.dx, -that.dy);
             };
+
+            function previewMove() {
+                items.forEach(function (item) {
+
+                    if (item.data.isNode) {
+                        item.view.previewMove(that.dx, that.dy);
+
+                        item.data.connections().forEach(function (connection) {
+                            if (connection.isLinePoint) {
+                                // I can't do preview on this line, because I don't know whether I'm moving its all points
+                                var point = connection;
+                                point.line.changeEventsEnabled(false);
+                                point.x += that.dx - lastPreviewDx;
+                                point.y += that.dy - lastPreviewDy;
+                                point.line.changeEventsEnabled(true);
+                                point.line.fireChange();
+                            }
+                        });
+                    }
+
+                });
+            }
+
+            // TODO: ugly and I'm still not sure that I'll need this optimalization
+            function cancelPreviewMove() {
+                items.forEach(function (item) {
+
+                    if (item.data.isNode) {
+                        item.view.cancelPreviewMove();
+
+                        item.data.connections().forEach(function (connection) {
+                            if (connection.isLinePoint) {
+                                // I can't do preview on this line, because I don't know whether I'm moving its all points
+                                var point = connection;
+                                point.line.changeEventsEnabled(false);
+                                point.x -= that.dx;
+                                point.y -= that.dy;
+                                point.line.changeEventsEnabled(true);
+                                point.line.fireChange();
+                            }
+                        });
+                    }
+
+                });
+            }
 
             function move(dx, dy) {
                 items.forEach(function (item) {
@@ -280,15 +338,46 @@ define(function(require) {
             return that;
         },
 
-        // TODO:
-        deleteItemCommand: function (diagram, item) {
+        // TODO: supress change event
+        deleteItemsCommand: function (diagram, items) {
             var that = {},
-                itemConnections = item.connections();
-
+                oldConnections = [];
 
             that.execute = function () {
-                diagram.removeItem(item.data);
+
+                items.forEach(function (item) {
+                    var data = item.data;
+                    // backup connections of item we are going to delete (it will be disconnected when removed from diagram)
+                    if (data.isLinePoint) {
+                        data.points.forEach(function (point) {
+                            point.connections().forEach(function (connectedTo) {
+                                oldConnections.push({from: point, to: connectedTo});
+                            });
+                        });
+                    } else {
+                        data.connections().forEach(function (connectedTo) {
+                            oldConnections.push({from: data, to: connectedTo});
+                        });
+                    }
+
+                    diagram.removeItem(data);
+                });
+
             };
+
+            that.undo = function () {
+                // add items back to the diagram
+                items.forEach(function (item) {
+                    diagram.addItem(item.data);
+                });
+                // restore connections
+                oldConnections.forEach(function (connection) {
+                    connection.from.addConnection(connection.to);
+                });
+
+            };
+
+            return that;
         }
     };
 });

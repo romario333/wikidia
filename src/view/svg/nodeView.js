@@ -209,15 +209,6 @@ define(function(require) {
             onMouseMove = handler;
         };
 
-        // TODO: bude treba tahle optimalizace?
-        that.previewMove = function (dx, dy) {
-            if (dx !== 0 && dy !== 0) {
-                element.attr("transform", "translate({dx},{dy})".supplant({dx: dx, dy: dy}));
-            } else {
-                element.removeAttr("transform");
-            }
-        };
-
         // TODO: stejne jako u lineView, zajimave
         that.showConnectionPoint = function (point) {
             connectPoint.attr({cx: point.x, cy: point.y, display: "block"});

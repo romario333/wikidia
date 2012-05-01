@@ -85,6 +85,12 @@ define(function(require) {
                 if (e.ctrlKey === true && e.which === 90) {
                     commandExecutor.undo();
                 }
+
+                if (e.which === 46 && selection.items().length > 0) { // DEL
+                    var deleteCommand = commands.deleteItemsCommand(diagram, selection.items());
+                    commandExecutor.execute(deleteCommand);
+                }
+
             });
         }
 
@@ -150,6 +156,8 @@ define(function(require) {
 
         function updateItem(item) {
             var renderer = itemRenderers.forItem(item);
+            console.log("renderer for item:");
+            console.dir(renderer);
             renderer.render(item);
         }
 
@@ -175,7 +183,14 @@ define(function(require) {
             throw new Error("Item not found.");
         };
 
+        items.remove = function (item) {
+            var i = items.indexOf(item);
+            items.splice(i, 1);
+        };
+
         function onItemAdded(diagram, data) {
+            console.log("item added");
+            console.dir(data);
             if (data.isLine) {
                 addLine(data);
             } else if (data.isNode) {
@@ -186,8 +201,11 @@ define(function(require) {
             updateItem(items.itemForData(data));
         }
 
-        function onItemRemoved(diagram, item) {
-            // TODO: remove view from diagramView
+        function onItemRemoved(diagram, data) {
+            console.log("item removed");
+            var item = items.itemForData(data);
+            item.view.remove();
+            items.remove(item);
         }
 
         function onNodeChange(node) {

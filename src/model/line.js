@@ -2,6 +2,7 @@ define(function (require) {
     "use strict";
 
     var item = require("model/item");
+    var utils = require("utils");
 
     return function (spec) {
         var that = item(),
@@ -14,24 +15,8 @@ define(function (require) {
         points.push(point({x: spec.x1 || 0, y: spec.y1 || 0}, that));
         points.push(point({x: spec.x2 || 0, y: spec.y2 || 0}, that));
 
-        // TODO: quick, not very effective implementation
-        // rebroadcast point change events as line change events
-        points.forEach(function (point) {
-            point.change(function () {
-                if (that.changeEventsEnabled()) {
-                    that.fireChange();
-                }
-            });
-
-            // remove change event related functions from point's interface, I want my clients to use line's interface
-            point.change = function () { throw new Error("You can't use change observing properties on point, use properties on line instead."); };
-            point.fireChange = function () { throw new Error("You can't use change observing properties on point, use properties on line instead."); };
-            point.changeEventsEnabled = function () { throw new Error("You can't use change observing properties on point, use properties on line instead."); };
-        });
-
-
-        that._addObservableProperty("text", spec.text || "");
-        that._addObservableProperty("kind", spec.kind || "line");
+        utils.addObservableProperty(that, "text", spec.text || "");
+        utils.addObservableProperty(that, "kind", spec.kind || "line");
 
         that.points = function (i) {
             if (arguments.length === 0) {
@@ -69,6 +54,14 @@ define(function (require) {
             throw new Error("You can't get list of line connections directly, use function on its point instead.");
         };
 
+        that.disconnect = function () {
+            that.points().forEach(function (point) {
+                point.connections().forEach(function (connection) {
+                    point.removeConnection(connection);
+                });
+            });
+        };
+
         that.isLine = true;
 
         /**
@@ -79,11 +72,22 @@ define(function (require) {
         function point(spec, line) {
             var that = item();
 
-            that._addObservableProperty("x", spec.x || 0);
-            that._addObservableProperty("y", spec.y || 0);
+            utils.addObservableProperty(that, "x", spec.x || 0);
+            utils.addObservableProperty(that, "y", spec.y || 0);
 
             that.isLinePoint = true;
             that.line = line;
+
+            // remove change event related functions from point's interface, I want my clients to use line's interface
+            that.change = function () { throw new Error("You can't use change observing properties on point, use properties on line instead."); };
+            that.fireChange = line.fireChange;
+            that.changeEventsEnabled = function () {
+                if (arguments.length !== 0) {
+                    throw new Error("You can't use change observing properties on point, use properties on line instead.");
+                }
+                return line.changeEventsEnabled();
+            };
+
 
             return that;
         }

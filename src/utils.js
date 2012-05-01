@@ -20,8 +20,37 @@ define(function (require) {
             }
             f.lastId++;
             return {oid: f.lastId};
-        }
+        },
 
+        /**
+         * Adds observable property to an object. It expects that object implements
+         * two functions:
+         * - fireChange() - called when change is detected
+         * - changeEventsEnabled() - called to decide whether to fire change event or not
+         *
+         * Also note that it stores property values in new properties starting with __.
+         *
+         * @param object
+         * @param propertyName
+         * @param initialValue
+         */
+        addObservableProperty: function (object, propertyName, initialValue) {
+            Object.defineProperty(object, propertyName, {
+                    get:function () {
+                        return object["__" + propertyName];
+                    },
+                    set:function (value) {
+                        var oldValue = object["__" + propertyName];
+                        if (value !== oldValue && object.changeEventsEnabled()) {
+                            // value changed, fire change event
+                            object.fireChange();
+                        }
+                        object["__" + propertyName] = value;
+                    }
+            });
+
+            object["__" + propertyName] = initialValue;
+        }
     };
 
 });

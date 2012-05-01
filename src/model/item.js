@@ -6,7 +6,6 @@ define(function (require) {
         var utils = require("utils");
 
         var that = utils.objectWithId(),
-            observableProperties = {},
             connections = [],
             onChangeHandlers = [],
             changeEventsEnabled = true;
@@ -39,13 +38,11 @@ define(function (require) {
          * Fires  change event. You want to use this typically when you disabled change events to do several changes
          * and now want to notify observers about changes.
          */
-        that.fireChange = fireChange;
-
-        function fireChange() {
+        that.fireChange = function () {
             onChangeHandlers.forEach(function (handler) {
                 handler(that);
             });
-        }
+        };
 
         that._addConnection = function (item) {
             if (!item.id) {
@@ -54,8 +51,8 @@ define(function (require) {
 
             connections.push(item);
 
-            if (changeEventsEnabled) {
-                fireChange();
+            if (that.changeEventsEnabled()) {
+                that.fireChange();
             }
         };
 
@@ -71,8 +68,8 @@ define(function (require) {
             }
             connections.splice(i, 1);
 
-            if (changeEventsEnabled) {
-                fireChange();
+            if (that.changeEventsEnabled()) {
+                that.fireChange();
             }
         };
 
@@ -89,24 +86,11 @@ define(function (require) {
             }
         };
 
-        that._addObservableProperty = function (propertyName, defaultValue) {
-            Object.defineProperty(that, propertyName, {
-                get:function () {
-                    return observableProperties[propertyName];
-                },
-                set:function (value) {
-                    var oldValue = observableProperties[propertyName];
-                    if (value !== oldValue && changeEventsEnabled) {
-                        // value changed, fire change event
-                        fireChange();
-                    }
-                    observableProperties[propertyName] = value;
-                }
+        that.disconnect = function () {
+            that.connections().forEach(function (connection) {
+                that.removeConnection(connection);
             });
-
-            observableProperties[propertyName] = defaultValue;
         };
-
 
         that._test = {
             onChangeHandlers:onChangeHandlers

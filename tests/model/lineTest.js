@@ -104,10 +104,6 @@ define(function(require, exports, module) {
             }).toThrow("You can't use change observing properties on point, use properties on line instead.");
 
             expect(function () {
-                line.points(0).fireChange();
-            }).toThrow("You can't use change observing properties on point, use properties on line instead.");
-
-            expect(function () {
                 line.points(0).changeEventsEnabled(false);
             }).toThrow("You can't use change observing properties on point, use properties on line instead.");
         });

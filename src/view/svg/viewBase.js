@@ -55,10 +55,25 @@ define(function(require) {
             return element;
         };
 
+        that.previewMove = function (dx, dy) {
+            element.attr("transform", "translate({dx},{dy})".supplant({dx: dx, dy: dy}));
+        };
+
+        that.cancelPreviewMove = function () {
+            element.removeAttr("transform");
+        };
+
         that.createElement = function (tagName, attributes) {
             var el = svgHelper.createSvgElement(tagName, attributes);
             element.append(el);
             return el;
+        };
+
+        /**
+         * Removes view from the document.
+         */
+        that.remove = function () {
+            element.remove();
         };
 
         return that;
