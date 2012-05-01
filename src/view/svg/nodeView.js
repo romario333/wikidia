@@ -260,29 +260,44 @@ define(function(require) {
         };
 
         that.text = function (spec) {
-            var textElement = svgHelper.createSvgElement("text");
-
-            // TODO: optimize? It would probably be considerably faster to construct text out of DOM
+            var textElement = createTextElement(spec);
             content.append(textElement);
-
-            var lines = spec.lines || [spec.text];
-            var lastY = spec.y;
-            lines.forEach(function (line) {
-                var lineSpan = svgHelper.createSvgElement("tspan", {
-                    x: spec.x,
-                    y: lastY,
-                    'alignment-baseline': 'text-before-edge'
-                });
-                lineSpan.text(line);
-                textElement.append(lineSpan);
-                lastY += lineSpan.height();
-            });
-
             return {
                 width: textElement.width(),
                 height: textElement.height()
             };
         };
+
+        that.measureText = function (spec) {
+            var textElement = createTextElement(spec);
+            // add text temporarily to the document so we can get its size
+            content.append(textElement);
+            var textSize = {
+                width: textElement.width(),
+                height: textElement.height()
+            };
+            textElement.remove();
+            return textSize;
+        };
+
+        function createTextElement(spec) {
+            var textElement = svgHelper.createSvgElement("text", {
+                x: spec.x,
+                y: spec.y,
+                'alignment-baseline': 'text-before-edge'
+            });
+
+            var lines = spec.lines || [spec.text];
+            lines.forEach(function (line) {
+                var lineSpan = svgHelper.createSvgElement("tspan", {
+                    x: spec.x,
+                    dy: 15 // TODO: how to find out the correct line height?
+                });
+                lineSpan.text(line);
+                textElement.append(lineSpan);
+            });
+            return textElement;
+        }
 
         that._test = {};
         that._test.contentSvg = function () {

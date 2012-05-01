@@ -24,15 +24,11 @@ define(function(require) {
 
     function verticalFlow(next) {
         var lastY = 0;
-        var TEXT_PADDING = 5;
+        var PADDING = 4; // padding is applied from the top and the left
 
         return {
             rect: function (spec) {
-                if (!spec.y) {
-                    spec.y = lastY;
-                }
-                next.rect(spec);
-                lastY += spec.height;
+                throw new Error("Not supported right now.");
             },
             line: function (spec) {
                 if (!spec.y1) {
@@ -41,16 +37,18 @@ define(function(require) {
                 if (!spec.y2) {
                     spec.y2 = lastY;
                 }
+                spec.y1 += PADDING;
+                spec.y2 += PADDING;
                 next.line(spec);
             },
             text: function (spec) {
                 if (!spec.y) {
                     spec.y = lastY;
                 }
-                spec.x = spec.x ? spec.x + TEXT_PADDING : TEXT_PADDING;
-                spec.y += TEXT_PADDING;
+                spec.x = spec.x ? spec.x + PADDING : PADDING;
+                spec.y += PADDING;
                 var textSize = next.text(spec);
-                lastY += textSize.height + (2 * TEXT_PADDING);
+                lastY += textSize.height + PADDING;
                 return textSize;
             }
         };
@@ -258,8 +256,19 @@ define(function(require) {
 
                 var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y)));
 
-                // TODO: for now let's cheat
-                render.text({x: 20, y: 20, lines: renderInfo.lines});
+                // TODO: center multi-line text correctly
+                var textSize = nodeView.measureText({lines: renderInfo.lines});
+                var textX = 0;
+                if (node.width > textSize.width) {
+                    textX = (node.width - textSize.width) / 2;
+                }
+                var textY = 0;
+                if (node.height > textSize.height) {
+                    textY = ((node.height - textSize.height) / 2);
+                }
+
+
+                render.text({x: textX, y: textY, lines: renderInfo.lines});
             };
 
             return that;

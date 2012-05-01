@@ -24,6 +24,10 @@ define(function(require, exports, module) {
             diagram.addItem(model.node());
         });
 
+        $("#addClass").click(function () {
+            diagram.addItem(model.node({kind: "class"}));
+        });
+
         $("#addUseCase").click(function () {
             diagram.addItem(model.node({kind: "useCase"}));
         });
