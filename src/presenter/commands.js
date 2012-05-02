@@ -7,22 +7,22 @@ define(function(require) {
      * Fills nodes and points arrays from items. Makes sure that duplicate line points
      * are added only once.
      *
-     * @param items
+     * @param itemInfos
      * @param nodes
      * @param linePoints
      */
-    function fillNodesAndPointsFromItems(nodes, linePoints, items) {
-        items.forEach(function (item) {
-            if (item.data.isNode) {
-                var node = item.data;
+    function fillNodesAndLinePointsFromItemInfos(nodes, linePoints, itemInfos) {
+        itemInfos.forEach(function (itemInfo) {
+            if (itemInfo.item.isNode) {
+                var node = itemInfo.item;
                 nodes.push(node);
                 node.connections().forEach(function (connection) {
                     if (connection.isLinePoint) {
                         addLinePoint(connection);
                     }
                 });
-            } else if (item.data.isLine) {
-                item.data.points().forEach(function (point) {
+            } else if (itemInfo.item.isLine) {
+                itemInfo.item.points().forEach(function (point) {
                     addLinePoint(point);
                 });
             } else {
@@ -38,7 +38,7 @@ define(function(require) {
     }
 
     return {
-        moveCommand: function (items) {
+        moveCommand: function (itemInfos) {
             var that = {},
                 lastPreviewDx = 0,
                 lastPreviewDy = 0,
@@ -51,7 +51,7 @@ define(function(require) {
 
             var previewMoveEnabled = true;
 
-            fillNodesAndPointsFromItems(nodes, linePoints, items);
+            fillNodesAndLinePointsFromItemInfos(nodes, linePoints, itemInfos);
 
             that.preview = function () {
                 if (previewMoveEnabled) {
@@ -78,7 +78,7 @@ define(function(require) {
 
             that.undo = function () {
                 move(-that.dx, -that.dy);
-                return items;
+                return itemInfos;
             };
 
             function move(dx, dy) {
@@ -105,9 +105,9 @@ define(function(require) {
 
             // TODO: I'm still not sure that I'll need this optimization
             function previewMove() {
-                items.forEach(function (item) {
-                    if (item.data.isNode) {
-                        item.view.previewMove(that.dx, that.dy);
+                itemInfos.forEach(function (itemInfo) {
+                    if (itemInfo.item.isNode) {
+                        itemInfo.view.previewMove(that.dx, that.dy);
                     }
                 });
                 updateLinePoints(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
@@ -115,9 +115,9 @@ define(function(require) {
 
 
             function cancelPreviewMove() {
-                items.forEach(function (item) {
-                    if (item.data.isNode) {
-                        item.view.cancelPreviewMove();
+                itemInfos.forEach(function (itemInfo) {
+                    if (itemInfo.item.isNode) {
+                        itemInfo.view.cancelPreviewMove();
                     }
                 });
                 updateLinePoints(-that.dx, -that.dy);
@@ -126,7 +126,7 @@ define(function(require) {
             return that;
         },
 
-        resizeNodeCommand: function (items) {
+        resizeNodeCommand: function (itemInfos) {
             var that = {},
                 lastDWidth = 0,
                 lastDHeight = 0,
@@ -138,7 +138,7 @@ define(function(require) {
 
             that.isResizeNodeCommand = true;
 
-            fillNodesAndPointsFromItems(nodes, linePoints, items);
+            fillNodesAndLinePointsFromItemInfos(nodes, linePoints, itemInfos);
 
             that.preview = function () {
                 resize(that.dWidth - lastDWidth, that.dHeight - lastDHeight);
@@ -156,7 +156,7 @@ define(function(require) {
 
             that.undo = function () {
                 resize(-that.dWidth, -that.dHeight);
-                return items;
+                return itemInfos;
             };
 
             function resize(dWidth, dHeight) {
@@ -315,65 +315,65 @@ define(function(require) {
 
         editItemCommand: function (item) {
             var that = {},
-                oldText = item.data.text;
+                oldText = item.text;
 
             that.newText = oldText;
             that.isEditItemCommand = true;
 
             that.execute = function () {
-                item.data.text = that.newText;
+                item.text = that.newText;
             };
 
             that.undo = function () {
-                item.data.text = oldText;
+                item.text = oldText;
                 return [item];
             };
 
             that.hasChanged = function () {
-                return that.newText !== item.data.text;
+                return that.newText !== item.text;
             };
 
             return that;
         },
 
         // TODO: suppress change event
-        deleteItemsCommand: function (diagram, items) {
+        deleteItemsCommand: function (diagram, itemInfos) {
             var that = {},
                 oldConnections = [];
 
             that.execute = function () {
 
-                items.forEach(function (item) {
-                    var data = item.data;
+                itemInfos.forEach(function (itemInfo) {
+                    var item = itemInfo.item;
                     // backup connections of item we are going to delete (it will be disconnected when removed from diagram)
-                    if (data.isLine) {
-                        data.points().forEach(function (point) {
+                    if (item.isLine) {
+                        item.points().forEach(function (point) {
                             point.connections().forEach(function (connectedTo) {
                                 oldConnections.push({from: point, to: connectedTo});
                             });
                         });
                     } else {
-                        data.connections().forEach(function (connectedTo) {
-                            oldConnections.push({from: data, to: connectedTo});
+                        item.connections().forEach(function (connectedTo) {
+                            oldConnections.push({from: item, to: connectedTo});
                         });
                     }
 
-                    diagram.removeItem(data);
+                    diagram.removeItem(item);
                 });
 
             };
 
             that.undo = function () {
                 // add items back to the diagram
-                items.forEach(function (item) {
-                    diagram.addItem(item.data);
+                itemInfos.forEach(function (item) {
+                    diagram.addItem(item.item);
                 });
                 // restore connections
                 oldConnections.forEach(function (connection) {
                     connection.from.addConnection(connection.to);
                 });
 
-                return items;
+                return itemInfos;
             };
 
             return that;

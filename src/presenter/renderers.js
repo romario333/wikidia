@@ -122,17 +122,17 @@ define(function(require) {
              * object, which contains parsed properties ({{property=value}}) and lines of text. You can
              * freely modify this object.
              *
-             * @param item
+             * @param itemInfo
              * @return {Object}
              * @private
              */
-            that._render = function(item) {
-                var node = item.data;
-                var nodeView = item.view;
+            that._render = function(itemInfo) {
+                var node = itemInfo.item;
+                var nodeView = itemInfo.view;
 
                 nodeView.clear();
                 nodeView.updateView({x: node.x, y: node.y, width: node.width, height: node.height});
-                nodeView.isSelected(item.isSelected);
+                nodeView.isSelected(itemInfo.isSelected);
 
                 var parsedText = parseRenderText(node.text);
                 var fillColor = parsedText.properties.fill || "white";
@@ -146,11 +146,11 @@ define(function(require) {
                 };
             };
 
-            that.render = function (item) {
-                var renderInfo = that._render(item);
+            that.render = function (itemInfo) {
+                var renderInfo = that._render(itemInfo);
 
-                var node = item.data;
-                var nodeView = item.view;
+                var node = itemInfo.item;
+                var nodeView = itemInfo.view;
 
                 nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: renderInfo.fillColor, stroke: renderInfo.strokeColor});
 
@@ -211,11 +211,11 @@ define(function(require) {
         classNodeRenderer: function () {
             var that = this.nodeRenderer();
 
-            that.render = function (item) {
-                var renderInfo = that._render(item);
+            that.render = function (itemInfo) {
+                var renderInfo = that._render(itemInfo);
 
-                var node = item.data;
-                var nodeView = item.view;
+                var node = itemInfo.item;
+                var nodeView = itemInfo.view;
 
                 nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: renderInfo.fillColor, stroke: renderInfo.strokeColor});
 
@@ -236,11 +236,11 @@ define(function(require) {
         useCaseNodeRenderer: function () {
             var that = this.nodeRenderer();
 
-            that.render = function (item) {
-                var renderInfo = that._render(item);
+            that.render = function (itemInfo) {
+                var renderInfo = that._render(itemInfo);
 
-                var node = item.data;
-                var nodeView = item.view;
+                var node = itemInfo.item;
+                var nodeView = itemInfo.view;
 
                 var halfWidth = node.width / 2;
                 var halfHeight = node.height / 2;
@@ -277,13 +277,13 @@ define(function(require) {
         lineRenderer: function () {
             var that = {};
 
-            that.render = function (item) {
-                var line = item.data;
-                var lineView = item.view;
+            that.render = function (itemInfo) {
+                var line = itemInfo.item;
+                var lineView = itemInfo.view;
 
                 lineView.clear();
                 lineView.updateView({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y});
-                lineView.isSelected(item.isSelected);
+                lineView.isSelected(itemInfo.isSelected);
 
                 lineView.line({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y, stroke: "black"});
                 // TODO: text

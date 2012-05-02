@@ -10,13 +10,14 @@ define(function(require) {
     return function (diagramView, diagram, itemEditView) {
         var utils = require("utils");
 
+        // TODO: proc to proste nepridat na iteminfo?
         var itemRenderers = {
             node: renderers.nodeRenderer(),
             class: renderers.classNodeRenderer(),
             useCase: renderers.useCaseNodeRenderer(),
             line: renderers.lineRenderer(),
-            forItem: function (item) {
-                var kind = item.data.kind;
+            forItem: function (itemInfo) {
+                var kind = itemInfo.item.kind;
                 if (!this[kind]) {
                     throw new Error("Unknown kind '{kind}'".supplant({kind: kind}));
                 }
@@ -29,11 +30,39 @@ define(function(require) {
 
         var that = {},
             commandExecutor,
-            items = [],
+            itemInfos = [],
             selection,
             commandInProgress,
             isCtrlKeyDown = false,
             isCreatingLineFromNode = true;
+
+        // TODO: encapsulate items to object
+        itemInfos.forView = function (view) {
+            // TODO: optimize?
+            var i;
+            for (i = 0; i < this.length; i++) {
+                if (this[i].view === view) {
+                    return this[i];
+                }
+            }
+            throw new Error("Item view not found.");
+        };
+
+        itemInfos.forItem = function (item) {
+            var i;
+            for (i = 0; i < this.length; i++) {
+                if (this[i].item === item) {
+                    return this[i];
+                }
+            }
+            throw new Error("Item not found.");
+        };
+
+        itemInfos.remove = function (itemInfo) {
+            var i = itemInfos.indexOf(itemInfo);
+            itemInfos.splice(i, 1);
+        };
+
 
         function init() {
             // TODO: popsat zakladni filozofii:
@@ -65,8 +94,8 @@ define(function(require) {
             itemEditView.focus(onItemEditViewFocus);
             itemEditView.blur(onItemEditViewBlur);
 
-            items.forEach(function (item) {
-                updateItem(item);
+            itemInfos.forEach(function (itemInfo) {
+                updateItem(itemInfo);
             });
 
             selection = multipleSelection();
@@ -87,8 +116,8 @@ define(function(require) {
                     selection.select(affectedItems);
                 }
 
-                if (e.which === 46 && selection.items().length > 0) { // DEL
-                    var deleteCommand = commands.deleteItemsCommand(diagram, selection.items());
+                if (e.which === 46 && selection.itemInfos().length > 0) { // DEL
+                    var deleteCommand = commands.deleteItemsCommand(diagram, selection.itemInfos());
                     commandExecutor.execute(deleteCommand);
                 }
 
@@ -98,12 +127,12 @@ define(function(require) {
         function addNode(node) {
             var nodeView = view.nodeView(diagramView);
 
-            var item = utils.objectWithId();
-            item.data = node;
-            item.view = nodeView;
-            item.isSelected = false;
+            var itemInfo = utils.objectWithId();
+            itemInfo.item = node;
+            itemInfo.view = nodeView;
+            itemInfo.isSelected = false;
 
-            items.push(item);
+            itemInfos.push(itemInfo);
 
             node.change(onNodeChange);
 
@@ -126,18 +155,18 @@ define(function(require) {
             nodeView.mouseLeave(onNodeMouseLeave);
             nodeView.mouseMove(onNodeMouseMove);
 
-            return item;
+            return itemInfo;
         }
 
         function addLine(line) {
             var lineView = view.lineView(diagramView);
 
-            var item = utils.objectWithId();
-            item.data = line;
-            item.view = lineView;
-            item.isSelected = false;
+            var itemInfo = utils.objectWithId();
+            itemInfo.item = line;
+            itemInfo.view = lineView;
+            itemInfo.isSelected = false;
 
-            items.push(item);
+            itemInfos.push(itemInfo);
 
             line.change(onLineChange);
 
@@ -152,64 +181,37 @@ define(function(require) {
             lineView.connectPointMouseUp(onLineConnectPointMouseUp);
 
 
-            return item;
+            return itemInfo;
         }
 
-        function updateItem(item) {
-            var renderer = itemRenderers.forItem(item);
-            renderer.render(item);
+        function updateItem(itemInfo) {
+            var renderer = itemRenderers.forItem(itemInfo);
+            renderer.render(itemInfo);
         }
 
-        // TODO: encapsulate items to object
-        items.itemForView = function (view) {
-            // TODO: optimize?
-            var i;
-            for (i = 0; i < this.length; i++) {
-                if (this[i].view === view) {
-                    return this[i];
-                }
-            }
-            throw new Error("Item view not found.");
-        };
-
-        items.itemForData = function (data) {
-            var i;
-            for (i = 0; i < this.length; i++) {
-                if (this[i].data === data) {
-                    return this[i];
-                }
-            }
-            throw new Error("Item not found.");
-        };
-
-        items.remove = function (item) {
-            var i = items.indexOf(item);
-            items.splice(i, 1);
-        };
-
-        function onItemAdded(diagram, data) {
-            if (data.isLine) {
-                addLine(data);
-            } else if (data.isNode) {
-                addNode(data);
+        function onItemAdded(diagram, item) {
+            if (item.isLine) {
+                addLine(item);
+            } else if (item.isNode) {
+                addNode(item);
             } else {
-                throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: data.kind}));
+                throw new Error("Unexpected item, kind='{kind}'.".supplant({kind: item.kind}));
             }
-            updateItem(items.itemForData(data));
+            updateItem(itemInfos.forItem(item));
         }
 
-        function onItemRemoved(diagram, data) {
-            var item = items.itemForData(data);
-            item.view.remove();
-            items.remove(item);
+        function onItemRemoved(diagram, item) {
+            var itemInfo = itemInfos.forItem(item);
+            itemInfo.view.remove();
+            itemInfos.remove(itemInfo);
         }
 
         function onNodeChange(node) {
-            updateItem(items.itemForData(node));
+            updateItem(itemInfos.forItem(node));
         }
 
         function onLineChange(line) {
-            updateItem(items.itemForData(line));
+            updateItem(itemInfos.forItem(line));
         }
 
         function onDiagramClick(view) {
@@ -217,23 +219,23 @@ define(function(require) {
         }
 
         function onItemMouseDown(view) {
-            var item = items.itemForView(view);
+            var itemInfo = itemInfos.forView(view);
 
             // simple selection is done on mouse-down, so I can just mouse-down an item and drag it immediately
             if (!isCtrlKeyDown) {
-                if (!item.isSelected) {
-                    selection.select(item);
+                if (!itemInfo.isSelected) {
+                    selection.select(itemInfo);
                 }
             }
         }
 
         function onItemClick(view) {
-            var item = items.itemForView(view);
+            var itemInfo = itemInfos.forView(view);
 
             // multiple selection is handled on-click, because I want to support this scenario:
             //      user ctrl-clicks on second item (adds it to multiple selection) and wants to drag it immediately
             if (isCtrlKeyDown) {
-                selection.addOrRemove(item);
+                selection.addOrRemove(itemInfo);
             }
         }
 
@@ -242,28 +244,25 @@ define(function(require) {
         }
 
         function onItemSelectionChange(item) {
-            console.log("onItemSelectionChange");
             stopEditing();
 
             if (!selection.isMultiple() && item.isSelected) {
-                itemEditView.val(item.data.text);
+                itemEditView.val(item.item.text);
             } else {
                 itemEditView.val("");
             }
         }
 
         function onItemEditViewFocus(e) {
-            console.log("onItemEditViewFocus");
             startEditing();
         }
 
         function onItemEditViewBlur(e) {
-            console.log("onItemEditViewBlur");
             stopEditing();
         }
 
         function onNodeDragStart(nodeView) {
-            commandInProgress = commands.moveCommand(selection.items());
+            commandInProgress = commands.moveCommand(selection.itemInfos());
         }
 
         function onNodeDragMove(nodeView, dx, dy) {
@@ -283,7 +282,7 @@ define(function(require) {
         }
 
         function onNodeResizeDragStart(nodeView) {
-            commandInProgress = commands.resizeNodeCommand(selection.items());
+            commandInProgress = commands.resizeNodeCommand(selection.itemInfos());
         }
 
         function onNodeResizeDragMove(nodeView, dx, dy) {
@@ -306,7 +305,7 @@ define(function(require) {
         }
 
         function onNodeConnectPointDragStart(nodeView, connectPointX, connectPointY) {
-            var node = items.itemForView(nodeView).data;
+            var node = itemInfos.forView(nodeView).item;
             commandInProgress = commands.createLineCommand(diagram, node, connectPointX, connectPointY);
             isCreatingLineFromNode = true;
         }
@@ -320,7 +319,7 @@ define(function(require) {
 
         function onNodeConnectPointMouseUp(nodeView, connectPointX, connectPointY) {
             // TODO: musi bezet pred onNodeConnectPointDragEnd, jak to vynutit nebo testovat?
-            var node = items.itemForView(nodeView).data;
+            var node = itemInfos.forView(nodeView).item;
             commandInProgress.itemToConnect = node;
             commandInProgress.x2 = connectPointX;
             commandInProgress.y2 = connectPointY;
@@ -346,21 +345,21 @@ define(function(require) {
         }
 
         function onNodeMouseMove(nodeView, x, y) {
-            var node = items.itemForView(nodeView);
-            var renderer = itemRenderers.forItem(node);
+            var itemInfo = itemInfos.forView(nodeView);
+            var renderer = itemRenderers.forItem(itemInfo);
             if (!isCtrlKeyDown) {
                 if (commandInProgress && commandInProgress.isMoveCommand) {
                     // TODO: temp fix - connection points show erratically when moving with translate optimization enabled
                     return;
                 }
-                renderer.showNearbyConnectionPoint(node.data, nodeView, x, y, GRID_STEP);
+                renderer.showNearbyConnectionPoint(itemInfo.item, nodeView, x, y, GRID_STEP);
             }
         }
 
         function onLineConnectPointDragStart(lineView, connectPointX, connectPointY) {
             lineView.hideConnectionPoints();
 
-            var line = items.itemForView(lineView).data;
+            var line = itemInfos.forView(lineView).item;
             var point = line.pointAt(connectPointX, connectPointY);
             commandInProgress = commands.moveLinePointCommand(point);
         }
@@ -373,7 +372,7 @@ define(function(require) {
         }
 
         function onLineConnectPointMouseUp(lineView, connectPointX, connectPointY) {
-            var line = items.itemForView(lineView).data;
+            var line = itemInfos.forView(lineView).item;
             commandInProgress.itemToConnect = line.pointAt(connectPointX, connectPointY);
         }
 
@@ -385,7 +384,7 @@ define(function(require) {
 
         function onLineMouseEnter(lineView) {
             if (!isCreatingLineFromNode) {
-                var line = items.itemForView(lineView).data;
+                var line = itemInfos.forView(lineView).item;
                 lineView.showConnectionPoints(line.points());
             }
         }
@@ -403,8 +402,8 @@ define(function(require) {
             }
 
             if (!commandInProgress) {
-                if (selection.items().length === 1) {
-                    commandInProgress = commands.editItemCommand(selection.items(0));
+                if (selection.itemInfos().length === 1) {
+                    commandInProgress = commands.editItemCommand(selection.itemInfos(0).item);
                 }
             }
         }
@@ -448,69 +447,69 @@ define(function(require) {
         }
 
         function multipleSelection() {
-            var items = [];
+            var selectedItems = [];
 
             return {
-                addOrRemove: function (item) {
+                addOrRemove: function (itemInfo) {
 
-                    if (item.isSelected) {
-                        this.remove(item);
+                    if (itemInfo.isSelected) {
+                        this.remove(itemInfo);
                     } else {
-                        this.add(item);
+                        this.add(itemInfo);
                     }
 
                 },
 
-                add: function (item) {
-                    items.push(item);
-                    item.isSelected = true;
-                    onItemSelectionChange(item);
-                    updateItem(item);
+                add: function (itemInfo) {
+                    selectedItems.push(itemInfo);
+                    itemInfo.isSelected = true;
+                    onItemSelectionChange(itemInfo);
+                    updateItem(itemInfo);
                 },
 
-                remove: function (item) {
-                    var i = items.indexOf(item);
-                    items.splice(i, 1);
-                    item.isSelected = false;
-                    onItemSelectionChange(item);
-                    updateItem(item);
+                remove: function (itemInfo) {
+                    var i = selectedItems.indexOf(itemInfo);
+                    selectedItems.splice(i, 1);
+                    itemInfo.isSelected = false;
+                    onItemSelectionChange(itemInfo);
+                    updateItem(itemInfo);
                 },
 
-                select: function (items) {
+                select: function (itemInfos) {
                     this.clear();
-                    if (Array.isArray(items)) {
+                    if (Array.isArray(itemInfos)) {
                         var selectionThis = this;
-                        items.forEach(function (item) {
-                            selectionThis.add(item);
+                        itemInfos.forEach(function (itemInfo) {
+                            selectionThis.add(itemInfo);
                         });
                     } else {
-                        this.add(items);
+                        this.add(itemInfos);
                     }
                 },
 
                 clear: function () {
-                    var selected;
-                    while ((selected = items.pop())) {
-                        selected.isSelected = false;
-                        onItemSelectionChange(selected);
-                        updateItem(selected);
+                    var itemInfo;
+                    while ((itemInfo = selectedItems.pop())) {
+                        itemInfo.isSelected = false;
+                        onItemSelectionChange(itemInfo);
+                        updateItem(itemInfo);
                     }
                 },
-                items: function (index) {
+                itemInfos: function (index) {
                     if (arguments.length === 0) {
-                        return items.slice();
+                        return selectedItems.slice();
                     } else {
-                        return items[index];
+                        return selectedItems[index];
                     }
                 },
 
                 isMultiple: function () {
-                    return items.length > 1;
+                    return selectedItems.length > 1;
                 }
             };
         }
         that._test = {
-            items: items
+            itemInfos: itemInfos
         };
 
         init();
