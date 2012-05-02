@@ -10,22 +10,6 @@ define(function(require) {
     return function (diagramView, diagram, itemEditView) {
         var utils = require("utils");
 
-        // TODO: proc to proste nepridat na iteminfo?
-        var itemRenderers = {
-            node: renderers.nodeRenderer(),
-            class: renderers.classNodeRenderer(),
-            useCase: renderers.useCaseNodeRenderer(),
-            line: renderers.lineRenderer(),
-            forItem: function (itemInfo) {
-                var kind = itemInfo.item.kind;
-                if (!this[kind]) {
-                    throw new Error("Unknown kind '{kind}'".supplant({kind: kind}));
-                }
-                return this[kind];
-            }
-        };
-
-
         var GRID_STEP = 15;
 
         var that = {},
@@ -185,7 +169,7 @@ define(function(require) {
         }
 
         function updateItem(itemInfo) {
-            var renderer = itemRenderers.forItem(itemInfo);
+            var renderer = renderers.rendererForItem(itemInfo.item);
             renderer.render(itemInfo);
         }
 
@@ -346,7 +330,7 @@ define(function(require) {
 
         function onNodeMouseMove(nodeView, x, y) {
             var itemInfo = itemInfos.forView(nodeView);
-            var renderer = itemRenderers.forItem(itemInfo);
+            var renderer = renderers.rendererForItem(itemInfo.item);
             if (!isCtrlKeyDown) {
                 if (commandInProgress && commandInProgress.isMoveCommand) {
                     // TODO: temp fix - connection points show erratically when moving with translate optimization enabled

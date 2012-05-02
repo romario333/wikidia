@@ -105,8 +105,30 @@ define(function(require) {
         return res;
     }
 
+    var renderersMap;
 
     return {
+
+        /**
+         * Returns renderer for the specified item. Note that renderers are shared between items and thus
+         * should not have any state.
+         *
+         * @param item
+         */
+        rendererForItem: function (item) {
+            if (!renderersMap) {
+                renderersMap = {
+                    node: this.nodeRenderer(),
+                    class: this.classNodeRenderer(),
+                    useCase: this.useCaseNodeRenderer(),
+                    line: this.lineRenderer()
+                };
+                if (!renderersMap[item.kind]) {
+                    throw new Error("I don't have renderer for item with kind '{kind}'".supplant({kind: item.kind}));
+                }
+            }
+            return renderersMap[item.kind];
+        },
 
         /**
          * <code>nodeRendered</code> is responsible for rendering of the content of a node.
