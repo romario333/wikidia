@@ -190,6 +190,7 @@ define(function(require) {
         /**
          * TODO: This event must be invoked BEFORE connectPointDragEnd, otherwise you won't be able to connect
          * two nodes in one drag.
+         * TODO: should be called drop
          *
          * @param handler
          */
@@ -218,7 +219,7 @@ define(function(require) {
             connectPoint.attr({display: "none"});
         };
 
-        that.updateView = function (spec) {
+        that.updateBounds = function (spec) {
             updateResizeBorder(spec);
             // TODO: should be derived from GRID_STEP (let's say 1/3 of it)
             eventBox.attr({x: spec.x - 5, y: spec.y - 5, width: spec.width + 10, height: spec.height + 10});

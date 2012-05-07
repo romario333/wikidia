@@ -9,4 +9,6 @@ define(function(require, exports, module) {
     require("test/view/svg/nodeViewTest");
     require("test/view/svg/rootViewTest");
 
+    require("test/presenter/diagramPresenterTest");
+
 });

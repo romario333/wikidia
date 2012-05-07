@@ -72,7 +72,7 @@ define(function(require) {
 
         }
 
-        that.updateView = function (spec) {
+        that.updateBounds = function (spec) {
             eventBox.attr(spec);
         };
 
@@ -114,6 +114,7 @@ define(function(require) {
             onConnectPointDragEnd = handler;
         };
 
+        // TODO: drop would be better name
         that.connectPointMouseUp = function (handler) {
             onConnectPointMouseUp = handler;
         };

@@ -153,7 +153,7 @@ define(function(require) {
                 var nodeView = itemInfo.view;
 
                 nodeView.clear();
-                nodeView.updateView({x: node.x, y: node.y, width: node.width, height: node.height});
+                nodeView.updateBounds({x: node.x, y: node.y, width: node.width, height: node.height});
                 nodeView.isSelected(itemInfo.isSelected);
 
                 var parsedText = parseRenderText(node.text);
@@ -304,7 +304,7 @@ define(function(require) {
                 var lineView = itemInfo.view;
 
                 lineView.clear();
-                lineView.updateView({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y});
+                lineView.updateBounds({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y});
                 lineView.isSelected(itemInfo.isSelected);
 
                 lineView.line({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y, stroke: "black"});

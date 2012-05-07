@@ -1,23 +1,38 @@
 define(function(require) {
     "use strict";
 
-    var view = require("view");
     var commands = require("presenter/commands");
     var renderers = require("presenter/renderers");
     var commandExec = require("presenter/commandExecutor");
 
-    // TODO: for now nodeEditView is just a jQuery wrapper around textarea
-    return function (diagramView, diagram, itemEditView) {
+    /**
+     * @constructor
+     * Creates diagram presenter. Presenter is responsible for application logic, it reacts to user events
+     * and does changes to model as necessary.
+     *
+     * Views are rather passive, they do not contain reference to model. They just render what presenter tells them
+     * to render and forwards user events to presenter.
+     *
+     * Data manipulation can be done via model objects only.
+     *
+     * @param diagram       Diagram data.
+     * @param container     Container DOM element, to which diagram should be added (should be wrapped in jQuery object).
+     * @param textArea      Text area, which will be used by user to edit content of node or line (should be wrapped in jQuery object).
+     * @param viewFactory   (optional) Factory which is able to produce views. This is useful for unit tests.
+     */
+    return function (diagram, container, textArea, viewFactory) {
         var utils = require("utils");
 
         var GRID_STEP = 15;
 
         var that = {},
+            keyboard,
+            itemEditView,
             commandExecutor,
+            diagramView,
             itemInfos = [],
             selection,
             commandInProgress,
-            isCtrlKeyDown = false,
             isCreatingLineFromNode = true;
 
         // TODO: encapsulate items to object
@@ -49,16 +64,18 @@ define(function(require) {
 
 
         function init() {
-            // TODO: popsat zakladni filozofii:
-            // 1) podle modelu se postavi views
-            // 2) veskere dalsi manipulace s views by se mela delat pokud mozno pres model pomoci observeru
-            //      (ale snazim se minimalizovat pocet observeru, v tuhle chvili je to snad jen diagramPresenter)
+            if (!viewFactory) {
+                viewFactory = require("view");
+            }
 
             commandExecutor = commandExec();
+            selection = multipleSelection();
 
-            diagramView.gridStep = GRID_STEP;
-            diagramView.update();
-            diagramView.click(onDiagramClick);
+            keyboard = viewFactory.keyboard();
+            itemEditView = viewFactory.itemEditView(textArea);
+
+            var rootView = viewFactory.rootView(container);
+            diagramView = viewFactory.diagramView(rootView);
 
             diagram.items().forEach(function (item) {
                 if (item.isNode) {
@@ -71,6 +88,9 @@ define(function(require) {
 
             });
 
+            diagramView.gridStep = GRID_STEP;
+            diagramView.update();
+            diagramView.click(onDiagramClick);
 
             diagram.itemAdded(onItemAdded);
             diagram.itemRemoved(onItemRemoved);
@@ -78,38 +98,15 @@ define(function(require) {
             itemEditView.focus(onItemEditViewFocus);
             itemEditView.blur(onItemEditViewBlur);
 
+            keyboard.keyUp(onKeyUp);
+
             itemInfos.forEach(function (itemInfo) {
                 updateItem(itemInfo);
-            });
-
-            selection = multipleSelection();
-
-            $(document).keydown(function (e) {
-                if (e.which === 17) {  // FIXME: e.ctrlKey does not work here
-                    isCtrlKeyDown = true;
-                }
-            });
-
-            $(document).keyup(function (e) {
-                if (e.ctrlKey) {
-                    isCtrlKeyDown = false;
-                }
-
-                if (e.ctrlKey === true && e.which === 90) {
-                    var affectedItems = commandExecutor.undo();
-                    selection.select(affectedItems);
-                }
-
-                if (e.which === 46 && selection.itemInfos().length > 0) { // DEL
-                    var deleteCommand = commands.deleteItemsCommand(diagram, selection.itemInfos());
-                    commandExecutor.execute(deleteCommand);
-                }
-
             });
         }
 
         function addNode(node) {
-            var nodeView = view.nodeView(diagramView);
+            var nodeView = viewFactory.nodeView(diagramView);
 
             var itemInfo = utils.objectWithId();
             itemInfo.item = node;
@@ -143,7 +140,7 @@ define(function(require) {
         }
 
         function addLine(line) {
-            var lineView = view.lineView(diagramView);
+            var lineView = viewFactory.lineView(diagramView);
 
             var itemInfo = utils.objectWithId();
             itemInfo.item = line;
@@ -198,6 +195,18 @@ define(function(require) {
             updateItem(itemInfos.forItem(line));
         }
 
+        function onKeyUp(e) {
+            if (e.ctrlKey === true && e.which === 90) {
+                var affectedItems = commandExecutor.undo();
+                selection.select(affectedItems);
+            }
+
+            if (e.which === 46 && selection.itemInfos().length > 0) { // DEL
+                var deleteCommand = commands.deleteItemsCommand(diagram, selection.itemInfos());
+                commandExecutor.execute(deleteCommand);
+            }
+        }
+
         function onDiagramClick(view) {
             selection.clear();
         }
@@ -206,7 +215,7 @@ define(function(require) {
             var itemInfo = itemInfos.forView(view);
 
             // simple selection is done on mouse-down, so I can just mouse-down an item and drag it immediately
-            if (!isCtrlKeyDown) {
+            if (!keyboard.isCtrlKeyDown()) {
                 if (!itemInfo.isSelected) {
                     selection.select(itemInfo);
                 }
@@ -218,7 +227,7 @@ define(function(require) {
 
             // multiple selection is handled on-click, because I want to support this scenario:
             //      user ctrl-clicks on second item (adds it to multiple selection) and wants to drag it immediately
-            if (isCtrlKeyDown) {
+            if (keyboard.isCtrlKeyDown()) {
                 selection.addOrRemove(itemInfo);
             }
         }
@@ -231,9 +240,9 @@ define(function(require) {
             stopEditing();
 
             if (!selection.isMultiple() && item.isSelected) {
-                itemEditView.val(item.item.text);
+                itemEditView.text(item.item.text);
             } else {
-                itemEditView.val("");
+                itemEditView.text("");
             }
         }
 
@@ -318,7 +327,7 @@ define(function(require) {
         }
 
         function onNodeMouseEnter(nodeView) {
-            if (isCtrlKeyDown) {
+            if (keyboard.isCtrlKeyDown()) {
                 nodeView.showResizeBorder();
             }
         }
@@ -331,7 +340,7 @@ define(function(require) {
         function onNodeMouseMove(nodeView, x, y) {
             var itemInfo = itemInfos.forView(nodeView);
             var renderer = renderers.rendererForItem(itemInfo.item);
-            if (!isCtrlKeyDown) {
+            if (!keyboard.isCtrlKeyDown()) {
                 if (commandInProgress && commandInProgress.isMoveCommand) {
                     // TODO: temp fix - connection points show erratically when moving with translate optimization enabled
                     return;
@@ -394,7 +403,7 @@ define(function(require) {
 
         function stopEditing() {
             if (commandInProgress && commandInProgress.isEditItemCommand) {
-                commandInProgress.newText = itemEditView.val();
+                commandInProgress.newText = itemEditView.text();
                 if (commandInProgress.hasChanged()) {
                     commandExecutor.execute(commandInProgress);
                     commandInProgress = null;
@@ -486,17 +495,21 @@ define(function(require) {
                         return selectedItems[index];
                     }
                 },
-
                 isMultiple: function () {
                     return selectedItems.length > 1;
+                },
+                length: function () {
+                    return selectedItems.length;
                 }
             };
         }
-        that._test = {
-            itemInfos: itemInfos
-        };
 
         init();
+
+        that._test = {
+            itemInfos: itemInfos,
+            selection: selection
+        };
 
         return that;
 
