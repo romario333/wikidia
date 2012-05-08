@@ -4,7 +4,14 @@ define(function(require) {
     var utils = require("utils");
 
 
-    // note that chain should always start with renderChain
+    /**
+     * Rendering operations can be modified by composing rendering chain - this chain consists of
+     * objects which can transform input parameters of rendering operations. This is entry point of
+     * the chain - you should start every chain by calling this function first.
+     *
+     * @param next          Next item in the chain (e.g. @see relative, @see verticalFlow ...)
+     * @return {Object}
+     */
     function renderChain(next) {
         return {
             rect: function (spec) {
@@ -22,13 +29,49 @@ define(function(require) {
         };
     }
 
+    /**
+     * Part of the rendering chain. Translates all [x, y] coordinates by (dx, dy).
+     *
+     * @param next
+     * @param dx
+     * @param dy
+     * @return {Object}
+     */
+    function relative(next, dx, dy) {
+        return {
+            rect: function (spec) {
+                spec.x = spec.x ? spec.x + dx : dx;
+                spec.y = spec.y ? spec.y + dy : dy;
+                return next.rect(spec);
+            },
+            line: function (spec) {
+                spec.x1 = spec.x1 ? spec.x1 + dx : dx;
+                spec.y1 = spec.y1 ? spec.y1 + dy : dy;
+                spec.x2 = spec.x2 ? spec.x2 + dx : dx;
+                spec.y2 = spec.y2 ? spec.y2 + dy : dy;
+                return next.line(spec);
+            },
+            text: function (spec) {
+                spec.x = spec.x ? spec.x + dx : dx;
+                spec.y = spec.y ? spec.y + dy : dy;
+                return next.text(spec);
+            }
+        };
+    }
+
+    /**
+     * Part of the rendering chain.
+     *
+     * @param next
+     * @return {Object}
+     */
     function verticalFlow(next) {
         var lastY = 0;
         var PADDING = 4; // padding is applied from the top and the left
 
         return {
             rect: function (spec) {
-                throw new Error("Not supported right now.");
+                throw new Error("Not implemented yet.");
             },
             line: function (spec) {
                 if (!spec.y1) {
@@ -54,27 +97,7 @@ define(function(require) {
         };
     }
 
-    function relative(next, dx, dy) {
-        return {
-            rect: function (spec) {
-                spec.x = spec.x ? spec.x + dx : dx;
-                spec.y = spec.y ? spec.y + dy : dy;
-                return next.rect(spec);
-            },
-            line: function (spec) {
-                spec.x1 = spec.x1 ? spec.x1 + dx : dx;
-                spec.y1 = spec.y1 ? spec.y1 + dy : dy;
-                spec.x2 = spec.x2 ? spec.x2 + dx : dx;
-                spec.y2 = spec.y2 ? spec.y2 + dy : dy;
-                return next.line(spec);
-            },
-            text: function (spec) {
-                spec.x = spec.x ? spec.x + dx : dx;
-                spec.y = spec.y ? spec.y + dy : dy;
-                return next.text(spec);
-            }
-        };
-    }
+
 
     /**
      * Parses text and returns:
@@ -149,6 +172,7 @@ define(function(require) {
              * @private
              */
             that._render = function(itemInfo) {
+                // TODO: proc se tak strasne branim stavu tady?
                 var node = itemInfo.item;
                 var nodeView = itemInfo.view;
 
@@ -276,7 +300,7 @@ define(function(require) {
                     stroke: renderInfo.strokeColor
                 });
 
-                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y)));
+                var render = renderChain(relative(nodeView, node.x, node.y));
 
                 // TODO: center multi-line text correctly
                 var textSize = nodeView.measureText({lines: renderInfo.lines});
@@ -286,7 +310,7 @@ define(function(require) {
                 }
                 var textY = 0;
                 if (node.height > textSize.height) {
-                    textY = ((node.height - textSize.height) / 2);
+                    textY = ((node.height - textSize.height) / 2) - 4; // TODO: something weird is happening here, why I need those -4?
                 }
 
 
