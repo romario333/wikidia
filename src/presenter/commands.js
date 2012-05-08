@@ -41,35 +41,21 @@ define(function(require) {
         moveCommand: function (itemInfos) {
             var that = {},
                 lastPreviewDx = 0,
-                lastPreviewDy = 0,
-                nodes = [],
-                linePoints = [];
+                lastPreviewDy = 0;
+
             that.dx = 0;
             that.dy = 0;
 
             that.isMoveCommand = true;
 
-            var previewMoveEnabled = true;
-
-            fillNodesAndLinePointsFromItemInfos(nodes, linePoints, itemInfos);
-
             that.preview = function () {
-                if (previewMoveEnabled) {
-                    previewMove();
-                } else {
-                    move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
-                }
+                move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
                 lastPreviewDx = that.dx;
                 lastPreviewDy = that.dy;
             };
 
             that.cancelPreview = function () {
-                if (previewMoveEnabled) {
-                    cancelPreviewMove();
-                } else {
-                    move(-that.dx, -that.dy);
-                }
-
+                move(-that.dx, -that.dy);
             };
 
             that.execute = function () {
@@ -82,45 +68,13 @@ define(function(require) {
             };
 
             function move(dx, dy) {
-                nodes.forEach(function (node) {
-                    node.changeEventsEnabled(false);
-                    node.x += dx;
-                    node.y += dy;
-                    node.changeEventsEnabled(true);
-                    node.fireChange();
-                });
-
-                updateLinePoints(dx, dy);
-            }
-
-            function updateLinePoints(dx, dy) {
-                linePoints.forEach(function (point) {
-                    point.line.changeEventsEnabled(false);
-                    point.x += dx;
-                    point.y += dy;
-                    point.line.changeEventsEnabled(true);
-                    point.line.fireChange();
-                });
-            }
-
-            // TODO: I'm still not sure that I'll need this optimization
-            function previewMove() {
                 itemInfos.forEach(function (itemInfo) {
                     if (itemInfo.item.isNode) {
-                        itemInfo.view.previewMove(that.dx, that.dy);
+                        var node = itemInfo.item;
+                        // position of connected lines will be updated automatically
+                        node.moveTo(node.x + dx, node.y + dy);
                     }
                 });
-                updateLinePoints(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
-            }
-
-
-            function cancelPreviewMove() {
-                itemInfos.forEach(function (itemInfo) {
-                    if (itemInfo.item.isNode) {
-                        itemInfo.view.cancelPreviewMove();
-                    }
-                });
-                updateLinePoints(-that.dx, -that.dy);
             }
 
             return that;
@@ -129,16 +83,12 @@ define(function(require) {
         resizeNodeCommand: function (itemInfos) {
             var that = {},
                 lastDWidth = 0,
-                lastDHeight = 0,
-                nodes = [],
-                linePoints = [];
+                lastDHeight = 0;
 
             that.dWidth = 0;
             that.dHeight = 0;
 
             that.isResizeNodeCommand = true;
-
-            fillNodesAndLinePointsFromItemInfos(nodes, linePoints, itemInfos);
 
             that.preview = function () {
                 resize(that.dWidth - lastDWidth, that.dHeight - lastDHeight);
@@ -160,20 +110,12 @@ define(function(require) {
             };
 
             function resize(dWidth, dHeight) {
-                nodes.forEach(function (node) {
-                    node.changeEventsEnabled(false);
-                    node.width += dWidth;
-                    node.height += dHeight;
-                    node.changeEventsEnabled(true);
-                    node.fireChange();
-                });
-
-                linePoints.forEach(function (point) {
-                    point.line.changeEventsEnabled(false);
-                    point.x += dWidth;
-                    point.y += dHeight;
-                    point.line.changeEventsEnabled(true);
-                    point.line.fireChange();
+                itemInfos.forEach(function (itemInfo) {
+                    if (itemInfo.item.isNode) {
+                        var node = itemInfo.item;
+                        // position of connected lines will be updated automatically
+                        node.resizeTo(node.width + dWidth, node.height + dHeight);
+                    }
                 });
             }
 

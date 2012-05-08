@@ -90,6 +90,60 @@ define(function(require, exports, module) {
             expect(connections).toContain(line2);
         });
 
+        it("if you move node, connected lines are moved too", function () {
+            var node = createNode({x: 10, y: 10, width: 100, height: 100});
+            var line = createLine({x1: 110, y1:110, x2: 200, y2: 200});
+            node.addConnection(line.points(0));
+
+            node.moveTo(20, 30);
+
+            expect(line.points(0).x).toEqual(120);
+            expect(line.points(0).y).toEqual(130);
+            expect(line.points(1).x).toEqual(200);
+            expect(line.points(1).y).toEqual(200);
+        });
+
+        it("if you resize node, connected lines are moved (if necessary)", function () {
+            var node = createNode({x: 10, y: 10, width: 100, height: 100});
+
+            var lineN = createLine({x1: 50, y1:10, x2: 0, y2: 0});
+            var lineS = createLine({x1: 50, y1:110, x2: 0, y2: 0});
+            var lineW = createLine({x1: 10, y1:50, x2: 0, y2: 0});
+            var lineE = createLine({x1: 110, y1:50, x2: 0, y2: 0});
+
+            node.addConnection(lineN.points(0));
+            node.addConnection(lineS.points(0));
+            node.addConnection(lineW.points(0));
+            node.addConnection(lineE.points(0));
+
+            node.resizeTo(90, 80);
+
+            // line connected to the north edge shouldn't move
+            expect(lineN.points(0).x).toEqual(50);
+            expect(lineN.points(0).y).toEqual(10);
+            expect(lineN.points(1).x).toEqual(0);
+            expect(lineN.points(1).y).toEqual(0);
+
+            // south line have updated position
+            expect(lineS.points(0).x).toEqual(50);
+            expect(lineS.points(0).y).toEqual(90);
+            expect(lineS.points(1).x).toEqual(0);
+            expect(lineS.points(1).y).toEqual(0);
+
+            // west line shouldn't move
+            expect(lineW.points(0).x).toEqual(10);
+            expect(lineW.points(0).y).toEqual(50);
+            expect(lineW.points(1).x).toEqual(0);
+            expect(lineW.points(1).y).toEqual(0);
+
+            // east line have updated position
+            expect(lineE.points(0).x).toEqual(100);
+            expect(lineE.points(0).y).toEqual(50);
+            expect(lineE.points(1).x).toEqual(0);
+            expect(lineE.points(1).y).toEqual(0);
+
+        });
+
 //        it("can create copy of itself", function () {
 //            var node = createNode({x: 1, y: 2, width: 3, height: 4, text: "original"});
 //            var line1 = createLine();

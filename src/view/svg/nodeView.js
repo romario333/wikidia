@@ -23,7 +23,6 @@ define(function(require) {
         var content, eventBox, resizeBorder, connectPoint;
         var onDragStart, onDragMove, onDragEnd;
         var onResizeDragStart, onResizeDragMove, onResizeDragEnd;
-        // TODO: join nebo joint?
         var onConnectPointDragStart, onConnectPointDragMove, onConnectPointDragEnd;
         var onConnectPointMouseUp;
         var onMouseEnter, onMouseLeave, onMouseMove;

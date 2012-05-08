@@ -9,7 +9,7 @@ define(function(require) {
 
         var onKeyUp;
 
-        var isCtrlKeyDown = true;
+        var isCtrlKeyDown = false;
 
         $(document).keydown(function (e) {
             if (e.which === 17) {  // FIXME: e.ctrlKey does not work here
