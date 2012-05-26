@@ -25,6 +25,9 @@ define(function(require) {
             text: function (spec) {
                 spec = spec ? utils.copyShallow(spec) : {};
                 return next.text(spec);
+            },
+            measureText: function (spec) {
+                return next.measureText(spec);
             }
         };
     }
@@ -55,6 +58,9 @@ define(function(require) {
                 spec.x = spec.x ? spec.x + dx : dx;
                 spec.y = spec.y ? spec.y + dy : dy;
                 return next.text(spec);
+            },
+            measureText: function (spec) {
+                return next.measureText(spec);
             }
         };
     }
@@ -65,7 +71,7 @@ define(function(require) {
      * @param next
      * @return {Object}
      */
-    function verticalFlow(next) {
+    function verticalFlow(next, width) {
         var lastY = 0;
         var PADDING = 4; // padding is applied from the top and the left
 
@@ -88,11 +94,30 @@ define(function(require) {
                 if (!spec.y) {
                     spec.y = lastY;
                 }
-                spec.x = spec.x ? spec.x + PADDING : PADDING;
+
                 spec.y += PADDING;
-                var textSize = next.text(spec);
+
+                var align = spec.align || "left";
+                var textSize;
+                if (align === "center") {
+                    textSize = next.measureText({text: spec.text});
+                    spec.x = 0;
+                    if (width > textSize.width) {
+                        spec.x = (width - textSize.width) / 2;
+                    }
+                } else if (align === "right") {
+                    throw new Error("TODO: not implemented yet.");
+                } else {
+                    // left align by default
+                    spec.x = spec.x ? spec.x + PADDING : PADDING;
+                }
+
+                textSize = next.text(spec);
                 lastY += textSize.height + PADDING;
                 return textSize;
+            },
+            measureText: function (spec) {
+                return next.measureText(spec);
             }
         };
     }
@@ -155,7 +180,6 @@ define(function(require) {
 
         /**
          * <code>nodeRendered</code> is responsible for rendering of the content of a node.
-         * TODO: zacina to vypadat spis jako controller
          */
         nodeRenderer: function () {
             var that = {};
@@ -164,8 +188,8 @@ define(function(require) {
 
             /**
              * You should always call this function before render. It returns <code>renderInfo</code>
-             * object, which contains parsed properties ({{property=value}}) and lines of text. You can
-             * freely modify this object.
+             * object, which contains parsed properties ({{property=value}}) and lines of text. You are
+             * free to further modify this object.
              *
              * @param itemInfo
              * @return {Object}
@@ -200,8 +224,11 @@ define(function(require) {
 
                 nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: renderInfo.fillColor, stroke: renderInfo.strokeColor});
 
-                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y)));
-                render.text({lines: renderInfo.lines});
+                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y), node.width));
+
+                renderInfo.lines.forEach(function (line) {
+                    render.text({text: line});
+                });
             };
 
             that.showNearbyConnectionPoint = function (node, nodeView, x, y, gridStep) {
@@ -265,13 +292,15 @@ define(function(require) {
 
                 nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: renderInfo.fillColor, stroke: renderInfo.strokeColor});
 
-                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y)));
+                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y), node.width));
 
+                var isFirstSection = true;
                 renderInfo.lines.forEach(function (line) {
                     if (line === "--") {
                         render.line({x1: 0, x2: node.width, stroke: renderInfo.strokeColor});
+                        isFirstSection = false;
                     } else {
-                        render.text({text: line});
+                        render.text({text: line, align: isFirstSection ? "center" : "left"});
                     }
                 });
             };
@@ -300,21 +329,23 @@ define(function(require) {
                     stroke: renderInfo.strokeColor
                 });
 
-                var render = renderChain(relative(nodeView, node.x, node.y));
+                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y), node.width));
 
-                // TODO: center multi-line text correctly
+                // TODO: mozna zabalit do neceho, co by se taky stalo casti renderChain?
                 var textSize = nodeView.measureText({lines: renderInfo.lines});
-                var textX = 0;
-                if (node.width > textSize.width) {
-                    textX = (node.width - textSize.width) / 2;
-                }
-                var textY = 0;
+                var textStartY = 0;
                 if (node.height > textSize.height) {
-                    textY = ((node.height - textSize.height) / 2) - 4; // TODO: something weird is happening here, why I need those -4?
+                    textStartY = ((node.height - textSize.height) / 2) - 4; // TODO: something weird is happening here, why I need those -4?
                 }
 
-
-                render.text({x: textX, y: textY, lines: renderInfo.lines});
+                renderInfo.lines.forEach(function (line, index) {
+                    if (index === 0) {
+                        // text is centered vertically, offset first line
+                        render.text({y: textStartY, text: line, align: "center"});
+                    } else {
+                        render.text({text: line, align: "center"});
+                    }
+                });
             };
 
             return that;

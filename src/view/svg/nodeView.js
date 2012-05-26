@@ -29,8 +29,6 @@ define(function(require) {
         // TODO: why do I need to do this? I should be able to avoid this simply by e.stopPropagation() in event handlers.
         var isResizing = false, isConnectPointDragging = false;
 
-        var textLineHeight;
-
         function init() {
             element.attr("cursor", "move");
             content = that.createElement("g", {class: "content"});
@@ -38,10 +36,6 @@ define(function(require) {
             resizeBorder = that.createElement("g", {class: "resize-border", display: "none"});
             connectPoint = that.createElement("circle", {class: "connect-point", cx: 0, cy: 0, r: 6, fill: "red", stroke:"blue", display: "none"});
             connectPoint.attr("cursor", "default");
-
-            // find out what is the height of the row
-            textLineHeight = that.measureText({text: "test"}).height;
-
 
             var dragHandler = dragEventHandler(element);
             dragHandler.dragStart(function (e) {
@@ -291,16 +285,7 @@ define(function(require) {
                 y: spec.y || 0,
                 'alignment-baseline': 'text-before-edge'
             });
-
-            var lines = spec.lines || [spec.text];
-            lines.forEach(function (line) {
-                var lineSpan = svgHelper.createSvgElement("tspan", {
-                    x: spec.x || 0,
-                    dy: textLineHeight
-                });
-                lineSpan.text(line);
-                textElement.append(lineSpan);
-            });
+            textElement.text(spec.text);
             return textElement;
         }
 
