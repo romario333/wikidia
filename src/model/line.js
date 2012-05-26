@@ -4,6 +4,17 @@ define(function (require) {
     var item = require("model/item");
     var utils = require("utils");
 
+    /**
+     * @constructor
+     *
+     * This object represents a line in a diagram. Line has `text`, `kind == "line"` and it contains
+     * points.
+     *
+     * You cannot connect directly to the line, you have to connect to one of its points instead.
+     *
+     * @param spec  Line's specification, e.g.: `{x1: 0, y1: 0, x2: 10, y2: 10}` creates line with two points -
+     *              [0, 0] and [10, 10].
+     */
     return function (spec) {
         var that = item(),
             points = [];
@@ -12,8 +23,8 @@ define(function (require) {
 
         // line has always two points right now, in the future it should be possible to add or remove arbitrary
         // number of points
-        points.push(point({x: spec.x1 || 0, y: spec.y1 || 0}, that));
-        points.push(point({x: spec.x2 || 0, y: spec.y2 || 0}, that));
+        points.push(linePoint({x: spec.x1 || 0, y: spec.y1 || 0}, that));
+        points.push(linePoint({x: spec.x2 || 0, y: spec.y2 || 0}, that));
 
         utils.addObservableProperty(that, "text", spec.text || "");
         utils.addObservableProperty(that, "kind", spec.kind || "line");
@@ -65,11 +76,14 @@ define(function (require) {
         that.isLine = true;
 
         /**
-         * Point cannot exist on itself, it is always a part of the line.
+         * @constructor
          *
-         * @param spec
+         * This object represents a line on a point. It cannot exist on itself, it is always a part of the line.
+         *
+         * @param spec  Point's specification (coordinates)
+         * @param line  Line to which this point belongs.
          */
-        function point(spec, line) {
+        function linePoint(spec, line) {
             var that = item();
 
             utils.addObservableProperty(that, "x", spec.x || 0);
@@ -88,10 +102,8 @@ define(function (require) {
                 return line.changeEventsEnabled();
             };
 
-
             return that;
         }
-
 
         return that;
     };

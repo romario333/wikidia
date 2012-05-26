@@ -4,6 +4,14 @@ define(function (require) {
     var item = require("model/item");
     var utils = require("utils");
 
+    /**
+     * @constructor
+     *
+     * This object represents a node in a diagram. Node has `text`, `x` and `y` coordinates, `width` and `height`
+     * and `kind == "node"`.
+     *
+     * @param spec  Node's specification.
+     */
     return function (spec) {
         var DEFAULT_SIZE = 90;
 
