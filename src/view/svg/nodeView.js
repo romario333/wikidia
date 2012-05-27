@@ -358,7 +358,7 @@ define(function(require) {
             var textElement = svgHelper.createSvgElement("text", {
                 x: spec.x || 0,
                 y: spec.y || 0,
-                'alignment-baseline': 'text-before-edge'
+                'dominant-baseline': 'text-before-edge'
             });
             textElement.text(spec.text);
             return textElement;

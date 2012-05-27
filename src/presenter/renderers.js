@@ -1,128 +1,7 @@
 define(function(require) {
     "use strict";
 
-    var utils = require("utils");
-
-
-    /**
-     * Rendering operations can be modified by composing rendering chain - this chain consists of
-     * objects which can transform input parameters of rendering operations. This is entry point of
-     * the chain - you should start every chain by calling this function first.
-     *
-     * @param next          Next item in the chain (e.g. @see relative, @see verticalFlow ...)
-     * @return {Object}
-     */
-    function renderChain(next) {
-        return {
-            rect: function (spec) {
-                spec = spec ? utils.copyShallow(spec) : {};
-                next.rect(spec);
-            },
-            line: function (spec) {
-                spec = spec ? utils.copyShallow(spec) : {};
-                next.line(spec);
-            },
-            text: function (spec) {
-                spec = spec ? utils.copyShallow(spec) : {};
-                return next.text(spec);
-            },
-            measureText: function (spec) {
-                return next.measureText(spec);
-            }
-        };
-    }
-
-    /**
-     * Part of the rendering chain. Translates all [x, y] coordinates by (dx, dy).
-     *
-     * @param next
-     * @param dx
-     * @param dy
-     * @return {Object}
-     */
-    function relative(next, dx, dy) {
-        return {
-            rect: function (spec) {
-                spec.x = spec.x ? spec.x + dx : dx;
-                spec.y = spec.y ? spec.y + dy : dy;
-                return next.rect(spec);
-            },
-            line: function (spec) {
-                spec.x1 = spec.x1 ? spec.x1 + dx : dx;
-                spec.y1 = spec.y1 ? spec.y1 + dy : dy;
-                spec.x2 = spec.x2 ? spec.x2 + dx : dx;
-                spec.y2 = spec.y2 ? spec.y2 + dy : dy;
-                return next.line(spec);
-            },
-            text: function (spec) {
-                spec.x = spec.x ? spec.x + dx : dx;
-                spec.y = spec.y ? spec.y + dy : dy;
-                return next.text(spec);
-            },
-            measureText: function (spec) {
-                return next.measureText(spec);
-            }
-        };
-    }
-
-    /**
-     * Part of the rendering chain.
-     *
-     * @param next
-     * @return {Object}
-     */
-    function verticalFlow(next, width) {
-        var lastY = 0;
-        var PADDING = 4; // padding is applied from the top and the left
-
-        return {
-            rect: function (spec) {
-                throw new Error("Not implemented yet.");
-            },
-            line: function (spec) {
-                if (!spec.y1) {
-                    spec.y1 = lastY;
-                }
-                if (!spec.y2) {
-                    spec.y2 = lastY;
-                }
-                spec.y1 += PADDING;
-                spec.y2 += PADDING;
-                next.line(spec);
-            },
-            text: function (spec) {
-                if (!spec.y) {
-                    spec.y = lastY;
-                }
-
-                spec.y += PADDING;
-
-                var align = spec.align || "left";
-                var textSize;
-                if (align === "center") {
-                    textSize = next.measureText({text: spec.text});
-                    spec.x = 0;
-                    if (width > textSize.width) {
-                        spec.x = (width - textSize.width) / 2;
-                    }
-                } else if (align === "right") {
-                    throw new Error("TODO: not implemented yet.");
-                } else {
-                    // left align by default
-                    spec.x = spec.x ? spec.x + PADDING : PADDING;
-                }
-
-                textSize = next.text(spec);
-                lastY += textSize.height + PADDING;
-                return textSize;
-            },
-            measureText: function (spec) {
-                return next.measureText(spec);
-            }
-        };
-    }
-
-
+    var renderFilters = require("presenter/renderFilters");
 
     /**
      * Parses text and returns:
@@ -224,7 +103,10 @@ define(function(require) {
 
                 nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: renderInfo.fillColor, stroke: renderInfo.strokeColor});
 
-                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y), node.width));
+                var render = renderFilters.renderFilterChain(nodeView, [
+                    renderFilters.verticalFlow(node.width),
+                    renderFilters.relative(node.x, node.y)
+                ]);
 
                 renderInfo.lines.forEach(function (line) {
                     render.text({text: line});
@@ -292,7 +174,10 @@ define(function(require) {
 
                 nodeView.rect({x: node.x, y: node.y, width: node.width, height: node.height, rx: 3, ry: 3, fill: renderInfo.fillColor, stroke: renderInfo.strokeColor});
 
-                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y), node.width));
+                var render = renderFilters.renderFilterChain(nodeView, [
+                    renderFilters.verticalFlow(node.width),
+                    renderFilters.relative(node.x, node.y)
+                ]);
 
                 var isFirstSection = true;
                 renderInfo.lines.forEach(function (line) {
@@ -329,13 +214,17 @@ define(function(require) {
                     stroke: renderInfo.strokeColor
                 });
 
-                var render = renderChain(verticalFlow(relative(nodeView, node.x, node.y), node.width));
+                var render = renderFilters.renderFilterChain(nodeView, [
+                    renderFilters.verticalFlow(node.width),
+                    renderFilters.relative(node.x, node.y)
+                ]);
 
-                // TODO: mozna zabalit do neceho, co by se taky stalo casti renderChain?
-                var textSize = nodeView.measureText({lines: renderInfo.lines});
-                var textStartY = 0;
-                if (node.height > textSize.height) {
-                    textStartY = ((node.height - textSize.height) / 2) - 4; // TODO: something weird is happening here, why I need those -4?
+                var textHeight = 0, textStartY = 0;
+                renderInfo.lines.forEach(function (line) {
+                    textHeight += nodeView.measureText({text: line}).height;
+                });
+                if (node.height > textHeight) {
+                    textStartY = ((node.height - textHeight) / 2);
                 }
 
                 renderInfo.lines.forEach(function (line, index) {
