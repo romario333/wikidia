@@ -1,12 +1,15 @@
 /*global define*/
 define(function(require) {
     "use strict";
+
     /**
-     * <code>nodeView</code> is an rectangular area and provides following services:
+     * `nodeView` is a rectangular area which provides following services:
      * - It publishes drag events.
-     * - It has active border which can be used for node resizing - it publishes resize events.
+     * - It has active border which can be used for node resizing. It does not handle resizing on itself though, it
+     * just publishes resize events.
+     * - It can display connection points and handle events for them.
      *
-     * <code>nodeView</code> is not responsible for its content - content is rendered by <code>nodeRenderer</code>.
+     * `nodeView` is not responsible for its content - content is rendered by `nodeRenderer` from presenter layer.
      *
      * @param diagramView
      */
@@ -24,9 +27,8 @@ define(function(require) {
         var onDragStart, onDragMove, onDragEnd;
         var onResizeDragStart, onResizeDragMove, onResizeDragEnd;
         var onConnectPointDragStart, onConnectPointDragMove, onConnectPointDragEnd;
-        var onConnectPointMouseUp;
+        var onConnectPointDrop;
         var onMouseEnter, onMouseLeave, onMouseMove;
-        // TODO: why do I need to do this? I should be able to avoid this simply by e.stopPropagation() in event handlers.
         var isResizing = false, isConnectPointDragging = false;
 
         function init() {
@@ -58,9 +60,8 @@ define(function(require) {
             connectPointDragHandler.dragStart(function (e) {
                 isConnectPointDragging = true;
                 if (onConnectPointDragStart) {
-                    // TODO: read somehting about baseVal.value
-                    var connectPointX = e.target.cx.baseVal.value;
-                    var connectPointY = e.target.cy.baseVal.value;
+                    var connectPointX = e.target.cx.animVal.value;
+                    var connectPointY = e.target.cy.animVal.value;
                     onConnectPointDragStart(that, connectPointX, connectPointY);
                 }
             });
@@ -76,12 +77,21 @@ define(function(require) {
                 }
             });
 
+            // FIXME: drop event should be part of drag handler
             connectPoint.mouseup(function (e) {
-                if (onConnectPointMouseUp) {
-                    var connectPointX = e.target.cx.baseVal.value;
-                    var connectPointY = e.target.cy.baseVal.value;
-                    onConnectPointMouseUp(that, connectPointX, connectPointY);
+                if (onConnectPointDrop) {
+                    var connectPointX = e.target.cx.animVal.value;
+                    var connectPointY = e.target.cy.animVal.value;
+                    onConnectPointDrop(that, connectPointX, connectPointY);
                 }
+            });
+
+            connectPoint.mouseenter(function (e) {
+                connectPoint.attr("fill", "black");
+            });
+
+            connectPoint.mouseleave(function (e) {
+                connectPoint.attr("fill", "red");
             });
 
             element.mouseenter(function (e) {
@@ -96,19 +106,121 @@ define(function(require) {
             });
             element.mousemove(function (e) {
                 if (!isResizing && onMouseMove) {
-                    // TODO: kde beru jistotu, ze je tohle spravne? offset vuci cemu?
-                    onMouseMove(that, e.offsetX, e.offsetY);
+                    var diagramOffset = diagramView.offset();
+                    onMouseMove(that, e.pageX - diagramOffset.left, e.pageY - diagramOffset.top);
                 }
             });
 
         }
 
+        /**
+         * Binds an event handler to the `dragStart` event. This event occurs when user starts dragging the node.
+         *
+         * @param handler
+         */
+        that.dragStart = function (handler) {
+            onDragStart = handler;
+        };
+
+        /**
+         * Binds an event handler to the `dragMove` event. This event occurs when user drags the node around.
+         *
+         * @param handler
+         */
+        that.dragMove = function (handler) {
+            onDragMove = handler;
+        };
+
+        /**
+         * Binds an event handler to the `dragEnd` event. This event occurs when user stops dragging the node.
+         *
+         * @param handler
+         */
+        that.dragEnd = function (handler) {
+            onDragEnd = handler;
+        };
+
+        that.resizeDragStart = function (handler) {
+            onResizeDragStart = handler;
+        };
+
+        that.resizeDragMove = function (handler) {
+            onResizeDragMove = handler;
+        };
+
+        that.resizeDragEnd = function (handler) {
+            onResizeDragEnd = handler;
+        };
+
+        /**
+         * Binds and event handler to the `connectPointDragStart` event. This event occurs when user starts
+         * dragging at the connection point.
+         *
+         * @param handler
+         */
+        that.connectPointDragStart = function (handler) {
+            onConnectPointDragStart = handler;
+        };
+
+        that.connectPointDragMove = function (handler) {
+            onConnectPointDragMove = handler;
+        };
+
+        that.connectPointDragEnd = function (handler) {
+            onConnectPointDragEnd = handler;
+        };
+
+        that.connectPointDrop = function (handler) {
+            onConnectPointDrop = handler;
+        };
+
+        that.mouseEnter = function (handler) {
+            onMouseEnter = handler;
+        };
+
+        that.mouseLeave = function (handler) {
+            onMouseLeave = handler;
+        };
+
+        that.mouseMove = function (handler) {
+            onMouseMove = handler;
+        };
+
+        /**
+         * Shows resize border - this border is used by user to resizing of node.
+         */
         that.showResizeBorder = function () {
             resizeBorder.attr("display", "block");
         };
 
+        /**
+         * Hides resize border.
+         */
         that.hideResizeBorder = function () {
             resizeBorder.attr("display", "none");
+        };
+
+        that.showConnectionPoint = function (point) {
+            connectPoint.attr({cx: point.x, cy: point.y, display: "block"});
+        };
+
+        that.hideConnectionPoints = function () {
+            connectPoint.attr({display: "none"});
+        };
+
+        that.updateBounds = function (spec) {
+            updateResizeBorder(spec);
+            // make eventBox slightly wider than node
+            var tolerance = diagramView.gridStep / 3;
+            eventBox.attr({
+                x: spec.x - tolerance,
+                y: spec.y - tolerance,
+                width: spec.width + 2 * tolerance,
+                height: spec.height + 2 * tolerance});
+        };
+
+        that.isSelected = function(selected) {
+            eventBox.attr("opacity", selected ? 0.5 : 0);
         };
 
         function updateResizeBorder(rect) {
@@ -130,7 +242,6 @@ define(function(require) {
 
             var resizeDragHandler = dragEventHandler(resizeHandle);
             resizeDragHandler.dragStart(function (e) {
-                // TODO: move dragStart and moveDragMove are fired once before isResizing is set, hopefully it won't do any damage
                 isResizing = true;
                 if (onResizeDragStart) {
                     onResizeDragStart(that);
@@ -149,84 +260,7 @@ define(function(require) {
             });
         }
 
-        that.dragStart = function (handler) {
-            onDragStart = handler;
-        };
-
-        that.dragMove = function (handler) {
-            onDragMove = handler;
-        };
-
-        that.dragEnd = function (handler) {
-            onDragEnd = handler;
-        };
-
-        that.resizeDragStart = function (handler) {
-            onResizeDragStart = handler;
-        };
-
-        that.resizeDragMove = function (handler) {
-            onResizeDragMove = handler;
-        };
-
-        that.resizeDragEnd = function (handler) {
-            onResizeDragEnd = handler;
-        };
-
-        that.connectPointDragStart = function (handler) {
-            onConnectPointDragStart = handler;
-        };
-
-        that.connectPointDragMove = function (handler) {
-            onConnectPointDragMove = handler;
-        };
-
-        that.connectPointDragEnd = function (handler) {
-            onConnectPointDragEnd = handler;
-        };
-
-        /**
-         * TODO: This event must be invoked BEFORE connectPointDragEnd, otherwise you won't be able to connect
-         * two nodes in one drag.
-         * TODO: should be called drop
-         *
-         * @param handler
-         */
-        that.connectPointMouseUp = function (handler) {
-            onConnectPointMouseUp = handler;
-        };
-
-        that.mouseEnter = function (handler) {
-            onMouseEnter = handler;
-        };
-
-        that.mouseLeave = function (handler) {
-            onMouseLeave = handler;
-        };
-
-        that.mouseMove = function (handler) {
-            onMouseMove = handler;
-        };
-
-        // TODO: stejne jako u lineView, zajimave
-        that.showConnectionPoint = function (point) {
-            connectPoint.attr({cx: point.x, cy: point.y, display: "block"});
-        };
-
-        that.hideConnectionPoints = function () {
-            connectPoint.attr({display: "none"});
-        };
-
-        that.updateBounds = function (spec) {
-            updateResizeBorder(spec);
-            // TODO: should be derived from GRID_STEP (let's say 1/3 of it)
-            eventBox.attr({x: spec.x - 5, y: spec.y - 5, width: spec.width + 10, height: spec.height + 10});
-        };
-
-        that.isSelected = function(selected) {
-            eventBox.attr("opacity", selected ? 0.5 : 0);
-        };
-
+        // TODO: put these in other object?
         /* RENDERING OPERATIONS - called by renderers from renderers.js */
 
         /**
@@ -250,7 +284,6 @@ define(function(require) {
          * @param spec.stroke   Stroke color.
          */
         that.rect = function (spec) {
-            // TODO: validate spec
             var el = svgHelper.createSvgElement("rect", spec);
             content.append(el);
         };

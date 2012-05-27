@@ -30,7 +30,7 @@ define(function (require) {
         that.id = null;
 
         /**
-         * Binds an event handler to the "change" event. This handler is called when any property
+         * Binds an event handler to the `change` event. This handler is called when any property
          * is changed. You can disable firing of this event by `changeEventsEnabled()` function.
          *
          * @param handler   Function which will be called when something changes in item.

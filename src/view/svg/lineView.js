@@ -13,12 +13,12 @@ define(function(require) {
         var content, eventBox, connectPoints;
         var onConnectPointDragStart, onConnectPointDragMove, onConnectPointDragEnd;
         var isConnectPointDragging = false;
-        var onConnectPointMouseUp;
+        var onConnectPointDrop;
         var onMouseEnter, onMouseLeave, onMouseMove;
 
         function init() {
             content = that.createElement("g", {class: "content"});
-            eventBox = that.createElement("line", {class: "eventBox", stroke: 'blue', opacity: 0, 'stroke-width': 7});
+            eventBox = that.createElement("line", {class: "eventBox", stroke: 'blue', opacity: 0, 'stroke-width': (diagramView.gridStep / 3) * 2});
             connectPoints = that.createElement("g", {class: "connect-points"});
             connectPoints.attr("cursor", "default");
 
@@ -34,8 +34,8 @@ define(function(require) {
             });
             element.mousemove(function (e) {
                 if (!isConnectPointDragging && onMouseMove) {
-                    // TODO: kde beru jistotu, ze je tohle spravne? offset vuci cemu?
-                    onMouseMove(that, e.offsetX, e.offsetY);
+                    var diagramOffset = diagramView.offset();
+                    onMouseMove(that, e.pageX - diagramOffset.left, e.pageY - diagramOffset.top);
                 }
             });
 
@@ -43,9 +43,8 @@ define(function(require) {
             connectPointDragHandler.dragStart(function (e) {
                 isConnectPointDragging = true;
                 if (onConnectPointDragStart) {
-                    // TODO: read somehting about baseVal.value
-                    var connectPointX = e.target.cx.baseVal.value;
-                    var connectPointY = e.target.cy.baseVal.value;
+                    var connectPointX = e.target.cx.animVal.value;
+                    var connectPointY = e.target.cy.animVal.value;
                     onConnectPointDragStart(that, connectPointX, connectPointY);
                 }
             });
@@ -62,45 +61,13 @@ define(function(require) {
             });
 
             connectPoints.mouseup(function (e) {
-                if (onConnectPointMouseUp) {
-                    var connectPointX = e.target.cx.baseVal.value;
-                    var connectPointY = e.target.cy.baseVal.value;
-                    onConnectPointMouseUp(that, connectPointX, connectPointY);
+                if (onConnectPointDrop) {
+                    var connectPointX = e.target.cx.animVal.value;
+                    var connectPointY = e.target.cy.animVal.value;
+                    onConnectPointDrop(that, connectPointX, connectPointY);
                 }
             });
-
-
         }
-
-        that.updateBounds = function (spec) {
-            eventBox.attr(spec);
-        };
-
-        that.isSelected = function(selected) {
-            eventBox.attr("opacity", selected ? 0.5 : 0);
-        };
-
-
-        // TODO: temp verze
-        that.clear = function () {
-            content.empty();
-        };
-
-        that.line = function(spec) {
-            var el = svgHelper.createSvgElement("line", spec);
-            content.append(el);
-        };
-
-        that.showConnectionPoints = function (points) {
-            points.forEach(function (point) {
-                var p = svgHelper.createSvgElement("circle", {cx: point.x, cy: point.y, r: 6, fill: "red", stroke:"blue"});
-                connectPoints.append(p);
-            });
-        };
-
-        that.hideConnectionPoints = function () {
-            connectPoints.empty();
-        };
 
         that.connectPointDragStart = function (handler) {
             onConnectPointDragStart = handler;
@@ -114,11 +81,9 @@ define(function(require) {
             onConnectPointDragEnd = handler;
         };
 
-        // TODO: drop would be better name
-        that.connectPointMouseUp = function (handler) {
-            onConnectPointMouseUp = handler;
+        that.connectPointDrop = function (handler) {
+            onConnectPointDrop = handler;
         };
-
 
         that.mouseEnter = function (handler) {
             onMouseEnter = handler;
@@ -130,6 +95,35 @@ define(function(require) {
 
         that.mouseMove = function (handler) {
             onMouseMove = handler;
+        };
+
+        that.updateBounds = function (spec) {
+            eventBox.attr(spec);
+        };
+
+        that.isSelected = function(selected) {
+            eventBox.attr("opacity", selected ? 0.5 : 0);
+        };
+
+        that.showConnectionPoints = function (points) {
+            points.forEach(function (point) {
+                var p = svgHelper.createSvgElement("circle", {cx: point.x, cy: point.y, r: 6, fill: "red", stroke:"blue"});
+                connectPoints.append(p);
+            });
+        };
+
+        that.hideConnectionPoints = function () {
+            connectPoints.empty();
+        };
+
+        // TODO: temp verze
+        that.clear = function () {
+            content.empty();
+        };
+
+        that.line = function(spec) {
+            var el = svgHelper.createSvgElement("line", spec);
+            content.append(el);
         };
 
         init();

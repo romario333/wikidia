@@ -130,7 +130,7 @@ define(function(require) {
             nodeView.connectPointDragStart(onNodeConnectPointDragStart);
             nodeView.connectPointDragMove(onNodeConnectPointDragMove);
             nodeView.connectPointDragEnd(onNodeConnectPointDragEnd);
-            nodeView.connectPointMouseUp(onNodeConnectPointMouseUp);
+            nodeView.connectPointDrop(onNodeConnectPointDrop);
 
             nodeView.mouseEnter(onNodeMouseEnter);
             nodeView.mouseLeave(onNodeMouseLeave);
@@ -159,7 +159,7 @@ define(function(require) {
             lineView.connectPointDragStart(onLineConnectPointDragStart);
             lineView.connectPointDragMove(onLineConnectPointDragMove);
             lineView.connectPointDragEnd(onLineConnectPointDragEnd);
-            lineView.connectPointMouseUp(onLineConnectPointMouseUp);
+            lineView.connectPointDrop(onLineConnectPointDrop);
 
 
             return itemInfo;
@@ -310,7 +310,7 @@ define(function(require) {
             commandInProgress.preview();
         }
 
-        function onNodeConnectPointMouseUp(nodeView, connectPointX, connectPointY) {
+        function onNodeConnectPointDrop(nodeView, connectPointX, connectPointY) {
             // TODO: musi bezet pred onNodeConnectPointDragEnd, jak to vynutit nebo testovat?
             var node = itemInfos.forView(nodeView).item;
             commandInProgress.itemToConnect = node;
@@ -364,7 +364,7 @@ define(function(require) {
             commandInProgress.preview();
         }
 
-        function onLineConnectPointMouseUp(lineView, connectPointX, connectPointY) {
+        function onLineConnectPointDrop(lineView, connectPointX, connectPointY) {
             var line = itemInfos.forView(lineView).item;
             commandInProgress.itemToConnect = line.pointAt(connectPointX, connectPointY);
         }

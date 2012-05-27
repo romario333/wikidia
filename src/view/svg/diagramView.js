@@ -15,7 +15,6 @@ define(function(require) {
             grid = that.createElement("g", {class: "grid"});
 
             // disable text selection (it collides with diagram manipulation)
-            // -webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-o-user-select: none;user-select: none;
             element.css("-webkit-user-select", "none");
             element.css("-khtml-user-select", "none");
             element.css("-o-user-select", "none");
@@ -43,6 +42,13 @@ define(function(require) {
                     grid.append(line);
                 }
             }
+        };
+
+        /**
+         * Returns the current coordinates of the diagram element, relative to the document.
+         */
+        that.offset = function () {
+            return rootView.element().offset();
         };
 
         init();
