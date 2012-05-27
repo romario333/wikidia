@@ -227,6 +227,8 @@ define(function(require) {
             eventBox.attr("opacity", selected ? 0.5 : 0);
         };
 
+        /* RENDERING OPERATIONS - called by renderers from renderers.js */
+
         /**
          * Clears content of the node. It's typically called as the first thing by renderer when it's going to update
          * node contents.
@@ -236,10 +238,16 @@ define(function(require) {
         };
 
         /**
-         * Draws rectangle specified by x, y, width and height. X and y are relative to the left upper edge
-         * of the node, which is considered to be [0, 0].
+         * Draws a rectangle.
          *
-         * @param spec
+         * @param spec.x        The x-axis coordinate of the upper left corner of the rectangle.
+         * @param spec.y        The y-axis coordinate of the upper left corner of the rectangle.
+         * @param spec.width
+         * @param spec.height
+         * @param spec.rx       For rounded rectangles, the x-axis radius of the ellipse used to round off the corners of the rectangle.
+         * @param spec.ry       For rounded rectangles, the y-axis radius of the ellipse used to round off the corners of the rectangle.
+         * @param spec.fill     Fill color.
+         * @param spec.stroke   Stroke color.
          */
         that.rect = function (spec) {
             // TODO: validate spec
@@ -247,17 +255,43 @@ define(function(require) {
             content.append(el);
         };
 
+        /**
+         * Draws a line.
+         *
+         * @param spec.x1
+         * @param spec.y1
+         * @param spec.x2
+         * @param spec.y2
+         * @param spec.stroke   Stroke color.
+         */
         that.line = function (spec) {
             var el = svgHelper.createSvgElement("line", spec);
             content.append(el);
         };
 
+        /**
+         * Draws an ellipse
+         *
+         * @param spec.cx       The x-axis coordinate of the center of the ellipse.
+         * @param spec.cy       The y-axis coordinate of the center of the ellipse.
+         * @param spec.rx       The x-axis radius of the ellipse.
+         * @param spec.ry       The y-axis radius of the ellipse.
+         * @param spec.fill     Fill color.
+         * @param spec.stroke   Stroke color.
+         */
         that.ellipse = function (spec) {
-            // TODO: validate spec
             var el = svgHelper.createSvgElement("ellipse", spec);
             content.append(el);
         };
 
+        /**
+         * Draws a text. Only single line text is supported, any `\n` will be ignored.
+         *
+         * @param spec.x        The x-axis coordinate of the upper left corner of the text.
+         * @param spec.y        The y-axis coordinate of the upper left corner of the text.
+         * @param spec.text     The text to render.
+         * @return {Object}     Size of the rendered text.
+         */
         that.text = function (spec) {
             var textElement = createTextElement(spec);
             content.append(textElement);
@@ -267,6 +301,14 @@ define(function(require) {
             };
         };
 
+        /**
+         * Measures a text without rendering.
+         *
+         * @param spec.x        The x-axis coordinate of the upper left corner of the text.
+         * @param spec.y        The y-axis coordinate of the upper left corner of the text.
+         * @param spec.text     The text to render.
+         * @return {Object}     Size of the rendered text.
+         */
         that.measureText = function (spec) {
             var textElement = createTextElement(spec);
             // add text temporarily to the document so we can get its size
@@ -300,9 +342,6 @@ define(function(require) {
 
             return svg;
         };
-
-        //TODO:
-
 
         init();
 
