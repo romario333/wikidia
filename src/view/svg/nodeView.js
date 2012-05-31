@@ -208,6 +208,19 @@ define(function(require) {
             connectPoint.attr({display: "none"});
         };
 
+        that.previewMove = function (dx, dy) {
+            element.attr("transform", "translate({dx},{dy})".supplant({dx: dx, dy: dy}));
+        };
+
+        that.cancelPreviewMove = function () {
+            element.attr("transform", "");
+        };
+
+        /**
+         * Updates size of node's area.
+         *
+         * @param spec - [x, y] coordinates of the node's left upper corner and its width and height.
+         */
         that.updateBounds = function (spec) {
             updateResizeBorder(spec);
             // make eventBox slightly wider than node

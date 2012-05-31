@@ -3,40 +3,6 @@ define(function(require) {
 
     var model = require("model");
 
-    /**
-     * Fills nodes and points arrays from items. Makes sure that duplicate line points
-     * are added only once.
-     *
-     * @param itemInfos
-     * @param nodes
-     * @param linePoints
-     */
-    function fillNodesAndLinePointsFromItemInfos(nodes, linePoints, itemInfos) {
-        itemInfos.forEach(function (itemInfo) {
-            if (itemInfo.item.isNode) {
-                var node = itemInfo.item;
-                nodes.push(node);
-                node.connections().forEach(function (connection) {
-                    if (connection.isLinePoint) {
-                        addLinePoint(connection);
-                    }
-                });
-            } else if (itemInfo.item.isLine) {
-                itemInfo.item.points().forEach(function (point) {
-                    addLinePoint(point);
-                });
-            } else {
-                throw new Error("Don't know how to handle this item.");
-            }
-        });
-
-        function addLinePoint(point) {
-            if (!linePoints[point.id]) {
-                linePoints[point.id] = point;
-            }
-        }
-    }
-
     return {
         moveCommand: function (itemInfos) {
             var that = {},
@@ -49,13 +15,33 @@ define(function(require) {
             that.isMoveCommand = true;
 
             that.preview = function () {
-                move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
+                itemInfos.forEach(function (itemInfo) {
+                    if (itemInfo.item.isNode) {
+                        itemInfo.view.previewMove(that.dx, that.dy);
+
+                        // we have to change node's position in model in order to update the position of lines
+                        // we don't want to fire change event though as that would lead to redraw of the node
+                        var node = itemInfo.item;
+                        node.changeEventsEnabled(false);
+                        node.move(that.dx - lastPreviewDx, that.dy - lastPreviewDy);
+                        node.changeEventsEnabled(true);
+                    }
+                });
                 lastPreviewDx = that.dx;
                 lastPreviewDy = that.dy;
             };
 
             that.cancelPreview = function () {
-                move(-that.dx, -that.dy);
+                itemInfos.forEach(function (itemInfo) {
+                    if (itemInfo.item.isNode) {
+                        itemInfo.view.cancelPreviewMove();
+
+                        var node = itemInfo.item;
+                        node.changeEventsEnabled(false);
+                        node.move(-that.dx, -that.dy);
+                        node.changeEventsEnabled(true);
+                    }
+                });
             };
 
             that.execute = function () {

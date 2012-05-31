@@ -41,11 +41,11 @@ define(function (require) {
                     },
                     set:function (value) {
                         var oldValue = object["__" + propertyName];
+                        object["__" + propertyName] = value;
                         if (value !== oldValue && object.changeEventsEnabled()) {
                             // value changed, fire change event
                             object.fireChange();
                         }
-                        object["__" + propertyName] = value;
                     }
             });
 

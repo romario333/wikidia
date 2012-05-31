@@ -33,8 +33,6 @@ define(function (require) {
          * @param y
          */
         that.moveTo = function (x, y) {
-            that.changeEventsEnabled(false);
-
             that.connections().forEach(function (c) {
                 if (c.isLinePoint) {
                     c.line.changeEventsEnabled(true);
@@ -49,9 +47,16 @@ define(function (require) {
 
             that.x = x;
             that.y = y;
+        };
 
-            that.changeEventsEnabled(true);
-            that.fireChange();
+        /**
+         * Moves node by the offset specified by `dx` and `dy`.
+         *
+         * @param dx
+         * @param dy
+         */
+        that.move = function (dx, dy) {
+            that.moveTo(that.x + dx, that.y + dy);
         };
 
         /**
