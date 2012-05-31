@@ -1,0 +1,16 @@
+{
+    "predef": [
+        "define"
+    ],
+
+    "es5" : true,
+    "browser" : true,
+    "jquery" : true,
+    "strict" : true,
+    "forin" : true,
+    "noarg" : true,
+    "bitwise" : true,
+    "undef" : true,
+    "curly" : true,
+    "eqeqeq" : true
+}
