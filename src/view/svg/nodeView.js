@@ -36,7 +36,7 @@ define(function(require) {
             content = that.createElement("g", {class: "content"});
             eventBox = that.createElement("rect", {class: "eventBox", opacity: 0, fill: "blue"});
             resizeBorder = that.createElement("g", {class: "resize-border", display: "none"});
-            connectPoint = that.createElement("circle", {class: "connect-point", cx: 0, cy: 0, r: 6, fill: "red", stroke:"blue", display: "none"});
+            connectPoint = that.createElement("circle", {class: "connect-point", cx: 0, cy: 0, r: 0, fill: "red", stroke:"blue", display: "none"});
             connectPoint.attr("cursor", "default");
 
             var dragHandler = dragEventHandler(element);
@@ -202,10 +202,18 @@ define(function(require) {
 
         that.showConnectionPoint = function (point) {
             connectPoint.attr({cx: point.x, cy: point.y, display: "block"});
+            // note that animate method is designed to work with CSS properties, I use it with DOM properties instead
+            $(connectPoint).animate({value: 10},{
+                duration: "fast",
+                easing: "swing",
+                step: function (now, fx) {
+                    this.r.baseVal.value = now;
+                }
+            });
         };
 
         that.hideConnectionPoints = function () {
-            connectPoint.attr({display: "none"});
+            connectPoint.attr({r: 0, display: "none"});
         };
 
         that.previewMove = function (dx, dy) {

@@ -154,9 +154,10 @@ define(function(require) {
                     }
                 });
 
-                nodeView.hideConnectionPoints();
                 if (nearestPoint) {
                     nodeView.showConnectionPoint(nearestPoint);
+                } else {
+                    nodeView.hideConnectionPoints();
                 }
             };
 
