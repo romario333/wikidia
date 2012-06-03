@@ -145,11 +145,14 @@ define(function(require) {
                 line.points(0).addConnection(node);
                 // if end point was provided, connect line to it too
                 if (that.itemToConnect) {
-                    line.points(1).addConnection(that.itemToConnect);
+                    line.points(1).addConnection(that.itemToConnect.item);
                 }
 
                 line.changeEventsEnabled(true);
                 line.fireChange();
+
+                that.itemToConnect.view.hideConnectionPoints();
+                that.itemToConnect.view.animateLock();
             };
 
             that.undo = function () {

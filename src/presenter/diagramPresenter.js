@@ -312,8 +312,7 @@ define(function(require) {
 
         function onNodeConnectPointDrop(nodeView, connectPointX, connectPointY) {
             // TODO: musi bezet pred onNodeConnectPointDragEnd, jak to vynutit nebo testovat?
-            var node = itemInfos.forView(nodeView).item;
-            commandInProgress.itemToConnect = node;
+            commandInProgress.itemToConnect = itemInfos.forView(nodeView);
             commandInProgress.x2 = connectPointX;
             commandInProgress.y2 = connectPointY;
         }

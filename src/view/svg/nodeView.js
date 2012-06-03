@@ -23,7 +23,7 @@ define(function(require) {
         var element = diagramView.createElement("g", {class: "node"});
         var that = parent(element);
 
-        var content, eventBox, resizeBorder, connectPoint;
+        var content, eventBox, resizeBorder, connectPoint, connectPointLocked;
         var onDragStart, onDragMove, onDragEnd;
         var onResizeDragStart, onResizeDragMove, onResizeDragEnd;
         var onConnectPointDragStart, onConnectPointDragMove, onConnectPointDragEnd;
@@ -38,6 +38,10 @@ define(function(require) {
             resizeBorder = that.createElement("g", {class: "resize-border", display: "none"});
             connectPoint = that.createElement("circle", {class: "connect-point", cx: 0, cy: 0, r: 0, fill: "red", stroke:"blue", display: "none"});
             connectPoint.attr("cursor", "default");
+            // circle which shows in animation when a line is locked to a node
+            connectPointLocked = that.createElement("circle", {class: "connect-point-locked", cx: 0, cy: 0, r: 0, fill: "none", stroke:"black", "stroke-width": 2, display: "none"});
+
+
 
             var dragHandler = dragEventHandler(element);
             dragHandler.dragStart(function (e) {
@@ -208,7 +212,6 @@ define(function(require) {
 
             connectPoint.attr({cx: point.x, cy: point.y, display: "block"});
 
-            connectPoint.clearQueue(); // stop any pending effects
             $(connectPoint[0].r.baseVal).animate({value: 10},{
                 duration: "fast"
             });
@@ -219,6 +222,17 @@ define(function(require) {
 
             connectPoint.delay(500).queue(function () {
                 connectPoint.attr({r: 0});
+            });
+        };
+
+        /**
+         * Animation which is run when user locks a line to a node.
+         */
+        that.animateLock = function () {
+            connectPointLocked.attr({cx: connectPoint.attr("cx"), cy: connectPoint.attr("cy"), r: 40, display: "block"});
+
+            $(connectPointLocked[0].r.baseVal).animate({value: 0},{
+                duration: "fast"
             });
         };
 
