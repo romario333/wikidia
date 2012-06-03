@@ -326,9 +326,6 @@ define(function(require) {
         }
 
         function onNodeMouseEnter(nodeView) {
-            if (keyboard.isCtrlKeyDown()) {
-                nodeView.showResizeBorder();
-            }
         }
 
         function onNodeMouseLeave(nodeView) {
@@ -337,6 +334,10 @@ define(function(require) {
         }
 
         function onNodeMouseMove(nodeView, x, y) {
+            if (keyboard.isCtrlKeyDown()) {
+                nodeView.showResizeBorder();
+            }
+
             var itemInfo = itemInfos.forView(nodeView);
             var renderer = renderers.rendererForItem(itemInfo.item);
             if (!keyboard.isCtrlKeyDown()) {

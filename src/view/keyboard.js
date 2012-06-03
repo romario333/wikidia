@@ -30,6 +30,10 @@ define(function(require) {
             }
         });
 
+        $(window).blur(function () {
+            isCtrlKeyDown = false;
+        });
+
         that.keyUp = function (handler) {
             onKeyUp = handler;
         };

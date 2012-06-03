@@ -205,6 +205,7 @@ define(function(require) {
         };
 
         that.showConnectionPoint = function (point) {
+            /*jshint eqeqeq:false*/
             if (connectPoint.attr("cx") == point.x && connectPoint.attr("cy") == point.y && connectPoint.attr("display") === "block") {
                 // connection point already visible, do nothing
                 return;
