@@ -201,19 +201,25 @@ define(function(require) {
         };
 
         that.showConnectionPoint = function (point) {
+            if (connectPoint.attr("cx") == point.x && connectPoint.attr("cy") == point.y && connectPoint.attr("display") === "block") {
+                // connection point already visible, do nothing
+                return;
+            }
+
             connectPoint.attr({cx: point.x, cy: point.y, display: "block"});
-            // note that animate method is designed to work with CSS properties, I use it with DOM properties instead
-            $(connectPoint).animate({value: 10},{
-                duration: "fast",
-                easing: "swing",
-                step: function (now, fx) {
-                    this.r.baseVal.value = now;
-                }
+
+            connectPoint.clearQueue(); // stop any pending effects
+            $(connectPoint[0].r.baseVal).animate({value: 10},{
+                duration: "fast"
             });
         };
 
         that.hideConnectionPoints = function () {
-            connectPoint.attr({r: 0, display: "none"});
+            connectPoint.attr({display: "none"});
+
+            connectPoint.delay(500).queue(function () {
+                connectPoint.attr({r: 0});
+            });
         };
 
         that.previewMove = function (dx, dy) {
