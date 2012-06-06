@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="lib/qunit-v1.3.0pre.css" type="text/css" media="screen"/>
     <script type="text/javascript" src="lib/qunit-1.3.0pre.js"></script>
 
+
     <script>
 
 
@@ -33,7 +34,7 @@
 
                 // we have inadvertently REWRITTEN parts of WINDOW OBJECT!
                 equal(person2, window);
-                equal(window.toString(), "Brandon Eich");
+                equal(window.toString(), "Brandon Eich"); // TODO: pada v IE9, WTF?
                 equal(window.firstName, "Brandon");
                 equal(window.lastName, "Eich");
             });
@@ -55,74 +56,88 @@
                 raises(function () { var person2 = Person(); }, TypeError); // TypeError: Cannot set property 'firstName' of undefined
             });
 
-            test("New syntax in ES5", function () {
+            test("Syntax and semantic differences - without SyntaxError", function () {
 
-                function strict() {
-                    "use strict";
-
-                    // trailing commas
-                    equal([1, 2, ].length, 2);
-
-                    // reserved word restriction on property names - removed in ES5
-                    var o = {function: "test"};
-                    equal(o.function, "test");
-
-                    // getters and setter
-                    o = {
-                        get test() {
-                            return "test";
-                        }
-                    };
-                    equal(o.test, "test");
-
-                    // multi-line string literals?
-                    var s = "long string\
-with two lines";
-                    equal(s, "long string\nwith two lines");
-                }
-
-                // TODO: co IE na tohle?
-                function nonStrict() {
+                function es3() {
+                    // TODO: this is actually new syntax resulting in
                     // trailing commas
                     equal([1, 2, ].length, 3);
 
-                }
-
-                strict();
-                nonStrict();
-            });
-
-            test("Semantic differences", function () {
-
-                // TODO:
-                function strict() {
-                    "use strict";
-
-                    equal(parseInt("08"), 8);
-
-                    raises(function () { Infinity = 1; }, TypeError); // TypeError: Cannot assign to read only property 'Infinity' of [object Window]
-                    raises(function () { NaN = 1; }, TypeError); // TypeError: Cannot assign to read only property 'NaN' of [object Window]
-                    raises(function () { undefined = 1; }, TypeError); // TypeError: Cannot assign to read only property 'undefined' of [object Window]
-                }
-
-                function nonStrict() {
-                    equal(parseInt("08"), 8);
-
+                    // Infinity, NaN and undefined can be redefined in ES3
                     Infinity = 1;
                     NaN = 1;
                     undefined = 1;
-
-                    // TODO: proc to neprochazi? souvisi to nejak s window.Infinity ...
                     equal(Infinity, 1);
                     equal(NaN, 1);
                     equal(undefined, 1);
                 }
 
-                strict();
-                nonStrict();
+                function es5() {
+                    // trailing commas
+                    equal([1, 2, ].length, 2);
+
+                    // TODO: proc tohle nefunguje?
+                    Infinity = 1;
+                    NaN = 1;
+                    undefined = 1;
+                    equal(Infinity, 1);
+                    equal(NaN, 1);
+                    equal(undefined, 1);
+                }
+
+                function es5Strict() {
+                    "use strict";
+
+                    // Infinity, NaN and undefined cannot be redefined in ES5/strict
+                    raises(function () { Infinity = 1; }, TypeError); // TypeError: Cannot assign to read only property 'Infinity' of [object Window]
+                    raises(function () { NaN = 1; }, TypeError); // TypeError: Cannot assign to read only property 'NaN' of [object Window]
+                    raises(function () { undefined = 1; }, TypeError); // TypeError: Cannot assign to read only property 'undefined' of [object Window]
+                }
+
+                // TODO: dokazal bych ostatni browsery nejak donutit se prepnout do ES3 ?
+                if ($.browser.msie && $.browser.version < 9) {
+                    es3();
+                } else {
+                    es5();
+                    // TODO: can I detect whether browser support strict mode?
+                    es5Strict();
+                }
+
+                // TODO: ten parseInt nejak nefunguje equal(parseInt("08"), 8);
+            });
+
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+
+            // I have to keep this test in the standalone script as it causes syntax error in IE < 9
+            test("Syntax and semantic differences - WITH SyntaxError", function () {
+
+                // reserved word restriction on property names - removed in ES5
+                var o = {function: "test"};
+                equal(o.function, "test");
+
+                // getters and setter
+                o = {
+                    get test() {
+                        return "test";
+                    }
+                };
+                equal(o.test, "test");
+
+                // multi-line string literals?
+                var s = "very long \
+string";
+                equal(s, "very long string");
+
+
+
             });
         });
     </script>
+
 
 </head>
 <body>
