@@ -55,8 +55,72 @@
                 raises(function () { var person2 = Person(); }, TypeError); // TypeError: Cannot set property 'firstName' of undefined
             });
 
+            test("New syntax in ES5", function () {
 
+                function strict() {
+                    "use strict";
 
+                    // trailing commas
+                    equal([1, 2, ].length, 2);
+
+                    // reserved word restriction on property names - removed in ES5
+                    var o = {function: "test"};
+                    equal(o.function, "test");
+
+                    // getters and setter
+                    o = {
+                        get test() {
+                            return "test";
+                        }
+                    };
+                    equal(o.test, "test");
+
+                    // multi-line string literals?
+                    var s = "long string\
+with two lines";
+                    equal(s, "long string\nwith two lines");
+                }
+
+                // TODO: co IE na tohle?
+                function nonStrict() {
+                    // trailing commas
+                    equal([1, 2, ].length, 3);
+
+                }
+
+                strict();
+                nonStrict();
+            });
+
+            test("Semantic differences", function () {
+
+                // TODO:
+                function strict() {
+                    "use strict";
+
+                    equal(parseInt("08"), 8);
+
+                    raises(function () { Infinity = 1; }, TypeError); // TypeError: Cannot assign to read only property 'Infinity' of [object Window]
+                    raises(function () { NaN = 1; }, TypeError); // TypeError: Cannot assign to read only property 'NaN' of [object Window]
+                    raises(function () { undefined = 1; }, TypeError); // TypeError: Cannot assign to read only property 'undefined' of [object Window]
+                }
+
+                function nonStrict() {
+                    equal(parseInt("08"), 8);
+
+                    Infinity = 1;
+                    NaN = 1;
+                    undefined = 1;
+
+                    // TODO: proc to neprochazi? souvisi to nejak s window.Infinity ...
+                    equal(Infinity, 1);
+                    equal(NaN, 1);
+                    equal(undefined, 1);
+                }
+
+                strict();
+                nonStrict();
+            });
         });
     </script>
 
