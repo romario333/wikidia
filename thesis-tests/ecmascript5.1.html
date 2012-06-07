@@ -6,11 +6,16 @@
     <link rel="stylesheet" href="lib/qunit-v1.3.0pre.css" type="text/css" media="screen"/>
     <script type="text/javascript" src="lib/qunit-1.3.0pre.js"></script>
 
-
     <script>
 
 
         $(document).ready(function () {
+
+            // some changes to the language are syntax error, load those conditionally
+            // TODO: this does not work in Chrome when on local filesystem, retest this via HTTP
+            if (supportsES5()) {
+                $(document.body).append('<script src="es5-breaking-changes.js"><\/script>');
+            }
 
             test("Constructor Function Without Strict Mode - DO NOT DO THIS!", function () {
                 // DON'T USE CONSTRUCTOR FUNCTIONS!
@@ -34,27 +39,29 @@
 
                 // we have inadvertently REWRITTEN parts of WINDOW OBJECT!
                 equal(person2, window);
-                equal(window.toString(), "Brandon Eich"); // TODO: pada v IE9, WTF?
+                equal(window.toString(), "Brandon Eich"); // TODO: note that this fails in IE9, passes in IE8 though
                 equal(window.firstName, "Brandon");
                 equal(window.lastName, "Eich");
             });
 
-            test("Constructor Function in Strict Mode - Slightly Better", function () {
-                "use strict";
+            if (supportsES5Strict()) {
+                test("Constructor Function in Strict Mode - Slightly Better", function () {
+                    "use strict";
 
-                function Person() {
-                    this.firstName = "Brandon";
-                    this.lastName = "Eich";
+                    function Person() {
+                        this.firstName = "Brandon";
+                        this.lastName = "Eich";
 
-                    this.toString = function () {
-                        return this.firstName + " " + this.lastName;
-                    };
+                        this.toString = function () {
+                            return this.firstName + " " + this.lastName;
+                        };
 
-                    return this; // return is actually not required here
-                }
+                        return this; // return is actually not required here
+                    }
 
-                raises(function () { var person2 = Person(); }, TypeError); // TypeError: Cannot set property 'firstName' of undefined
-            });
+                    raises(function () { var person2 = Person(); }, TypeError); // TypeError: Cannot set property 'firstName' of undefined
+                });
+            }
 
             test("Syntax and semantic differences - without SyntaxError", function () {
 
@@ -70,19 +77,26 @@
                     equal(Infinity, 1);
                     equal(NaN, 1);
                     equal(undefined, 1);
+
+                    // parseInt treat number as octal if it starts with 0
+                    equal(equal(parseInt("08"), 0));
                 }
 
                 function es5() {
                     // trailing commas
                     equal([1, 2, ].length, 2);
 
-                    // TODO: proc tohle nefunguje?
+                    // TODO: why this fails?
                     Infinity = 1;
                     NaN = 1;
                     undefined = 1;
                     equal(Infinity, 1);
                     equal(NaN, 1);
                     equal(undefined, 1);
+
+                    // TODO: vsichni to ignoruji: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/parseInt#ECMAScript_5_Removes_Octal_Interpretation
+                    // parseInt treat number as decimal
+                    equal(parseInt("08"), 8);
                 }
 
                 function es5Strict() {
@@ -92,49 +106,42 @@
                     raises(function () { Infinity = 1; }, TypeError); // TypeError: Cannot assign to read only property 'Infinity' of [object Window]
                     raises(function () { NaN = 1; }, TypeError); // TypeError: Cannot assign to read only property 'NaN' of [object Window]
                     raises(function () { undefined = 1; }, TypeError); // TypeError: Cannot assign to read only property 'undefined' of [object Window]
+
+                    (function () {
+                        // well, you can redefine them if you try hard enough ;-)
+                        var Infinity, NaN, undefined;
+
+                        Infinity = 1;
+                        NaN = 1;
+                        undefined = 1;
+                        equal(Infinity, 1);
+                        equal(NaN, 1);
+                        equal(undefined, 1);
+
+                    })();
                 }
 
-                // TODO: dokazal bych ostatni browsery nejak donutit se prepnout do ES3 ?
-                if ($.browser.msie && $.browser.version < 9) {
+                if (!supportsES5()) {
                     es3();
                 } else {
                     es5();
-                    // TODO: can I detect whether browser support strict mode?
-                    es5Strict();
-                }
-
-                // TODO: ten parseInt nejak nefunguje equal(parseInt("08"), 8);
-            });
-
-        });
-    </script>
-
-    <script>
-        $(document).ready(function () {
-
-            // I have to keep this test in the standalone script as it causes syntax error in IE < 9
-            test("Syntax and semantic differences - WITH SyntaxError", function () {
-
-                // reserved word restriction on property names - removed in ES5
-                var o = {function: "test"};
-                equal(o.function, "test");
-
-                // getters and setter
-                o = {
-                    get test() {
-                        return "test";
+                    if (supportsES5Strict()) {
+                        es5Strict();
                     }
-                };
-                equal(o.test, "test");
-
-                // multi-line string literals?
-                var s = "very long \
-string";
-                equal(s, "very long string");
-
-
-
+                }
             });
+
+            // utility functions
+
+            // TODO: improve this detection if I get bored
+            function supportsES5() {
+                return !$.browser.msie || ($.browser.msie && $.browser.version > 8);
+            }
+
+            function supportsES5Strict() {
+                return !$.browser.msie || ($.browser.msie && $.browser.version > 9);
+            }
+
         });
     </script>
 
