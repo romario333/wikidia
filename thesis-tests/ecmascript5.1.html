@@ -86,23 +86,56 @@
                     // trailing commas
                     equal([1, 2, ].length, 2);
 
-                    // TODO: why this fails?
+                    // note that in ES5 an attempt to redefine Infinity, Nan and undefined silently fails
                     Infinity = 1;
                     NaN = 1;
                     undefined = 1;
-                    equal(Infinity, 1);
-                    equal(NaN, 1);
-                    equal(undefined, 1);
+                    equal(Infinity, Infinity);
+                    equal(NaN.toString(), NaN.toString());
+                    equal(undefined, undefined);
 
                     // TODO: vsichni to ignoruji: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/parseInt#ECMAScript_5_Removes_Octal_Interpretation
                     // parseInt treat number as decimal
-                    equal(parseInt("08"), 8);
+                    equal(parseInt("08"), 0);
+                }
+
+                if (!supportsES5()) {
+                    es3();
+                } else {
+                    es5();
+                }
+            });
+
+            test("ES5/strict", function () {
+                function es5() {
+                    // you can't no longer accidentally create global variable
+                    globalLeak1 = "test";
+                    equal(window.globalLeak1, "test");
+
+                    // attempt to redefine Infinity, NaN and undefined FAILS SILENTLY in ES5/strict
+                    Infinity = 1;
+                    NaN = 1;
+                    undefined = 1;
+                    equal(Infinity, Infinity);
+                    equal(NaN.toString(), NaN.toString());
+                    equal(undefined, undefined);
+
+                    // attempt to delete some built-in properties fails silently
+                    equal(Object.prototype, null);
+                    delete Object.prototype;
+                    equal(Object.prototype, null);
                 }
 
                 function es5Strict() {
                     "use strict";
 
-                    // Infinity, NaN and undefined cannot be redefined in ES5/strict
+                    // you can't no longer accidentally leak variable to the global scope
+                    raises(function () {globalLeak2 = "test";}, ReferenceError); // ReferenceError: globalLeak2 is not defined
+                    // TODO: you can still accidentally rewrite existing variable in global scope though :(
+                    globalLeak1 = "strict test";
+                    equal(window.globalLeak1, "strict test");
+
+                    // attempt to redefine Infinity, NaN and undefined fails visibly in ES5/strict
                     raises(function () { Infinity = 1; }, TypeError); // TypeError: Cannot assign to read only property 'Infinity' of [object Window]
                     raises(function () { NaN = 1; }, TypeError); // TypeError: Cannot assign to read only property 'NaN' of [object Window]
                     raises(function () { undefined = 1; }, TypeError); // TypeError: Cannot assign to read only property 'undefined' of [object Window]
@@ -119,15 +152,20 @@
                         equal(undefined, 1);
 
                     })();
+
+                    // attempt to delete some built-in properties fails visibly in ES5/strict
+                    raises(function () { delete Object.prototype; }, TypeError); // TypeError: Cannot delete property 'prototype' of function Object()
+
+
+                    // TODO: vsichni to ignoruji: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/parseInt#ECMAScript_5_Removes_Octal_Interpretation
+                    equal(parseInt("08"), 0);
                 }
 
-                if (!supportsES5()) {
-                    es3();
-                } else {
+                if (supportsES5()) {
                     es5();
-                    if (supportsES5Strict()) {
-                        es5Strict();
-                    }
+                }
+                if (supportsES5Strict()) {
+                    es5Strict();
                 }
             });
 
