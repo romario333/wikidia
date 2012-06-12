@@ -106,7 +106,7 @@
                 }
             });
 
-            test("ES5/strict", function () {
+            test("ES5 vs ES5/strict", function testFn () {
                 function es5() {
                     // you can't no longer accidentally create global variable
                     globalLeak1 = "test";
@@ -121,9 +121,15 @@
                     equal(undefined, undefined);
 
                     // attempt to delete some built-in properties fails silently
-                    equal(Object.prototype, null);
+                    var objectPrototype = Object.prototype;
                     delete Object.prototype;
-                    equal(Object.prototype, null);
+                    equal(Object.prototype, objectPrototype);
+
+                    // this is global object in ES5 !
+                    equal(this, window);
+
+                    // in ES5 you can get reference to the calling function
+                    equal(es5.caller, testFn);
                 }
 
                 function es5Strict() {
@@ -159,6 +165,13 @@
 
                     // TODO: vsichni to ignoruji: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/parseInt#ECMAScript_5_Removes_Octal_Interpretation
                     equal(parseInt("08"), 0);
+
+                    // this is by default undefined in ES5/strict
+                    equal(this, undefined);
+
+                    // in ES5/strict you can't get reference to the calling function
+                    equal(es5.caller, null);
+
                 }
 
                 if (supportsES5()) {
