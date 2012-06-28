@@ -4,7 +4,7 @@ define(function(require) {
     /**
      * @constructor
      *
-     * This object represents diagram. Diagram can contains items - items are nodes and lines.
+     * This object represents diagram. Diagram can contain items - items are nodes and lines.
      *
      * Diagram is responsible for tracking of item's identity - it assigns them `id` property, which is unique
      * within diagram.
