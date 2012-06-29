@@ -108,7 +108,7 @@ define(function(require, exports, module) {
             addEvent(that, "connectPointDragStart");
             addEvent(that, "connectPointDragMove");
             addEvent(that, "connectPointDragEnd");
-            addEvent(that, "connectPointMouseUp");
+            addEvent(that, "connectPointDrop");
 
             return that;
         }
@@ -124,7 +124,7 @@ define(function(require, exports, module) {
             addEvent(that, "connectPointDragStart");
             addEvent(that, "connectPointDragMove");
             addEvent(that, "connectPointDragEnd");
-            addEvent(that, "connectPointMouseUp");
+            addEvent(that, "connectPointDrop");
 
             return that;
         }
