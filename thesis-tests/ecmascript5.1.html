@@ -9,7 +9,7 @@
     <script>
 
 
-        $(document).ready(function () {
+        (function () {
 
             // some changes to the language are syntax error, load those conditionally
             // TODO: this does not work in Chrome when on local filesystem, retest this via HTTP
@@ -17,8 +17,9 @@
                 $(document.body).append('<script src="es5-breaking-changes.js"><\/script>');
             }
 
-            test("Constructor Function Without Strict Mode - DO NOT DO THIS!", function () {
-                // DON'T USE CONSTRUCTOR FUNCTIONS!
+            test("Constructor Function Without Strict Mode", function () {
+                // TODO: zakomponovat sem a do textu testy z how this works (in basics)
+
                 function Person() {
                     this.firstName = "Brandon";
                     this.lastName = "Eich";
@@ -193,7 +194,7 @@
                 return !$.browser.msie || ($.browser.msie && $.browser.version > 9);
             }
 
-        });
+        })();
     </script>
 
 

@@ -8,10 +8,12 @@
 
     <script>
 
-        var global = "global";
+        "use strict";
 
-        $(document).ready(function () {
+        var globalThis = this;
 
+        // TODO: podivat se, jestli jquery v qunit testech pouziva document ready a udelat to tu stejne (i vsude jinde)
+        (function () {
             "use strict";
 
             module("Objects");
@@ -66,7 +68,7 @@
                 equal("test".toString(), "test");
                 equal(true.toString(), "true");
                 equal((3).toString(), "3");
-                equal((function () {}).toString());
+                equal((function () {}).toString(), "function () {}");
 
                 // TypeError: Cannot call method 'toString' of undefined
                 raises(function () {undefined.toString();}, TypeError);
@@ -151,8 +153,7 @@
 
             });
 
-            test("Constructor Function - DO NOT DO THIS!", function () {
-                // DON'T USE CONSTRUCTOR FUNCTIONS!
+            test("Constructor Function", function () {
                 function Person() {
                     this.firstName = "Brandon";
                     this.lastName = "Eich";
@@ -169,7 +170,39 @@
                 equal(person.toString(), "Brandon Eich");
             });
 
+            test("How this works", function () {
+                // when you call a function on an object, this refers to the object
+                var o = {
+                    f: function () {
+                        equal(this, o);
+                    }
+                };
+                o.f();
 
+                // when you call a function with new, this refers to a created object
+                var thisInConstructor;
+                function F() {
+                    thisInConstructor = this;
+                }
+                var fObj = new F();
+                equal(thisInConstructor, fObj);
+
+                // this refers to global object in global scope
+                equal(globalThis, window);
+
+                // when you call a function, this refers to undefined
+                function f() {
+                    equal(this, undefined);
+                }
+                f();
+
+                // caller of the function can bind this to whatever he wants
+                var anyObj = {};
+                function f2() {
+                    equal(this, anyObj);
+                }
+                f2.call(anyObj);
+            });
 
             module("Functions");
 
@@ -359,7 +392,7 @@
 
 
 
-        });
+        })();
     </script>
 
 </head>

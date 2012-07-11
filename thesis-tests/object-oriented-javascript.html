@@ -130,10 +130,10 @@
 
 
 
-            test("Prototypal Inheritance pokus", function () {
+            test("TODO: Prototypal Inheritance - person example", function () {
                 var person = {
-                    firstName: "",
-                    lastName: "",
+                    firstName: "N/A",
+                    lastName: "N/A",
                     get fullName() {
                         return this.firstName + " " + this.lastName;
                     }
@@ -144,7 +144,6 @@
 
                 p1.firstName = "haha";
 
-                // TODO: jaktoze to funguje
                 equal(p1.firstName, "haha");
                 equal(p2.firstName, "");
             });
