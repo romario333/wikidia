@@ -34,7 +34,7 @@ define(function(require) {
             itemInfos = [],
             selection,
             commandInProgress,
-            isCreatingLineFromNode = true;
+            isCreatingLineFromNode = false;
 
         // TODO: encapsulate items to object
         itemInfos.forView = function (view) {
@@ -77,6 +77,7 @@ define(function(require) {
 
             var rootView = viewFactory.rootView(container);
             diagramView = viewFactory.diagramView(rootView);
+            diagramView.gridStep = GRID_STEP;
 
             diagram.items().forEach(function (item) {
                 if (item.isNode) {
@@ -89,7 +90,6 @@ define(function(require) {
 
             });
 
-            diagramView.gridStep = GRID_STEP;
             diagramView.update();
             diagramView.click(onDiagramClick);
             diagramView.dragStart(onDiagramDragStart);
@@ -360,6 +360,9 @@ define(function(require) {
         }
 
         function onNodeMouseMove(nodeView, x, y) {
+            x -= viewPortScroll.left;
+            y -= viewPortScroll.top;
+
             if (keyboard.isCtrlKeyDown()) {
                 nodeView.showResizeBorder();
             }

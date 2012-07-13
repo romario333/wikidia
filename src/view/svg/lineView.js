@@ -18,7 +18,9 @@ define(function(require) {
 
         function init() {
             content = that.createElement("g", {class: "content"});
-            eventBox = that.createElement("line", {class: "eventBox", stroke: 'blue', opacity: 0, 'stroke-width': (diagramView.gridStep / 3) * 2});
+            // make eventBox slightly wider than lne
+            var tolerance = diagramView.gridStep ? diagramView.gridStep / 3 : 5;
+            eventBox = that.createElement("line", {class: "eventBox", stroke: 'blue', opacity: 0, 'stroke-width': tolerance * 2});
             connectPoints = that.createElement("g", {class: "connect-points"});
             connectPoints.attr("cursor", "default");
 

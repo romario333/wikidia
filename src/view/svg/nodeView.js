@@ -253,7 +253,7 @@ define(function(require) {
         that.updateBounds = function (spec) {
             updateResizeBorder(spec);
             // make eventBox slightly wider than node
-            var tolerance = diagramView.gridStep / 3;
+            var tolerance = diagramView.gridStep ? diagramView.gridStep / 3 : 5;
             eventBox.attr({
                 x: spec.x - tolerance,
                 y: spec.y - tolerance,

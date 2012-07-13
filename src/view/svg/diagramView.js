@@ -46,14 +46,14 @@ define(function(require) {
         }
 
         /**
-         * Step between lines in grid. 0 means disabled.
+         * Step between lines in grid. null means disabled.
          */
-        that.gridStep = 0;
+        that.gridStep = null;
 
         that.update = function () {
             // draw grid
             grid.empty();
-            if (that.gridStep !== 0) {
+            if (that.gridStep !== null) {
                 var diagramWidth = rootView.containerWidth();
                 var diagramHeight = rootView.containerHeight();
                 var x, y, line;
