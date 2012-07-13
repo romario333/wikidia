@@ -27,6 +27,7 @@ define(function(require) {
 
         var that = {},
             keyboard,
+            viewPortScroll = {top: 0, left: 0},
             itemEditView,
             commandExecutor,
             diagramView,
@@ -91,6 +92,10 @@ define(function(require) {
             diagramView.gridStep = GRID_STEP;
             diagramView.update();
             diagramView.click(onDiagramClick);
+            diagramView.dragStart(onDiagramDragStart);
+            diagramView.dragMove(onDiagramDragMove);
+            diagramView.dragEnd(onDiagramDragEnd);
+
 
             diagram.itemAdded(onItemAdded);
             diagram.itemRemoved(onItemRemoved);
@@ -210,6 +215,27 @@ define(function(require) {
         function onDiagramClick(view) {
             selection.clear();
         }
+
+        function onDiagramDragStart(diagramView) {
+        }
+
+        function onDiagramDragMove(diagramView, dx, dy) {
+            var snapped = snapToGrid({
+                x: viewPortScroll.left + dx,
+                y: viewPortScroll.top + dy
+            });
+            diagramView.scrollTo(snapped.x, snapped.y);
+        }
+
+        function onDiagramDragEnd(diagramView, dx, dy) {
+            var snapped = snapToGrid({
+                x: viewPortScroll.left + dx,
+                y: viewPortScroll.top + dy
+            });
+            viewPortScroll.left = snapped.x;
+            viewPortScroll.top = snapped.y;
+        }
+
 
         function onItemMouseDown(view) {
             var itemInfo = itemInfos.forView(view);

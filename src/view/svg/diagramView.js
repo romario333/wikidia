@@ -17,6 +17,7 @@ define(function(require) {
         diagramElement.append(viewPort);
         var that = parent(viewPort);
         var eventBox, grid;
+        var onDragStart, onDragMove, onDragEnd;
 
         function init() {
 
@@ -26,22 +27,21 @@ define(function(require) {
             diagramElement.css("-o-user-select", "none");
             diagramElement.css("user-select", "none");
 
-            // TODO: let's skip presenter for now
-            var viewPortX = 0, viewPortY = 0, lastDx, lastDy;
             var dragHandler = dragEventHandler(diagramElement);
             dragHandler.dragStart(function (e, dragInfo) {
-                lastDx = 0;
-                lastDy = 0;
+                if (onDragStart) {
+                    onDragStart(that);
+                }
             });
             dragHandler.dragMove(function (e, dragInfo) {
-                viewPortX += dragInfo.dx - lastDx;
-                viewPortY += dragInfo.dy - lastDy;
-                lastDx = dragInfo.dx;
-                lastDy = dragInfo.dy;
-
-                viewPort.attr("transform", "translate({dx},{dy})".supplant({dx: viewPortX, dy: viewPortY}));
+                if (onDragMove) {
+                    onDragMove(that, dragInfo.dx, dragInfo.dy);
+                }
             });
             dragHandler.dragEnd(function (e, dragInfo) {
+                if (onDragEnd) {
+                    onDragEnd(that, dragInfo.dx, dragInfo.dy);
+                }
             });
         }
 
@@ -67,6 +67,48 @@ define(function(require) {
                 }
             }
         };
+
+        /**
+         * Scrolls to the coordinates specified by [x, y]. Upper left corner of viewport will start on these
+         * coordinates.
+         *
+         * @param x
+         * @param y
+         */
+        that.scrollTo = function (x, y) {
+            viewPort.attr("transform", "translate({x},{y})".supplant({x: x, y: y}));
+        };
+
+        /**
+         * Binds an event handler to the `dragStart` event. This event occurs when user starts dragging the diagram.
+         * Note that if mouse is over a item in diagram, this event does not fire.
+         *
+         * @param handler
+         */
+        that.dragStart = function (handler) {
+            onDragStart = handler;
+        };
+
+        /**
+         * Binds an event handler to the `dragMove` event. This event occurs when user drags the diagram.
+         * Note that if mouse is over a item in diagram, this event does not fire.
+         *
+         * @param handler
+         */
+        that.dragMove = function (handler) {
+            onDragMove = handler;
+        };
+
+        /**
+         * Binds an event handler to the `dragEnd` event. This event occurs when user stops dragging the diagram.
+         * Note that if mouse is over a item in diagram, this event does not fire.
+         *
+         * @param handler
+         */
+        that.dragEnd = function (handler) {
+            onDragEnd = handler;
+        };
+
 
         /**
          * Returns the current coordinates of the diagram element, relative to the document.

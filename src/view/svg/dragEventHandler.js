@@ -10,7 +10,9 @@ define(function(require) {
                 x: null,
                 y: null,
                 dx: 0,
-                dy: 0
+                dy: 0,
+                lastDx: 0,
+                lastDy: 0
             },
             // TODO: only one listener can be registered at the  moment
             onDragStart,
@@ -29,6 +31,12 @@ define(function(require) {
                 isDragged = true;
                 readyForDrag = false;
                 if (onDragStart) {
+                    dragInfo.x = dragInfo.startX;
+                    dragInfo.y = dragInfo.startY;
+                    dragInfo.dx = 0;
+                    dragInfo.dy = 0;
+                    dragInfo.lastDx = 0;
+                    dragInfo.lastDy = 0;
                     onDragStart(e, dragInfo);
                 }
                 // we have to disable click event temporarily, because mouseup on the same element later will produce click and we
@@ -37,6 +45,8 @@ define(function(require) {
             }
             if (isDragged) {
                 if (onDragMove) {
+                    dragInfo.lastDx = dragInfo.dx;
+                    dragInfo.lastDy = dragInfo.dy;
                     dragInfo.dx = e.clientX - dragInfo.startX;
                     dragInfo.dy = e.clientY - dragInfo.startY;
                     onDragMove(e, dragInfo);
@@ -49,6 +59,8 @@ define(function(require) {
             if (isDragged) {
                 isDragged = false;
                 if (onDragEnd) {
+                    dragInfo.lastDx = dragInfo.dx;
+                    dragInfo.lastDy = dragInfo.dy;
                     dragInfo.dx = e.clientX - dragInfo.startX;
                     dragInfo.dy = e.clientY - dragInfo.startY;
                     onDragEnd(e, dragInfo);
