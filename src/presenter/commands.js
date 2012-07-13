@@ -151,8 +151,10 @@ define(function(require) {
                 line.changeEventsEnabled(true);
                 line.fireChange();
 
-                that.itemToConnect.view.hideConnectionPoints();
-                that.itemToConnect.view.animateLock();
+                if (that.itemToConnect) {
+                    that.itemToConnect.view.hideConnectionPoints();
+                    that.itemToConnect.view.animateLock();
+                }
             };
 
             that.undo = function () {
@@ -173,7 +175,7 @@ define(function(require) {
 
             that.dx = 0;
             that.dy = 0;
-            that.connectToItem = null;
+            that.itemToConnect = null;
 
 
             // I'm assuming that point can have only one connection at a time
@@ -205,12 +207,17 @@ define(function(require) {
                 if (wasConnectedToItem) {
                     point.removeConnection(wasConnectedToItem);
                 }
-                if (that.connectToItem) {
-                    point.addConnection(that.connectToItem);
+                if (that.itemToConnect) {
+                    point.addConnection(that.itemToConnect.item);
                 }
 
                 point.line.changeEventsEnabled(true);
                 point.line.fireChange();
+
+                if (that.itemToConnect) {
+                    that.itemToConnect.view.hideConnectionPoints();
+                    that.itemToConnect.view.animateLock();
+                }
             };
 
             that.undo = function () {

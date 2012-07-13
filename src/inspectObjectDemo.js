@@ -68,6 +68,19 @@ define(function(require, exports, module) {
             autoLayout(nodes);
         });
 
+        $("#addNode").click(function () {
+            diagram.addItem(model.node());
+        });
+
+        $("#addClass").click(function () {
+            diagram.addItem(model.node({kind: "class"}));
+        });
+
+        $("#addUseCase").click(function () {
+            diagram.addItem(model.node({kind: "useCase"}));
+        });
+
+
     });
 
     function autoLayout(nodes) {
@@ -94,14 +107,15 @@ define(function(require, exports, module) {
             v.node.connections().forEach(function (c) {
                 var otherNode = c.line.points(0).connections(0) === v.node ? c.line.points(1).connections(0) : c.line.points(0).connections(0);
                 //console.log("connection from " + v.node.text + " to " + otherNode.text);
-                v.edges.push(verticesById[otherNode.id]);
+
+                if (otherNode) {
+                    v.edges.push(verticesById[otherNode.id]);
+                }
             });
         });
 
-        console.dir(vertices);
-
         //setTimeout(iterationFun, ITERATION_INTERVAL);
-        requestAnimationFrame(iterationFun)
+        requestAnimationFrame(iterationFun);
 
         function iterationFun() {
             iteration++;
