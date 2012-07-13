@@ -21,15 +21,15 @@
 
         draggable = WIKIDIA.view.svg.dragEventHandler($("#draggable"));
 
-        draggable.dragStart(function (e) {
+        draggable.dragStart(function (e, dragInfo) {
             console.log("drag start");
         });
 
-        draggable.dragMove(function (e, dx, dy) {
+        draggable.dragMove(function (e, dragInfo) {
             console.log("drag move");
         });
 
-        draggable.dragEnd(function (e, dx, dy) {
+        draggable.dragEnd(function (e, dragInfo) {
             console.log("drag end");
         });
 

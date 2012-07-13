@@ -4,16 +4,22 @@ define(function(require) {
     return function (element) {
         var readyForDrag = false,
             isDragged = false,
-            dragStartX,
-            dragStartY,
+            dragInfo = {
+                startX: null,
+                startY: null,
+                x: null,
+                y: null,
+                dx: 0,
+                dy: 0
+            },
             // TODO: only one listener can be registered at the  moment
             onDragStart,
             onDragMove,
             onDragEnd;
 
         element.mousedown(function (e) {
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
+            dragInfo.startX = e.clientX;
+            dragInfo.startY = e.clientY;
             readyForDrag = true;
         });
 
@@ -23,7 +29,7 @@ define(function(require) {
                 isDragged = true;
                 readyForDrag = false;
                 if (onDragStart) {
-                    onDragStart(e);
+                    onDragStart(e, dragInfo);
                 }
                 // we have to disable click event temporarily, because mouseup on the same element later will produce click and we
                 // don't want to fire click handlers
@@ -31,9 +37,9 @@ define(function(require) {
             }
             if (isDragged) {
                 if (onDragMove) {
-                    var dx = e.clientX - dragStartX;
-                    var dy = e.clientY - dragStartY;
-                    onDragMove(e, dx, dy);
+                    dragInfo.dx = e.clientX - dragInfo.startX;
+                    dragInfo.dy = e.clientY - dragInfo.startY;
+                    onDragMove(e, dragInfo);
                 }
             }
         });
@@ -43,9 +49,9 @@ define(function(require) {
             if (isDragged) {
                 isDragged = false;
                 if (onDragEnd) {
-                    var dx = e.clientX - dragStartX;
-                    var dy = e.clientY - dragStartY;
-                    onDragEnd(e, dx, dy);
+                    dragInfo.dx = e.clientX - dragInfo.startX;
+                    dragInfo.dy = e.clientY - dragInfo.startY;
+                    onDragEnd(e, dragInfo);
                 }
 
                 // TODO: this is terrible, there must be easier way

@@ -5,20 +5,44 @@ define(function(require) {
 
         var parent = require("./viewBase");
         var svgHelper = require("./svgHelper");
+        var dragEventHandler = require("./dragEventHandler");
 
-        var element = rootView.createElement("g", {class: "diagram"});
-        var that = parent(element);
+        // TODO: view.createElement vs svgHelper.createSvgElement + is out of init because of parent(element) call, which sucks
+        var diagramElement = rootView.createElement("g", {class: "diagram"});
+        eventBox = svgHelper.createSvgElement("rect", {class: "eventBox", opacity: 0, fill: "blue", width: "100%", height: "100%"});
+        diagramElement.append(eventBox);
+        grid = svgHelper.createSvgElement("g", {class: "grid"});
+        diagramElement.append(grid);
+        var viewPort = svgHelper.createSvgElement("g", {class: "viewPort"});
+        diagramElement.append(viewPort);
+        var that = parent(viewPort);
         var eventBox, grid;
 
         function init() {
-            eventBox = that.createElement("rect", {class: "eventBox", opacity: 0, fill: "blue", width: "100%", height: "100%"});
-            grid = that.createElement("g", {class: "grid"});
 
             // disable text selection (it collides with diagram manipulation)
-            element.css("-webkit-user-select", "none");
-            element.css("-khtml-user-select", "none");
-            element.css("-o-user-select", "none");
-            element.css("user-select", "none");
+            diagramElement.css("-webkit-user-select", "none");
+            diagramElement.css("-khtml-user-select", "none");
+            diagramElement.css("-o-user-select", "none");
+            diagramElement.css("user-select", "none");
+
+            // TODO: let's skip presenter for now
+            var viewPortX = 0, viewPortY = 0, lastDx, lastDy;
+            var dragHandler = dragEventHandler(diagramElement);
+            dragHandler.dragStart(function (e, dragInfo) {
+                lastDx = 0;
+                lastDy = 0;
+            });
+            dragHandler.dragMove(function (e, dragInfo) {
+                viewPortX += dragInfo.dx - lastDx;
+                viewPortY += dragInfo.dy - lastDy;
+                lastDx = dragInfo.dx;
+                lastDy = dragInfo.dy;
+
+                viewPort.attr("transform", "translate({dx},{dy})".supplant({dx: viewPortX, dy: viewPortY}));
+            });
+            dragHandler.dragEnd(function (e, dragInfo) {
+            });
         }
 
         /**
@@ -50,6 +74,8 @@ define(function(require) {
         that.offset = function () {
             return rootView.element().offset();
         };
+
+
 
         init();
 

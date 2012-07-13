@@ -5,7 +5,8 @@
     <title>Wikidia Demo</title>
 
     <script type="text/javascript" src="lib/jquery-1.7.2.js"></script>
-    <script data-main="src/demo.js" src="lib/require-1.0.8.js"></script>
+    <script type="text/javascript" src="lib/springy.js"></script>
+    <script data-main="src/inspectObjectDemo.js" src="lib/require-1.0.8.js"></script>
 
     <style type="text/css">
         svg
@@ -58,9 +59,7 @@
                 <br/>
                 CTRL+Z to undo and DEL to delete.
             </div>
-            <input id="addNode" type="button" value="Add Node" />
-            <input id="addClass" type="button" value="Add Class" />
-            <input id="addUseCase" type="button" value="Add Use-Case" />
+            <input id="autoLayout" type="button" value="Auto Layout" />
             <hr/>
             <textarea id="nodeEdit"></textarea>
         </div>

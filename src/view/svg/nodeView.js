@@ -44,24 +44,24 @@ define(function(require) {
 
 
             var dragHandler = dragEventHandler(element);
-            dragHandler.dragStart(function (e) {
+            dragHandler.dragStart(function (e, dragInfo) {
                 if (!isResizing && !isConnectPointDragging && onDragStart) {
                     onDragStart(that);
                 }
             });
-            dragHandler.dragMove(function (e, dx, dy) {
+            dragHandler.dragMove(function (e, dragInfo) {
                 if (!isResizing && !isConnectPointDragging && onDragMove) {
-                    onDragMove(that, dx, dy);
+                    onDragMove(that, dragInfo.dx, dragInfo.dy);
                 }
             });
-            dragHandler.dragEnd(function (e, dx, dy) {
+            dragHandler.dragEnd(function (e, dragInfo) {
                 if (!isResizing && !isConnectPointDragging && onDragEnd) {
-                    onDragEnd(that, dx, dy);
+                    onDragEnd(that, dragInfo.dx, dragInfo.dy);
                 }
             });
 
             var connectPointDragHandler = dragEventHandler(connectPoint);
-            connectPointDragHandler.dragStart(function (e) {
+            connectPointDragHandler.dragStart(function (e, dragInfo) {
                 isConnectPointDragging = true;
                 if (onConnectPointDragStart) {
                     var connectPointX = e.target.cx.animVal.value;
@@ -69,15 +69,15 @@ define(function(require) {
                     onConnectPointDragStart(that, connectPointX, connectPointY);
                 }
             });
-            connectPointDragHandler.dragMove(function (e, dx, dy) {
+            connectPointDragHandler.dragMove(function (e, dragInfo) {
                 if (onConnectPointDragMove) {
-                    onConnectPointDragMove(that, dx, dy);
+                    onConnectPointDragMove(that, dragInfo.dx, dragInfo.dy);
                 }
             });
-            connectPointDragHandler.dragEnd(function (e, dx, dy) {
+            connectPointDragHandler.dragEnd(function (e, dragInfo) {
                 isConnectPointDragging = false;
                 if (onConnectPointDragEnd) {
-                    onConnectPointDragEnd(that, dx, dy);
+                    onConnectPointDragEnd(that, dragInfo.dx, dragInfo.dy);
                 }
             });
 

@@ -40,7 +40,7 @@ define(function(require) {
             });
 
             var connectPointDragHandler = dragEventHandler(connectPoints);
-            connectPointDragHandler.dragStart(function (e) {
+            connectPointDragHandler.dragStart(function (e, dragInfo) {
                 isConnectPointDragging = true;
                 if (onConnectPointDragStart) {
                     var connectPointX = e.target.cx.animVal.value;
@@ -48,15 +48,15 @@ define(function(require) {
                     onConnectPointDragStart(that, connectPointX, connectPointY);
                 }
             });
-            connectPointDragHandler.dragMove(function (e, dx, dy) {
+            connectPointDragHandler.dragMove(function (e, dragInfo) {
                 if (onConnectPointDragMove) {
-                    onConnectPointDragMove(that, dx, dy);
+                    onConnectPointDragMove(that, dragInfo.dx, dragInfo.dy);
                 }
             });
-            connectPointDragHandler.dragEnd(function (e, dx, dy) {
+            connectPointDragHandler.dragEnd(function (e, dragInfo) {
                 isConnectPointDragging = false;
                 if (onConnectPointDragEnd) {
-                    onConnectPointDragEnd(that, dx, dy);
+                    onConnectPointDragEnd(that, dragInfo.dx, dragInfo.dy);
                 }
             });
 
