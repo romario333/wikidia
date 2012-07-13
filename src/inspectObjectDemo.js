@@ -5,6 +5,31 @@ define(function(require, exports, module) {
     var view = require("view");
     var diagramPresenter = require("presenter/diagramPresenter");
 
+    // TOOD:
+
+    /**
+     * Provides requestAnimationFrame in a cross browser way.
+     * @author paulirish / http://paulirish.com/
+     */
+
+    if ( !window.requestAnimationFrame ) {
+
+        window.requestAnimationFrame = ( function() {
+
+            return window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                window.oRequestAnimationFrame ||
+                window.msRequestAnimationFrame ||
+                function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
+
+                    window.setTimeout( callback, 1000 / 60 );
+
+                };
+
+        } )();
+
+    }
+
     $(document).ready(function () {
 
         $("#demo").height($(document).height());
@@ -68,19 +93,20 @@ define(function(require, exports, module) {
         vertices.forEach(function (v) {
             v.node.connections().forEach(function (c) {
                 var otherNode = c.line.points(0).connections(0) === v.node ? c.line.points(1).connections(0) : c.line.points(0).connections(0);
-                console.log("connection from " + v.node.text + " to " + otherNode.text);
+                //console.log("connection from " + v.node.text + " to " + otherNode.text);
                 v.edges.push(verticesById[otherNode.id]);
             });
         });
 
         console.dir(vertices);
 
-        setTimeout(iterationFun, ITERATION_INTERVAL);
+        //setTimeout(iterationFun, ITERATION_INTERVAL);
+        requestAnimationFrame(iterationFun)
 
         function iterationFun() {
             iteration++;
 
-            console.log("ITERATION " + iteration);
+            //console.log("ITERATION " + iteration);
 
             vertices.forEach(function (v1) {
 
@@ -103,13 +129,14 @@ define(function(require, exports, module) {
 
                 v1.node.moveTo(v1.x, v1.y);
 
-                console.log(v1.node.text + ": <" + netForce.x + ", " + netForce.y + ">");
+                //console.log(v1.node.text + ": <" + netForce.x + ", " + netForce.y + ">");
             });
 
-            console.log("");
+            //console.log("");
 
             if (iteration < ITERATION_COUNT) {
-                setTimeout(iterationFun, ITERATION_INTERVAL)
+                //setTimeout(iterationFun, ITERATION_INTERVAL)
+                requestAnimationFrame(iterationFun);
             }
         }
 
