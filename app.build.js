@@ -4,7 +4,10 @@
     dir: "optimized",
     modules: [
         {
-            name: "main"
+            name: "demo"
+        },
+        {
+            name: "inspectObjectDemo"
         }
     ]
 })
