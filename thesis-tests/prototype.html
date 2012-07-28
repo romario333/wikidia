@@ -15,12 +15,45 @@
 
             module("My Approach to OOP");
 
-            test("Functional Inheritance", function () {
-                equal()
+            test("Object keys can be string only", function () {
+                var map = {};
+
+                map["key1"] = "value1";
+                map["key2"] = "value2";
+
+                equal(map["key1"], "value1");
+                equal(map["key2"], "value2");
+
+                map = {};
+                var key1 = {}, key2 = {};
+                map[key1] = "value1";
+                map[key2] = "value2";
+
+                equal(map[key1], "value2");
+                equal(map[key2], "value2");
+
+                equal(Object.keys(map).length, 1);
+                equal(Object.keys(map)[0], "[object Object]");
+
+                var objectWithId = function f () {
+                    if (!f.lastId) {
+                        f.lastId = 0;
+                    }
+                    f.lastId++;
+                    return {oid: f.lastId};
+                };
+
+                map = {};
+                var key1 = objectWithId(), key2 = objectWithId();
+                map[key1.oid] = "value1";
+                map[key2.oid] = "value2";
+
+                equal(map[key1.oid], "value1");
+                equal(map[key2.oid], "value2");
+
+
             });
 
-            test("Duck-typing", function () {
-            });
 
 
 

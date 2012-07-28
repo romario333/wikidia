@@ -83,71 +83,89 @@
 
 
             test("Prototype Chain - property setting and retrieval", function () {
-                var parent = {
-                    sharedProperty: "shared"
-                };
-
-                var child = Object.create(parent);
-
-                equal(parent.sharedProperty, "shared");
-                equal(child.sharedProperty, "shared");
-
-                parent.sharedProperty = "changedOnParent";
-
-                equal(parent.sharedProperty, "changedOnParent");
-                equal(child.sharedProperty, "changedOnParent");
-
-                child.sharedProperty = "changedOnChild";
-                equal(parent.sharedProperty, "changedOnParent");
-                equal(child.sharedProperty, "changedOnChild");
-
-                child.childProperty = "child";
-                equal(parent.childProperty, undefined);
-                equal(child.childProperty, "child");
-            });
-
-            test("Inspecting prototype chain from code", function () {
-                var parent = {
-                    sharedProperty: "shared"
-                };
-
-                var child = Object.create(parent);
-
-                equal(Object.getPrototypeOf(child), parent);
-                equal(Object.getPrototypeOf(parent), Object.prototype);
-                equal(Object.getPrototypeOf(Object.prototype), null);
-
-                equal(child.__proto__, parent);
-                equal(parent.__proto__, Object.prototype);
-                equal(Object.prototype.__proto__, null);
-
-                equal(parent.isPrototypeOf(child), true);
-                equal(Object.prototype.isPrototypeOf(child), true);
-
-
-            });
-
-
-
-
-            test("TODO: Prototypal Inheritance - person example", function () {
                 var person = {
                     firstName: "N/A",
                     lastName: "N/A",
-                    get fullName() {
+                    fullName: function () {
                         return this.firstName + " " + this.lastName;
                     }
                 };
 
-                var p1 = Object.create(person);
-                var p2 = Object.create(person);
+                var brandon = Object.create(person);
 
-                p1.firstName = "haha";
+                equal(brandon.firstName, "N/A");
+                equal(brandon.lastName, "N/A");
 
-                equal(p1.firstName, "haha");
-                equal(p2.firstName, "");
+                brandon.firstName = "Brandon";
+                brandon.lastName = "Eich";
+
+                equal(brandon.firstName, "Brandon");
+                equal(brandon.lastName, "Eich");
+
+                equal(person.firstName, "N/A");
+                equal(person.lastName, "N/A");
+
+                var axel = Object.create(person);
+                axel.firstName = "Axel";
+
+                equal(brandon.fullName(), "Brandon Eich");
+                equal(axel.fullName(), "Axel N/A"); //TODO:
             });
 
+            test("Inspecting prototype chain from code", function () {
+                var person = {
+                    firstName: "N/A",
+                    lastName: "N/A"
+                };
+
+                var brandon = Object.create(person);
+
+                equal(Object.getPrototypeOf(brandon), person);
+                equal(Object.getPrototypeOf(person), Object.prototype);
+                equal(Object.getPrototypeOf(Object.prototype), null);
+
+                equal(brandon.__proto__, person);
+                equal(person.__proto__, Object.prototype);
+                equal(Object.prototype.__proto__, null);
+
+                equal(person.isPrototypeOf(brandon), true);
+                equal(Object.prototype.isPrototypeOf(brandon), true);
+            });
+
+            test("Prototype-based Inheritance with Constructor Functions", function () {
+                function Person() {
+                    this.firstName = "N/A";
+                    this.lastName = "N/A";
+                    // implicit return this
+                }
+
+                Person.prototype.fullName = function () {
+                    return this.firstName + " " + this.lastName;
+                };
+
+                var brandon = new Person();
+                brandon.firstName = "Brandon";
+                brandon.lastName = "Eich";
+
+                equal(brandon.fullName(), "Brandon Eich");
+
+                var axel = new Person();
+                axel.firstName = "Axel";
+                axel.lastName = "TODO"; // TODO:
+
+                equal(axel.fullName(), "Axel TODO");
+            });
+
+            test("Constructor Function can return whatever it wants", function () {
+                var cat = {};
+
+                function Dog() {
+                    return cat;
+                }
+
+                var dog = new Dog();
+                equal(dog, cat);
+            });
 
         });
 
