@@ -10,6 +10,8 @@
 
         "use strict";
 
+        var global = "value";
+
         var globalThis = this;
 
         // TODO: podivat se, jestli jquery v qunit testech pouziva document ready a udelat to tu stejne (i vsude jinde)
@@ -76,7 +78,32 @@
                 raises(function () {null.toString();}, TypeError);
             });
 
+            test("You can't add properties on primitive values", function () {
+                var number = 3;
+
+                number.pow = function (exponent) {
+                    return Math.pow(this, exponent);
+                };
+
+                // TypeError: Object 3 has no method 'pow'
+                raises(function () { equal(number.pow(2), 9); }, TypeError);
+
+                // you can extend the wrapper object though
+                Number.prototype.pow = function (exponent) {
+                    return Math.pow(this, exponent);
+                };
+
+                equal(number.pow(2), 9);
+            });
+
+            test("The Global Object", function () {
+                equal(window.global, global);
+            });
+
             test("Inheritance and prototypes", function () {
+                // __proto__ = Object.getPrototypeOf
+                equal({}.__proto__, Object.getPrototypeOf({}));
+
                 equal({}.__proto__, Object.prototype);
                 equal("test".__proto__, String.prototype);
                 equal(true.__proto__, Boolean.prototype);
@@ -358,6 +385,11 @@
                 equal(next(), 1);
                 equal(next(), 2);
                 equal(next(), 3);
+            });
+
+            test("Closures Inside Loops", function () {
+
+                // TODO:
             });
 
 
