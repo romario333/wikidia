@@ -100,6 +100,16 @@
                 equal(window.global, global);
             });
 
+            test("Monkey Patching", function () {
+                window.alert = function (message) {
+                    console.log("Alert Dialog: " + message);
+                    window.alert.lastMessage = message;
+                };
+
+                alert("test message");
+                equal(window.alert.lastMessage, "test message");
+            });
+
             test("Inheritance and prototypes", function () {
                 // __proto__ = Object.getPrototypeOf
                 equal({}.__proto__, Object.getPrototypeOf({}));
@@ -269,6 +279,9 @@
                 equal(greet1.__proto__, greet2.__proto__);
                 equal(greet1.__proto__, Function.prototype);
                 equal(greet2.__proto__, Function.prototype);
+
+                equal(greet1.name, "greet1");
+                equal(greet2.name, "");
             });
 
             test("Order of Functions", function () {
@@ -388,8 +401,34 @@
             });
 
             test("Closures Inside Loops", function () {
+                var numberGenerator = [];
 
-                // TODO:
+                for (var i = 1; i <= 3; i++) {
+                    numberGenerator[i] = function () {
+                        return i;
+                    }
+                }
+
+                // THEY ALL RETURN 4! What is happening here?
+                equal(numberGenerator[1](), 4);
+                equal(numberGenerator[2](), 4);
+                equal(numberGenerator[3](), 4);
+            });
+
+            test("Closures Inside Loops - Fixed", function () {
+                var numberGenerator = [];
+
+                for (var i = 1; i <= 3; i++) {
+                    (function (i) {
+                        numberGenerator[i] = function () {
+                            return i;
+                        }
+                    })(i);
+                }
+
+                equal(numberGenerator[1](), 1);
+                equal(numberGenerator[2](), 2);
+                equal(numberGenerator[3](), 3);
             });
 
 
