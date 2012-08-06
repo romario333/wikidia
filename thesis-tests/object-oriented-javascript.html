@@ -35,19 +35,18 @@
                 }
             });
 
-            test("Defective Duck", function () {
+            test("Duck-typing - check that quack is a function", function () {
                 expect(1);
 
-                var duck = {quack: true};
+                var duck = {
+                    quack: function () {
+                        console.log("quack");
+                    }
+                };
 
-                if (duck.quack) {
-                    // TypeError: Property 'quack' of object #<Object> is not a function
-                    raises(function () {duck.quack();}, TypeError);
-                }
-
-                if (duck.quack && typeof duck === "function") {
+                if (duck.quack && typeof duck.quack === "function") {
+                    ok("Ducks quack, no surprise here.");
                     duck.quack();
-                    fail("This duck should be defective and thus can't duck.");
                 }
             });
 
@@ -165,6 +164,73 @@
 
                 var dog = new Dog();
                 equal(dog, cat);
+            });
+
+            test("Inheritance by copying - Mixins", function () {
+                function applyMixin(object, mixin) {
+                    Object.keys(mixin).forEach(function (key) {
+                        object[key] = mixin[key];
+                    });
+                }
+
+                var o = {
+                    firstName: "Brandon",
+                    lastName: "Eich"
+                };
+
+                var debugMixin = {
+                    printProperties: function () {
+                        var props = [];
+                        var keys = Object.keys(this);
+                        for (var i in keys) {
+                            var key = keys[i];
+                            if (typeof this[key] !== "function")
+                            props.push(keys[i] + ": " + this[keys[i]]);
+                        }
+                        return props.join(", ");
+                    }
+                };
+
+                applyMixin(o, debugMixin);
+
+                equal(o.printProperties(), "firstName: Brandon, lastName: Eich");
+            });
+
+            test("Classical Inheritance with Constructor Functions", function () {
+                function Person(firstName, lastName) {
+                    this.firstName = firstName;
+                    this.lastName = lastName;
+                }
+
+                Person.prototype.fullName = function () {
+                    return this.firstName + " " + this.lastName;
+                };
+
+                var brandon = new Person("Brandon", "Eich");
+                equal(brandon.fullName(), "Brandon Eich");
+                equal(brandon instanceof Person, true);
+            });
+
+            module("Modules");
+
+            test("Simple module with Immediately-Invoked Function Expression", function () {
+                var MY_APP = MY_APP || {};
+                MY_APP.module = {};
+
+                (function () {
+                    var exports = MY_APP.module;
+
+                    exports.publicFunc = function () {
+                        privateFunc();
+                    };
+
+                    function privateFunc() {
+                        // do something
+                    }
+                })();
+
+                var module = MY_APP.module;
+                module.publicFunc();
             });
 
         });

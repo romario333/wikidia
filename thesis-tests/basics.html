@@ -431,6 +431,20 @@
                 equal(numberGenerator[3](), 3);
             });
 
+            test("Closures Inside Loops - Fixed with Array.forEach", function () {
+                var numberGenerator = [];
+
+                [1, 2, 3].forEach(function (number) {
+                    numberGenerator[number] = function () {
+                        return numberGenerator[number];
+                    }
+                });
+
+                equal(numberGenerator[1](), 1);
+                equal(numberGenerator[2](), 2);
+                equal(numberGenerator[3](), 3);
+            });
+
 
 
 

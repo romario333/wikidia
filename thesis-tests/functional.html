@@ -16,12 +16,48 @@
             test("Recursion - How Deep does the Rabbit Hole Go?", function () {
                 var level = 1;
                 function f() {
+                    if (level > 100000) {
+                        // Exit if stack overflow didn't occur in first 100,000 iterations.
+                        // This will probably happen in the future when tail call optimization
+                        // support is added.
+                        level = undefined;
+                        console.log("No stack-overflow in first 100,000 iterations, giving up.");
+                        return;
+                    }
+
                     level += 1;
                     f();
                 }
 
                 raises(function () { f(); }, RangeError);
-                console.log("Stack overflow error on level of recursion " + level);
+                if (level) {
+                    console.log("Stack overflow error on level of recursion " + level);
+                }
+            });
+
+            test("Functional Programming with Built-in Array functions", function () {
+                var employees = [
+                    {name: "Abel September", salary: 50000},
+                    {name: "Laurence Napier", salary: 4000},
+                    {name: "Oliver Nolan", salary: 13000}
+                ];
+
+                var salaryReport = employees.filter(function (employee) {
+                    return employee.salary > 10000;
+                }).map(function (employee) {
+                    return employee.name + ": $" + employee.salary;
+                }).join(", ");
+                equal(salaryReport, "Abel September: $50000, Oliver Nolan: $13000");
+            });
+
+            test("Function Currying", function () {
+                var add = function(a, b) {
+                    return a + b;
+                };
+
+                var add5 = add.bind(null, 5);
+
+                equal(add5(3), 8);
             });
 
 
