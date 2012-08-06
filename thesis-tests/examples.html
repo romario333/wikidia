@@ -1,0 +1,454 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<script src="lib/jquery-1.7.1.js"></script>
+<link rel="stylesheet" href="lib/qunit-v1.3.0pre.css" type="text/css" media="screen"/>
+<script type="text/javascript" src="lib/qunit-1.3.0pre.js"></script>
+
+<script>
+
+"use strict";
+
+/*
+ *  3 JAVASCRIPT BASICS
+ *
+ *  -> 3.1 OBJECTS
+ */
+
+test("Example 3-1, 3-2, 3-3: An object is a collection of properties.", function () {
+    var person = {
+        firstName: "Brandon",
+        lastName: "Eich",
+        toString: function () {
+            return this.firstName + " " + this.lastName;
+        }
+    };
+
+    equal(person["firstName"], "Brandon");
+    equal(person["lastName"], "Eich");
+    equal(person["toString"](), "Brandon Eich");
+
+
+    equal(person.firstName, "Brandon");
+    equal(person.lastName, "Eich");
+    equal(person.toString(), "Brandon Eich");
+
+    equal("Hello " + person, "Hello Brandon Eich");
+});
+
+test("Example 3-4: Accessor properties", function () {
+    var person = {
+        firstName: "Brandon",
+        lastName: "Eich",
+        get fullName() {
+            return this.firstName + " " +  this.lastName;
+        },
+        set fullName(value) {
+            var parts = value.split(" ");
+            this.firstName = parts[0];
+            this.lastName = parts[1];
+        }
+    };
+
+    equal(person["fullName"], "Brandon Eich");
+    equal(person.fullName, "Brandon Eich");
+
+    person.fullName = "Douglas Crockford";
+
+    equal(person.fullName, "Douglas Crockford");
+    equal(person.firstName, "Douglas");
+    equal(person.lastName, "Crockford");
+});
+
+test("Example 3-5: Almost everything can be treated as an object", function () {
+    equal({}.toString(), "[object Object]");
+    equal("test".toString(), "test");
+    equal(true.toString(), "true");
+    equal((3).toString(), "3");
+    equal((function () {}).toString(), "function () {}");
+
+    // TypeError: Cannot call method 'toString' of undefined
+    raises(function () {undefined.toString();}, TypeError);
+    // TypeError: Cannot call method 'toString' of null
+    raises(function () {null.toString();}, TypeError);
+});
+
+test("Example 3-6: You cannot add properties to primitive values", function () {
+    var number = 3;
+
+    number.pow = function (exponent) {
+        return Math.pow(this, exponent);
+    };
+
+    // TypeError: Object 3 has no method 'pow'
+    raises(function () { equal(number.pow(2), 9); }, TypeError);
+});
+
+test("Example 3-7: You can add properties to wrappers of primitive values", function () {
+    var number = 3;
+
+    // you can extend the wrapper object though
+    Number.prototype.pow = function (exponent) {
+        return Math.pow(this, exponent);
+    };
+
+    equal(number.pow(2), 9);
+});
+
+var global = "value";
+test("Example 3-8: Global symbols are accessible as properties of the global object", function () {
+    equal(window.global, global);
+});
+
+test("Example 3-9: Prototype chain of built-in types", function () {
+    // __proto__ = Object.getPrototypeOf
+    equal({}.__proto__, Object.getPrototypeOf({}));
+
+    equal({}.__proto__, Object.prototype);
+    equal("test".__proto__, String.prototype);
+    equal(true.__proto__, Boolean.prototype);
+    equal((3).__proto__, Number.prototype);
+    equal((function () {}).__proto__, Function.prototype);
+
+    // TypeError: Cannot read property '__proto__' of undefined
+    raises(function () {undefined.__proto__;}, TypeError);
+    // TypeError: Cannot read property '__proto__' of null
+    raises(function () {null.__proto__;}, TypeError);
+
+    // everything inherits from object
+    equal(String.prototype.__proto__, Object.prototype);
+    equal(Boolean.prototype.__proto__, Object.prototype);
+    equal(Number.prototype.__proto__, Object.prototype);
+    equal(Function.prototype.__proto__, Object.prototype);
+
+    equal(Object.getPrototypeOf(String.prototype), Object.prototype);
+    equal(Object.getPrototypeOf(Boolean.prototype), Object.prototype);
+    equal(Object.getPrototypeOf(Number.prototype), Object.prototype);
+    equal(Object.getPrototypeOf(Function.prototype), Object.prototype);
+
+});
+
+test("Example 3-10, 3-11: Create an object using object Literal and Object.create", function () {
+    var person1 = {
+        firstName: "Brandon",
+        lastName: "Eich",
+        toString: function () {
+            return this.firstName + " " + this.lastName;
+        }
+    };
+
+    equal(person1.toString(), "Brandon Eich");
+    equal(person1.__proto__, Object.prototype);
+
+    var person2 = Object.create(person1);
+    person2.firstName = "Douglas";
+    person2.lastName = "Crockford";
+
+    equal(person1.toString(), "Brandon Eich");
+    equal(person2.toString(), "Douglas Crockford");
+
+    // there is only one toString function
+    equal(person1.toString, person2.toString);
+
+    // data properties are duplicated though
+    notEqual(person1.firstName, person2.firstName);
+    notEqual(person1.lastName, person2.lastName);
+
+    // and person2's prototype is person1
+    equal(person2.__proto__, person1);
+});
+
+// TODO: what is this?
+test("Object.create - Closer Look", function () {
+    var person1 = {
+        firstName: "Brandon",
+        lastName: "Eich",
+        toString: function () {
+            return this.firstName + " " + this.lastName;
+        }
+    };
+
+    equal(person1.toString(), "Brandon Eich");
+    equal(person1.__proto__, Object.prototype);
+
+    var person2 = Object.create(person1);
+
+    equal(person1.firstName === person2.firstName, true);
+
+    person2.firstName = "Douglas";
+
+    equal(person1.firstName === person2.firstName, false);
+
+});
+
+test("Example 3-12: Create an object using constructor function", function () {
+    function Person() {
+        this.firstName = "Brandon";
+        this.lastName = "Eich";
+
+        this.toString = function () {
+            return this.firstName + " " + this.lastName;
+        };
+
+        return this;
+    }
+
+    // call constructor with new
+    var person = new Person();
+    equal(person.toString(), "Brandon Eich");
+});
+
+var globalThis = this;
+test("Example 3-13: This keyword binding depends on context where it is used", function () {
+    // when you call a function on an object, this refers to the object
+    var o = {
+        f: function () {
+            equal(this, o);
+        }
+    };
+    o.f();
+
+    // when you call a function with new, this refers to a created object
+    var thisInConstructor;
+    function F() {
+        thisInConstructor = this;
+    }
+    var fObj = new F();
+    equal(thisInConstructor, fObj);
+
+    // this refers to global object in global scope
+    equal(globalThis, window);
+
+    // when you call a function, this refers to undefined
+    function f() {
+        equal(this, undefined);
+    }
+    f();
+});
+
+test("Example 3-14: This keyword binding can be set explicitly", function () {
+    // caller of the function can bind this to whatever he wants
+    var anyObj = {};
+    function f2() {
+        equal(this, anyObj);
+    }
+    f2.call(anyObj);
+});
+
+test("Example 3-15: Redefine the window.alert function", function () {
+    window.alert = function (message) {
+        console.log("Alert Dialog: " + message);
+        window.alert.lastMessage = message;
+    };
+
+    alert("test message");
+    equal(window.alert.lastMessage, "test message");
+});
+
+/*
+ *  -> 3.2 FUNCTIONS
+ */
+
+test("Example 3-16: Simple function definition and invocation", function () {
+    function greet() {
+        return "hello";
+    }
+
+    equal(greet(), "hello");
+});
+
+test("Example 3-17, 3-18: Function is an object", function () {
+    function greet() { return "hello"; } // define function
+
+    equal(greet(), "hello"); // invoke function
+
+    // function is an object
+    equal(greet.__proto__, Function.prototype);
+    equal(Function.prototype.__proto__, Object.prototype);
+
+    var greet2 = greet;
+    equal(greet2(), "hello");
+
+    greet.who = "world";
+    equal(greet.who, "world");
+
+    equal(greet.toString(), 'function greet() { return "hello"; }');
+});
+
+test("Example 3-19, 3-20, 3-21: How to Define a Function", function () {
+    // define function using function statement
+    function greet1(who) {
+        return "hello " + who;
+    }
+
+    // define function using function expression
+    var greet2 = function (who) {
+        return "hello " + who;
+    };
+
+    equal(greet1("world"), "hello world");
+    equal(greet2("world"), "hello world");
+
+    // both function have same prototype
+    equal(greet1.__proto__, greet2.__proto__);
+    equal(greet1.__proto__, Function.prototype);
+    equal(greet2.__proto__, Function.prototype);
+
+    equal(greet1.name, "greet1");
+    equal(greet2.name, "");
+});
+
+test("Example 3-22: Function declaration is hoisted, function expression is not", function () {
+    // function declaration - you can call function before it's defined
+    equal(callMe1(), "test");
+
+    function callMe1() {
+        return "test";
+    }
+
+    // function expression - YOU HAVE TO DEFINE FUNCTION FIRST!
+    raises(function () {callMe2();}, TypeError); // TypeError: undefined is not a function
+
+    var callMe2 = function () {
+        return "test";
+    };
+
+    equal(callMe2(), "test");
+});
+
+test("Example 3-23: Function scope", function () {
+    var test = "global value";
+
+    function scope() {
+        var test = "local value";
+        equal(test, "local value");
+    }
+    scope();
+    // global variable wasn't affected by scope1 function
+    equal(test, "global value");
+});
+
+test("Example 3-24: You leak variable to the global scope if you forget var keyword", function () {
+    var test = "global value";
+
+    function scope() {
+        test = "local value";
+        equal(test, "local value");
+    }
+    scope();
+    // global variable was changed by scope2!
+    equal(test, "local value");
+});
+
+test("Example 3-25, 3-26: Variable hoisting", function () {
+    function scope1() {
+        // ReferenceError: undefinedVar is not defined
+        raises(function () {undefinedVar;}, ReferenceError);
+
+        equal(local, undefined);
+        var local = "local variable";
+        equal(local, "local variable");
+    }
+    scope1();
+
+    // Code above is equivalent to this:
+    function scope2() {
+        var local;
+        equal(local, undefined);
+        local = "local variable";
+        equal(local, "local variable");
+    }
+    scope2();
+});
+
+test("Example 3-27: Closure", function () {
+    function outer() {
+
+        var outerVar = "set by outer";
+
+        function inner() {
+            equal(outerVar, "set by outer");
+            outerVar = "set by inner";
+        }
+
+        equal(outerVar, "set by outer");
+        inner();
+        equal(outerVar, "set by inner");
+    }
+});
+
+test("Example 3-28: Sequence generator using closure", function () {
+    function sequence() {
+        var count = 0;
+
+        return function () {
+            return count += 1;
+        }
+    }
+
+    var next = sequence();
+    equal(next(), 1);
+    equal(next(), 2);
+    equal(next(), 3);
+});
+
+test("Example 3-29: Closure in loop – defective version", function () {
+    var numberGenerator = [];
+
+    for (var i = 1; i <= 3; i++) {
+        numberGenerator[i] = function () {
+            return i;
+        }
+    }
+
+    // THEY ALL RETURN 4! What is happening here?
+    equal(numberGenerator[1](), 4);
+    equal(numberGenerator[2](), 4);
+    equal(numberGenerator[3](), 4);
+});
+
+test("Example 3-30: Closure in loop – fixed version", function () {
+    var numberGenerator = [];
+
+    for (var i = 1; i <= 3; i++) {
+        (function (i) {
+            numberGenerator[i] = function () {
+                return i;
+            }
+        })(i);
+    }
+
+    equal(numberGenerator[1](), 1);
+    equal(numberGenerator[2](), 2);
+    equal(numberGenerator[3](), 3);
+});
+
+test("Example 3-31: Closure in loop – fixed with Array.forEach", function () {
+    var numberGenerator = [];
+
+    [1, 2, 3].forEach(function (number) {
+        numberGenerator[number] = function () {
+            return number;
+        }
+    });
+
+    equal(numberGenerator[1](), 1);
+    equal(numberGenerator[2](), 2);
+    equal(numberGenerator[3](), 3);
+});
+
+</script>
+
+</head>
+<body>
+<h1 id="qunit-header">QUnit example</h1>
+
+<h2 id="qunit-banner"></h2>
+
+<div id="qunit-testrunner-toolbar"></div>
+<h2 id="qunit-userAgent"></h2>
+<ol id="qunit-tests"></ol>
+<div id="qunit-fixture">test markup, will be hidden</div>
+</body>
+</html>
