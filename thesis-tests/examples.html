@@ -8,6 +8,8 @@
 
 <script>
 
+// TODO: show warning if browser does not support strict mode
+
 var global = "value";
 var globalThis = this;
 
@@ -334,7 +336,7 @@ var globalThis = this;
         equal(test, "global value");
     });
 
-    test("Example 3-24: You leak variable to the global scope if you forget var keyword", function () {
+    test("Example 3-24: You can rewrite variable in the global scope if you forget var keyword", function () {
         var test = "global value";
 
         function scope() {
@@ -526,32 +528,33 @@ var globalThis = this;
 
     test("Example 4-4, 4-5: Prototype chain - property setting and retrieval", function () {
         var person = {
-            firstName: "N/A",
-            lastName: "N/A",
+            firstName: "",
+            lastName: "",
             fullName: function () {
                 return this.firstName + " " + this.lastName;
             }
         };
 
-        var brandon = Object.create(person);
+        var brandan = Object.create(person);
 
-        equal(brandon.firstName, "N/A");
-        equal(brandon.lastName, "N/A");
+        equal(brandan.firstName, "");
+        equal(brandan.lastName, "");
 
-        brandon.firstName = "Brandon";
-        brandon.lastName = "Eich";
+        brandan.firstName = "Brandon";
+        brandan.lastName = "Eich";
 
-        equal(brandon.firstName, "Brandon");
-        equal(brandon.lastName, "Eich");
+        equal(brandan.firstName, "Brandon");
+        equal(brandan.lastName, "Eich");
 
-        equal(person.firstName, "N/A");
-        equal(person.lastName, "N/A");
+        equal(person.firstName, "");
+        equal(person.lastName, "");
 
         var axel = Object.create(person);
         axel.firstName = "Axel";
+        axel.lastName = "Rauschmayer";
 
-        equal(brandon.fullName(), "Brandon Eich");
-        equal(axel.fullName(), "Axel N/A"); //TODO:
+        equal(brandan.fullName(), "Brandon Eich");
+        equal(axel.fullName(), "Axel Rauschmayer");
     });
 
     test("Example 4-6: Inspect a prototype chain from the code", function () {
@@ -560,18 +563,18 @@ var globalThis = this;
             lastName: "N/A"
         };
 
-        var brandon = Object.create(person);
+        var brandan = Object.create(person);
 
-        equal(Object.getPrototypeOf(brandon), person);
+        equal(Object.getPrototypeOf(brandan), person);
         equal(Object.getPrototypeOf(person), Object.prototype);
         equal(Object.getPrototypeOf(Object.prototype), null);
 
-        equal(brandon.__proto__, person);
+        equal(brandan.__proto__, person);
         equal(person.__proto__, Object.prototype);
         equal(Object.prototype.__proto__, null);
 
-        equal(person.isPrototypeOf(brandon), true);
-        equal(Object.prototype.isPrototypeOf(brandon), true);
+        equal(person.isPrototypeOf(brandan), true);
+        equal(Object.prototype.isPrototypeOf(brandan), true);
     });
 
     test("Example 4-7, 4-8: Prototype-based inheritance with constructor functions", function () {
@@ -585,11 +588,11 @@ var globalThis = this;
             return this.firstName + " " + this.lastName;
         };
 
-        var brandon = new Person();
-        brandon.firstName = "Brandon";
-        brandon.lastName = "Eich";
+        var brandan = new Person();
+        brandan.firstName = "Brandon";
+        brandan.lastName = "Eich";
 
-        equal(brandon.fullName(), "Brandon Eich");
+        equal(brandan.fullName(), "Brandon Eich");
 
         var axel = new Person();
         axel.firstName = "Axel";
@@ -650,9 +653,9 @@ var globalThis = this;
             return this.firstName + " " + this.lastName;
         };
 
-        var brandon = new Person("Brandon", "Eich");
-        equal(brandon.fullName(), "Brandon Eich");
-        equal(brandon instanceof Person, true);
+        var brandan = new Person("Brandon", "Eich");
+        equal(brandan.fullName(), "Brandon Eich");
+        equal(brandan instanceof Person, true);
     });
 
     test("Example 4-11: Create a simple module", function () {
@@ -789,7 +792,7 @@ var globalThis = this;
 
     test("Constructor Function Without Strict Mode", function () {
         function Person() {
-            this.firstName = "Brandon";
+            this.firstName = "Brandan";
             this.lastName = "Eich";
 
             this.toString = function () {
@@ -801,15 +804,15 @@ var globalThis = this;
 
         // call constructor with new
         var person1 = new Person();
-        equal(person1.toString(), "Brandon Eich");
+        equal(person1.toString(), "Brandan Eich");
 
         // now have a look what happens if we FORGET A NEW KEYWORD:
         var person2 = Person();
 
         // we have inadvertently REWRITTEN parts of WINDOW OBJECT!
         equal(person2, window);
-        equal(window.toString(), "Brandon Eich"); // TODO: note that this fails in IE9, passes in IE8 though
-        equal(window.firstName, "Brandon");
+        equal(window.toString(), "Brandan Eich"); // TODO: note that this fails in IE9, passes in IE8 though
+        equal(window.firstName, "Brandan");
         equal(window.lastName, "Eich");
     });
 
@@ -818,7 +821,7 @@ var globalThis = this;
             "use strict";
 
             function Person() {
-                this.firstName = "Brandon";
+                this.firstName = "Brandan";
                 this.lastName = "Eich";
 
                 this.toString = function () {
