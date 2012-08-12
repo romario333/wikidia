@@ -158,6 +158,9 @@ define(function(require, exports, module) {
 
         function diagramViewMock() {
             var that = viewMockBase();
+            addEvent(that, "dragStart");
+            addEvent(that, "dragMove");
+            addEvent(that, "dragEnd");
             that.update = function () {};
             return that;
         }

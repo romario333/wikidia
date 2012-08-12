@@ -302,7 +302,16 @@ define(function(require) {
             });
         }
 
-        // TODO: put these in other object?
+        // TODO: for inspectObjectDemo.js
+        that.contentSize = function () {
+            var boundingBox = content[0].getBBox();
+            return {
+                width: boundingBox.width,
+                height: boundingBox.height
+            };
+        };
+
+        // TODO: DRY (slightly different version in line.js
         /* RENDERING OPERATIONS - called by renderers from renderers.js */
 
         /**

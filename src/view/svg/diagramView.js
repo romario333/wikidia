@@ -117,6 +117,17 @@ define(function(require) {
             return rootView.element().offset();
         };
 
+        /**
+         * Returns the size of the diagram.
+         */
+        that.size = function () {
+            var boundingBox = diagramElement[0].getBBox();
+            return {
+                width: boundingBox.width,
+                height: boundingBox.height
+            };
+        };
+
 
 
         init();

@@ -19,11 +19,15 @@ define(function(require) {
             var pathData = "";
             return {
                 moveTo: function (x, y) {
-                    pathData += "M {x} {y}".supplant({x: x, y: y});
+                    pathData += "M {x} {y} ".supplant({x: x, y: y});
                     return this;
                 },
                 lineTo: function (x, y) {
-                    pathData += "L {x} {y}".supplant({x: x, y: y});
+                    pathData += "L {x} {y} ".supplant({x: x, y: y});
+                    return this;
+                },
+                closePath: function () {
+                    pathData += "z ";
                     return this;
                 },
                 attr: function (attributes) {

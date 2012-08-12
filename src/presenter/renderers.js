@@ -58,7 +58,7 @@ define(function(require) {
         },
 
         /**
-         * <code>nodeRendered</code> is responsible for rendering of the content of a node.
+         * `nodeRendered` is responsible for rendering of the content of a node.
          */
         nodeRenderer: function () {
             var that = {};
@@ -248,13 +248,55 @@ define(function(require) {
                 var line = itemInfo.item;
                 var lineView = itemInfo.view;
 
+                var parsedText = parseRenderText(line.text);
+
+                var renderInfo = {
+                    x1: line.points(0).x,
+                    y1: line.points(0).y,
+                    x2: line.points(1).x,
+                    y2: line.points(1).y,
+                    strokeColor: parsedText.properties.stroke || "black",
+                    fillColor: parsedText.properties.fill || "white",
+                    lineType: parsedText.properties.lineType || "->"
+                };
+
                 lineView.clear();
-                lineView.updateBounds({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y});
+                lineView.updateBounds(renderInfo);
                 lineView.isSelected(itemInfo.isSelected);
 
-                lineView.line({x1: line.points(0).x, y1: line.points(0).y, x2: line.points(1).x, y2: line.points(1).y, stroke: "black"});
-                // TODO: text
+                lineView.line({x1: renderInfo.x1, y1: renderInfo.y1, x2: renderInfo.x2, y2: renderInfo.y2, stroke: renderInfo.strokeColor, "stroke-width": 1.5, fill: renderInfo.fillColor});
+
+                if (renderInfo.lineType !== "-") {
+                    // draw arrow head
+                    var headLength = 20;
+                    var angle = Math.atan2(renderInfo.y2 - renderInfo.y1, renderInfo.x2 - renderInfo.x1);
+                    var path = lineView.path({stroke: renderInfo.strokeColor, "stroke-width": 1.5, fill: renderInfo.fillColor});
+
+                    if (renderInfo.lineType === "->") {
+                        // simple arrow head
+                        path.moveTo(renderInfo.x2, renderInfo.y2);
+                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6));
+                        path.moveTo(renderInfo.x2, renderInfo.y2);
+                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6));
+                        path.moveTo(renderInfo.x2, renderInfo.y2);
+                    } else if (renderInfo.lineType === "->>") {
+                        // triangle arrow head
+                        path.moveTo(renderInfo.x2, renderInfo.y2);
+                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6));
+                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6));
+                        path.closePath();
+                    } else if (renderInfo.lineType == "-<>") {
+                        // TODO: diamond arrow head
+//                        path.moveTo(renderInfo.x2, renderInfo.y2);
+//                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6));
+//                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6));
+//                        path.closePath();
+                    }
+
+                    path.done();                }
             };
+
+
 
             return that;
         }

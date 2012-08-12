@@ -67,13 +67,27 @@
             <input id="addUseCase" type="button" value="Add Use-Case" />
             <br/>
             <input id="autoLayout" type="button" value="Auto Layout" />
+            <input id="pushArrows" type="button" value="Push Arrows" />
             <hr/>
             Code to Inspect:
             <textarea id="codeToInspect">
-var parent = {name: "parent"};
-var child = Object.create(parent);
-child.secondName = "child";
-return child;
+function Person(firstName, lastName) {
+this.firstName = firstName;
+this.lastName = lastName;
+}
+
+Person.prototype.fullName = function () {
+return this.firstName + " " + this.lastName();
+};
+
+var alphonso = new Person("Alphonso", "Deryck");
+alphonso.address = {
+street: "14 Main Street",
+city: "Tukwilla, WA",
+zipCode: "98168"
+}
+
+return alphonso;
             </textarea>
             <input id="inspect" type="button" value="Inspect" />
             <br/>

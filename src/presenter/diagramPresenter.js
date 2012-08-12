@@ -533,6 +533,17 @@ define(function(require) {
             };
         }
 
+        // TODO: for inspectObjectDemo.js
+        that.fitContent = function (node) {
+            var nodeView = itemInfos.forItem(node).view;
+            var size = nodeView.contentSize();
+            var padding = renderers.rendererForItem(node).TEXT_PADDING;
+            node.resizeTo(size.width + padding, size.height + padding);
+        };
+        that.diagramSize = function () {
+            return diagramView.size();
+        };
+
         init();
 
         that._test = {

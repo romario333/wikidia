@@ -118,14 +118,37 @@ define(function(require) {
             connectPoints.empty();
         };
 
-        // TODO: temp verze
         that.clear = function () {
             content.empty();
         };
 
-        that.line = function(spec) {
+        that.line = function (spec) {
             var el = svgHelper.createSvgElement("line", spec);
             content.append(el);
+        };
+
+        that.path = function (spec) {
+            var pathBuilder = svgHelper.pathBuilder();
+            pathBuilder.attr(spec);
+
+            // TODO: attr modification on each operation is probably not good idea
+            return {
+                moveTo: function (x, y) {
+                    pathBuilder.moveTo(x, y);
+                    return this;
+                },
+                lineTo: function (x, y) {
+                    pathBuilder.lineTo(x, y);
+                    return this;
+                },
+                closePath: function () {
+                    pathBuilder.closePath();
+                    return this;
+                },
+                done: function () {
+                    content.append(pathBuilder.create());
+                }
+            };
         };
 
         init();
