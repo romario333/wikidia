@@ -24,50 +24,26 @@ var globalThis = this;
 
     test("Example 3-1, 3-2, 3-3: An object is a collection of properties.", function () {
         var person = {
-            firstName: "Brandon",
+            firstName: "Brandan",
             lastName: "Eich",
             toString: function () {
                 return this.firstName + " " + this.lastName;
             }
         };
 
-        equal(person["firstName"], "Brandon");
+        equal(person["firstName"], "Brandan");
         equal(person["lastName"], "Eich");
-        equal(person["toString"](), "Brandon Eich");
+        equal(person["toString"](), "Brandan Eich");
 
 
-        equal(person.firstName, "Brandon");
+        equal(person.firstName, "Brandan");
         equal(person.lastName, "Eich");
-        equal(person.toString(), "Brandon Eich");
+        equal(person.toString(), "Brandan Eich");
 
-        equal("Hello " + person, "Hello Brandon Eich");
+        equal("Hello " + person, "Hello Brandan Eich");
     });
 
-    test("Example 3-4: Accessor properties", function () {
-        var person = {
-            firstName: "Brandon",
-            lastName: "Eich",
-            get fullName() {
-                return this.firstName + " " +  this.lastName;
-            },
-            set fullName(value) {
-                var parts = value.split(" ");
-                this.firstName = parts[0];
-                this.lastName = parts[1];
-            }
-        };
-
-        equal(person["fullName"], "Brandon Eich");
-        equal(person.fullName, "Brandon Eich");
-
-        person.fullName = "Douglas Crockford";
-
-        equal(person.fullName, "Douglas Crockford");
-        equal(person.firstName, "Douglas");
-        equal(person.lastName, "Crockford");
-    });
-
-    test("Example 3-5: Almost everything can be treated as an object", function () {
+    test("Example 3-4: Almost everything can be treated as an object", function () {
         equal({}.toString(), "[object Object]");
         equal("test".toString(), "test");
         equal(true.toString(), "true");
@@ -80,7 +56,7 @@ var globalThis = this;
         raises(function () {null.toString();}, TypeError);
     });
 
-    test("Example 3-6: You cannot add properties to primitive values", function () {
+    test("Example 3-5: You cannot add properties to primitive values", function () {
         var number = 3;
 
         number.pow = function (exponent) {
@@ -91,7 +67,7 @@ var globalThis = this;
         raises(function () { equal(number.pow(2), 9); }, TypeError);
     });
 
-    test("Example 3-7: You can add properties to wrappers of primitive values", function () {
+    test("Example 3-6: You can add properties to wrappers of primitive values", function () {
         var number = 3;
 
         // you can extend the wrapper object though
@@ -102,12 +78,12 @@ var globalThis = this;
         equal(number.pow(2), 9);
     });
 
-    test("Example 3-8: Global symbols are accessible as properties of the global object", function () {
+    test("Example 3-7: Global symbols are accessible as properties of the global object", function () {
         // global is declared at the top of the file
         equal(window.global, global);
     });
 
-    test("Example 3-9: Prototype chain of built-in types", function () {
+    test("Example 3-8: Prototype chain of built-in types", function () {
         // __proto__ = Object.getPrototypeOf
         equal({}.__proto__, Object.getPrototypeOf({}));
 
@@ -135,23 +111,23 @@ var globalThis = this;
 
     });
 
-    test("Example 3-10, 3-11: Create an object using object Literal and Object.create", function () {
+    test("Example 3-9, 3-10: Create an object using object Literal and Object.create", function () {
         var person1 = {
-            firstName: "Brandon",
+            firstName: "Brandan",
             lastName: "Eich",
             toString: function () {
                 return this.firstName + " " + this.lastName;
             }
         };
 
-        equal(person1.toString(), "Brandon Eich");
+        equal(person1.toString(), "Brandan Eich");
         equal(person1.__proto__, Object.prototype);
 
         var person2 = Object.create(person1);
         person2.firstName = "Douglas";
         person2.lastName = "Crockford";
 
-        equal(person1.toString(), "Brandon Eich");
+        equal(person1.toString(), "Brandan Eich");
         equal(person2.toString(), "Douglas Crockford");
 
         // there is only one toString function
@@ -168,14 +144,14 @@ var globalThis = this;
 // TODO: what is this?
     test("Object.create - Closer Look", function () {
         var person1 = {
-            firstName: "Brandon",
+            firstName: "Brandan",
             lastName: "Eich",
             toString: function () {
                 return this.firstName + " " + this.lastName;
             }
         };
 
-        equal(person1.toString(), "Brandon Eich");
+        equal(person1.toString(), "Brandan Eich");
         equal(person1.__proto__, Object.prototype);
 
         var person2 = Object.create(person1);
@@ -188,9 +164,9 @@ var globalThis = this;
 
     });
 
-    test("Example 3-12: Create an object using constructor function", function () {
+    test("Example 3-11: Create an object using constructor function", function () {
         function Person() {
-            this.firstName = "Brandon";
+            this.firstName = "Brandan";
             this.lastName = "Eich";
 
             this.toString = function () {
@@ -202,10 +178,10 @@ var globalThis = this;
 
         // call constructor with new
         var person = new Person();
-        equal(person.toString(), "Brandon Eich");
+        equal(person.toString(), "Brandan Eich");
     });
 
-    test("Example 3-13: This keyword binding depends on context where it is used", function () {
+    test("Example 3-12: This keyword binding depends on context where it is used", function () {
         // when you call a function on an object, this refers to the object
         var o = {
             f: function () {
@@ -232,7 +208,7 @@ var globalThis = this;
         f();
     });
 
-    test("Example 3-14: This keyword binding can be set explicitly", function () {
+    test("Example 3-13: This keyword binding can be set explicitly", function () {
         // caller of the function can bind this to whatever he wants
         var anyObj = {};
         function f2() {
@@ -241,7 +217,7 @@ var globalThis = this;
         f2.call(anyObj);
     });
 
-    test("Example 3-15: Redefine the window.alert function", function () {
+    test("Example 3-14: Redefine the window.alert function", function () {
         window.alert = function (message) {
             console.log("Alert Dialog: " + message);
             window.alert.lastMessage = message;
@@ -257,7 +233,7 @@ var globalThis = this;
      *  -> 3.2 FUNCTIONS
      */
 
-    test("Example 3-16: Simple function definition and invocation", function () {
+    test("Example 3-15: Simple function definition and invocation", function () {
         function greet() {
             return "hello";
         }
@@ -265,7 +241,7 @@ var globalThis = this;
         equal(greet(), "hello");
     });
 
-    test("Example 3-17, 3-18: Function is an object", function () {
+    test("Example 3-16, 3-17: Function is an object", function () {
         function greet() { return "hello"; } // define function
 
         equal(greet(), "hello"); // invoke function
@@ -283,7 +259,7 @@ var globalThis = this;
         equal(greet.toString(), 'function greet() { return "hello"; }');
     });
 
-    test("Example 3-19, 3-20, 3-21: How to Define a Function", function () {
+    test("Example 3-18, 3-19, 3-20: How to Define a Function", function () {
         // define function using function statement
         function greet1(who) {
             return "hello " + who;
@@ -306,7 +282,7 @@ var globalThis = this;
         equal(greet2.name, "");
     });
 
-    test("Example 3-22: Function declaration is hoisted, function expression is not", function () {
+    test("Example 3-21: Function declaration is hoisted, function expression is not", function () {
         // function declaration - you can call function before it's defined
         equal(callMe1(), "test");
 
@@ -324,7 +300,7 @@ var globalThis = this;
         equal(callMe2(), "test");
     });
 
-    test("Example 3-23: Function scope", function () {
+    test("Example 3-22: Function scope", function () {
         var test = "global value";
 
         function scope() {
@@ -336,7 +312,7 @@ var globalThis = this;
         equal(test, "global value");
     });
 
-    test("Example 3-24: You can rewrite variable in the global scope if you forget var keyword", function () {
+    test("Example 3-23: You can rewrite variable in the global scope if you forget var keyword", function () {
         var test = "global value";
 
         function scope() {
@@ -348,7 +324,7 @@ var globalThis = this;
         equal(test, "local value");
     });
 
-    test("Example 3-25, 3-26: Variable hoisting", function () {
+    test("Example 3-24, 3-25: Variable hoisting", function () {
         function scope1() {
             // ReferenceError: undefinedVar is not defined
             raises(function () {undefinedVar;}, ReferenceError);
@@ -375,7 +351,7 @@ var globalThis = this;
      *  -> 3.3 CLOSURES
      */
 
-    test("Example 3-27: Closure", function () {
+    test("Example 3-26: Closure", function () {
         function outer() {
 
             var outerVar = "set by outer";
@@ -391,7 +367,7 @@ var globalThis = this;
         }
     });
 
-    test("Example 3-28: Sequence generator using closure", function () {
+    test("Example 3-27: Sequence generator using closure", function () {
         function sequence() {
             var count = 0;
 
@@ -406,7 +382,7 @@ var globalThis = this;
         equal(next(), 3);
     });
 
-    test("Example 3-29: Closure in loop – defective version", function () {
+    test("Example 3-28: Closure in loop – defective version", function () {
         var numberGenerator = [];
 
         for (var i = 1; i <= 3; i++) {
@@ -421,7 +397,7 @@ var globalThis = this;
         equal(numberGenerator[3](), 4);
     });
 
-    test("Example 3-30: Closure in loop – fixed version", function () {
+    test("Example 3-29: Closure in loop – fixed version", function () {
         var numberGenerator = [];
 
         for (var i = 1; i <= 3; i++) {
@@ -437,7 +413,7 @@ var globalThis = this;
         equal(numberGenerator[3](), 3);
     });
 
-    test("Example 3-31: Closure in loop – fixed with Array.forEach", function () {
+    test("Example 3-30: Closure in loop – fixed with Array.forEach", function () {
         var numberGenerator = [];
 
         [1, 2, 3].forEach(function (number) {
@@ -520,13 +496,97 @@ var globalThis = this;
         equal(user.authenticate("bad secret"), false);
     });
 
+    test("Example 4-4: Define an accessor property within an object literal", function () {
+        var person = {
+            firstName: "Brandan",
+            lastName: "Eich",
+            get fullName() {
+                return this.firstName + " " +  this.lastName;
+            },
+            set fullName(value) {
+                var parts = value.split(" ");
+                this.firstName = parts[0];
+                this.lastName = parts[1];
+            }
+        };
+
+        equal(person["fullName"], "Brandan Eich");
+        equal(person.fullName, "Brandan Eich");
+
+        person.fullName = "Douglas Crockford";
+
+        equal(person.fullName, "Douglas Crockford");
+        equal(person.firstName, "Douglas");
+        equal(person.lastName, "Crockford");
+    });
+
+    test("Example 4-5: Add accessor properties to the existing object", function () {
+        var person = {
+            firstName: "Brandan",
+            lastName: "Eich"
+        };
+
+        Object.defineProperty(person, "fullName", {
+            get: function () {
+                return this.firstName + " " +  this.lastName;
+            },
+            set: function (value) {
+                var parts = value.split(" ");
+                this.firstName = parts[0];
+                this.lastName = parts[1];
+            }
+        });
+
+        equal(person["fullName"], "Brandan Eich");
+        equal(person.fullName, "Brandan Eich");
+
+        person.fullName = "Douglas Crockford";
+
+        equal(person.fullName, "Douglas Crockford");
+        equal(person.firstName, "Douglas");
+        equal(person.lastName, "Crockford");
+    });
+
+    test("Example 4-6: Inspect property attributes - data vs. accessor property", function () {
+        var person = {
+            firstName: "Brandan",
+            lastName: "Eich",
+            get fullName() {
+                return this.firstName + " " +  this.lastName;
+            },
+            set fullName(value) {
+                var parts = value.split(" ");
+                this.firstName = parts[0];
+                this.lastName = parts[1];
+            }
+        };
+
+        var dataProp = Object.getOwnPropertyDescriptor(person, "firstName");
+        console.dir(dataProp);
+        equal(dataProp.value, "Brandan");
+        equal(dataProp.writable, true);
+        equal(dataProp.enumerable, true);
+        equal(dataProp.configurable, true);
+        equal(dataProp.get, undefined);
+        equal(dataProp.set, undefined);
+
+        var accessorProp = Object.getOwnPropertyDescriptor(person, "fullName");
+        console.dir(accessorProp);
+        equal(accessorProp.value, undefined);
+        equal(accessorProp.writable, undefined);
+        equal(accessorProp.configurable, true);
+        equal(accessorProp.enumerable, true);
+        equal(typeof accessorProp.get === "function", true);
+        equal(typeof accessorProp.set == "function", true);
+    });
+
     /*
      *  4 OBJECT-ORIENTED JAVASCRIPT
      *
      *  -> 4.3 INHERITANCE
      */
 
-    test("Example 4-4, 4-5: Prototype chain - property setting and retrieval", function () {
+    test("Example 4-7, 4-8: Prototype chain - property setting and retrieval", function () {
         var person = {
             firstName: "",
             lastName: "",
@@ -540,10 +600,10 @@ var globalThis = this;
         equal(brandan.firstName, "");
         equal(brandan.lastName, "");
 
-        brandan.firstName = "Brandon";
+        brandan.firstName = "Brandan";
         brandan.lastName = "Eich";
 
-        equal(brandan.firstName, "Brandon");
+        equal(brandan.firstName, "Brandan");
         equal(brandan.lastName, "Eich");
 
         equal(person.firstName, "");
@@ -553,14 +613,14 @@ var globalThis = this;
         axel.firstName = "Axel";
         axel.lastName = "Rauschmayer";
 
-        equal(brandan.fullName(), "Brandon Eich");
+        equal(brandan.fullName(), "Brandan Eich");
         equal(axel.fullName(), "Axel Rauschmayer");
     });
 
-    test("Example 4-6: Inspect a prototype chain from the code", function () {
+    test("Example 4-9: Inspect a prototype chain from the code", function () {
         var person = {
-            firstName: "N/A",
-            lastName: "N/A"
+            firstName: "",
+            lastName: ""
         };
 
         var brandan = Object.create(person);
@@ -577,7 +637,7 @@ var globalThis = this;
         equal(Object.prototype.isPrototypeOf(brandan), true);
     });
 
-    test("Example 4-7, 4-8: Prototype-based inheritance with constructor functions", function () {
+    test("Example 4-10, 4-11: Prototype-based inheritance with constructor functions", function () {
         function Person() {
             this.firstName = "";
             this.lastName = "";
@@ -589,10 +649,10 @@ var globalThis = this;
         };
 
         var brandan = new Person();
-        brandan.firstName = "Brandon";
+        brandan.firstName = "Brandan";
         brandan.lastName = "Eich";
 
-        equal(brandan.fullName(), "Brandon Eich");
+        equal(brandan.fullName(), "Brandan Eich");
 
         var axel = new Person();
         axel.firstName = "Axel";
@@ -601,8 +661,7 @@ var globalThis = this;
         equal(axel.fullName(), "Axel TODO");
     });
 
-// TODO: copak to je?
-    test("Constructor Function can return whatever it wants", function () {
+    test("Example 4-12: Prototype-based inheritance with constructor functions", function () {
         var cat = {};
 
         function Dog() {
@@ -610,10 +669,11 @@ var globalThis = this;
         }
 
         var dog = new Dog();
+        equal(dog instanceof Dog, false);
         equal(dog, cat);
     });
 
-    test("Example 4-8: Apply a mixin to an object", function () {
+    test("Example 4-13: Apply a mixin to an object", function () {
         function applyMixin(object, mixin) {
             Object.keys(mixin).forEach(function (key) {
                 object[key] = mixin[key];
@@ -621,7 +681,7 @@ var globalThis = this;
         }
 
         var o = {
-            firstName: "Brandon",
+            firstName: "Brandan",
             lastName: "Eich"
         };
 
@@ -640,10 +700,10 @@ var globalThis = this;
 
         applyMixin(o, debugMixin);
 
-        equal(o.printProperties(), "firstName: Brandon, lastName: Eich");
+        equal(o.printProperties(), "firstName: Brandan, lastName: Eich");
     });
 
-    test("Example 4-9: “Classical” inheritance with function constructor", function () {
+    test("Example 4-14: “Classical” inheritance with function constructor", function () {
         function Person(firstName, lastName) {
             this.firstName = firstName;
             this.lastName = lastName;
@@ -653,12 +713,12 @@ var globalThis = this;
             return this.firstName + " " + this.lastName;
         };
 
-        var brandan = new Person("Brandon", "Eich");
-        equal(brandan.fullName(), "Brandon Eich");
+        var brandan = new Person("Brandan", "Eich");
+        equal(brandan.fullName(), "Brandan Eich");
         equal(brandan instanceof Person, true);
     });
 
-    test("Example 4-11: Create a simple module", function () {
+    test("Example 4-15: Create a simple module", function () {
         var MY_APP = MY_APP || {};
         MY_APP.module = {};
 
