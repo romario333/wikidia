@@ -68,6 +68,15 @@ define(function(require, exports, module) {
             autoLayout(nodes);
         });
 
+        $("#inspect").click(function () {
+            var code = $("#codeToInspect").val();
+            var f = Function(code);
+            var o = f();
+
+            console.dir(o);
+            inspect(o);
+        });
+
         $("#addNode").click(function () {
             diagram.addItem(model.node());
         });
@@ -80,8 +89,48 @@ define(function(require, exports, module) {
             diagram.addItem(model.node({kind: "useCase"}));
         });
 
+        function inspect(o) {
+
+            var objectNode = model.node({kind: "class"});
+            var text = o.constructor ? o.constructor.name : "???";
+            text += "\n--";
+
+            Object.keys(o).forEach(function (prop) {
+                if (!(prop instanceof Object)) { // TODO: test jestli je primitive
+                    text += "\n" + prop + ": ";
+                    if (o[prop] === undefined) {
+                        text += "undefined";
+                    } else if (o[prop] === null) {
+                        text += "null";
+                    } else {
+                        text += o[prop].toString();
+                    }
+
+                } else {
+                    inspect(o[prop]);
+                }
+            });
+
+            objectNode.text = text;
+            diagram.addItem(objectNode);
+
+            var proto = Object.getPrototypeOf(o);
+            if (proto) {
+                inspect(proto);
+            }
+
+            console.dir();
+            console.dir(Object.getPrototypeOf(o));
+        }
+
+        function quote(s) {
+            return '"' + s + '"';
+        }
+
 
     });
+
+
 
     function autoLayout(nodes) {
 

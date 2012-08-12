@@ -34,10 +34,14 @@
             padding: 5px;
         }
 
+        #codeToInspect
+        {
+            width: 100%; height: 40%;
+        }
 
         #nodeEdit
         {
-            width: 100%; height: 70%;
+            width: 100%; height: 30%;
         }
 
     </style>
@@ -64,6 +68,16 @@
             <br/>
             <input id="autoLayout" type="button" value="Auto Layout" />
             <hr/>
+            Code to Inspect:
+            <textarea id="codeToInspect">
+var parent = {name: "parent"};
+var child = Object.create(parent);
+child.secondName = "child";
+return child;
+            </textarea>
+            <input id="inspect" type="button" value="Inspect" />
+            <br/>
+            Item Text:
             <textarea id="nodeEdit"></textarea>
         </div>
     </div>

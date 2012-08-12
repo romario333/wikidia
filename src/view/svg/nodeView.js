@@ -283,21 +283,21 @@ define(function(require) {
             resizeBorder.append(resizeHandle);
 
             var resizeDragHandler = dragEventHandler(resizeHandle);
-            resizeDragHandler.dragStart(function (e) {
+            resizeDragHandler.dragStart(function (e, dragInfo) {
                 isResizing = true;
                 if (onResizeDragStart) {
                     onResizeDragStart(that);
                 }
             });
-            resizeDragHandler.dragMove(function (e, dx, dy) {
+            resizeDragHandler.dragMove(function (e, dragInfo) {
                 if (onResizeDragMove) {
-                    onResizeDragMove(that, dx, dy);
+                    onResizeDragMove(that, dragInfo.dx, dragInfo.dy);
                 }
             });
-            resizeDragHandler.dragEnd(function (e, dx, dy) {
+            resizeDragHandler.dragEnd(function (e, dragInfo) {
                 isResizing = false;
                 if (onResizeDragEnd) {
-                    onResizeDragEnd(that, dx, dy);
+                    onResizeDragEnd(that, dragInfo.dx, dragInfo.dy);
                 }
             });
         }
