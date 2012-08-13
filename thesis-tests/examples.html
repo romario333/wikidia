@@ -926,9 +926,9 @@ var globalThis = this;
             equal(NaN.toString(), NaN.toString());
             equal(undefined, undefined);
 
-            // TODO: vsichni to ignoruji: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/parseInt#ECMAScript_5_Removes_Octal_Interpretation
-            // parseInt treat number as decimal
-            equal(parseInt("08"), 0);
+            // parseInt treats number as decimal by default
+            // Unfortunately as of 2012 no major browser implements this
+            // equal(parseInt("08"), 8);
         }
 
         if (!supportsES5()) {
@@ -994,10 +994,6 @@ var globalThis = this;
             // attempt to delete some built-in properties fails visibly in ES5/strict
             raises(function () { delete Object.prototype; }, TypeError); // TypeError: Cannot delete property 'prototype' of function Object()
 
-
-            // TODO: vsichni to ignoruji: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/parseInt#ECMAScript_5_Removes_Octal_Interpretation
-            equal(parseInt("08"), 0);
-
             // this is by default undefined in ES5/strict
             equal(this, undefined);
 
@@ -1006,6 +1002,28 @@ var globalThis = this;
 
         }
 
+        if (supportsES5()) {
+            es5();
+        }
+        if (supportsES5Strict()) {
+            es5Strict();
+        }
+    });
+
+    test("As of Aug 2012 no major browser removed octal representation default from the parseInt function", function () {
+        function es3() {
+            equal(parseInt("08"), 0);
+        }
+
+        function es5() {
+            equal(parseInt("08"), 0); // should be 8
+        }
+
+        function es5Strict() {
+            equal(parseInt("08"), 0); // should be 8
+        }
+
+        es3();
         if (supportsES5()) {
             es5();
         }
