@@ -1,0 +1,225 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<script src="lib/jquery-1.7.1.js"></script>
+<link rel="stylesheet" href="lib/qunit-v1.3.0pre.css" type="text/css" media="screen"/>
+<script type="text/javascript" src="lib/qunit-1.3.0pre.js"></script>
+
+<script>
+
+/*
+ *  6 ECMASCRIPT 5
+ */
+
+// some changes to the language are syntax error, load those conditionally
+// TODO: this does not work in Chrome when on local filesystem, retest this via HTTP
+if (supportsES5()) {
+    $(document.body).append('<script src="es5-breaking-changes.js"><\/script>');
+}
+
+test("Constructor Function Without Strict Mode", function () {
+    function Person() {
+        this.firstName = "Brandan";
+        this.lastName = "Eich";
+
+        this.toString = function () {
+            return this.firstName + " " + this.lastName;
+        };
+
+        return this;
+    }
+
+    // call constructor with new
+    var person1 = new Person();
+    equal(person1.toString(), "Brandan Eich");
+
+    // now have a look what happens if we FORGET A NEW KEYWORD:
+    var person2 = Person();
+
+    // we have inadvertently REWRITTEN parts of WINDOW OBJECT!
+    equal(person2, window);
+    equal(window.toString(), "Brandan Eich"); // TODO: note that this fails in IE9, passes in IE8 though
+    equal(window.firstName, "Brandan");
+    equal(window.lastName, "Eich");
+});
+
+if (supportsES5Strict()) {
+    test("Constructor Function in Strict Mode - Slightly Better", function () {
+        "use strict";
+
+        function Person() {
+            this.firstName = "Brandan";
+            this.lastName = "Eich";
+
+            this.toString = function () {
+                return this.firstName + " " + this.lastName;
+            };
+
+            return this; // return is actually not required here
+        }
+
+        raises(function () { var person2 = Person(); }, TypeError); // TypeError: Cannot set property 'firstName' of undefined
+    });
+}
+
+test("Syntax and semantic differences - without SyntaxError", function () {
+
+    function es3() {
+        // TODO: this is actually new syntax resulting in
+        // trailing commas
+        equal([1, 2, ].length, 3);
+
+        // Infinity, NaN and undefined can be redefined in ES3
+        Infinity = 1;
+        NaN = 1;
+        undefined = 1;
+        equal(Infinity, 1);
+        equal(NaN, 1);
+        equal(undefined, 1);
+
+        // parseInt treat number as octal if it starts with 0
+        equal(equal(parseInt("08"), 0));
+    }
+
+    function es5() {
+        // trailing commas
+        equal([1, 2, ].length, 2);
+
+        // note that in ES5 an attempt to redefine Infinity, Nan and undefined silently fails
+        Infinity = 1;
+        NaN = 1;
+        undefined = 1;
+        equal(Infinity, Infinity);
+        equal(NaN.toString(), NaN.toString());
+        equal(undefined, undefined);
+
+        // parseInt treats number as decimal by default
+        // Unfortunately as of 2012 no major browser implements this
+        // equal(parseInt("08"), 8);
+    }
+
+    if (!supportsES5()) {
+        es3();
+    } else {
+        es5();
+    }
+});
+
+test("ES5 vs ES5/strict", function testFn () {
+    function es5() {
+        // you can't no longer accidentally create global variable
+        globalLeak1 = "test";
+        equal(window.globalLeak1, "test");
+
+        // attempt to redefine Infinity, NaN and undefined FAILS SILENTLY in ES5/strict
+        Infinity = 1;
+        NaN = 1;
+        undefined = 1;
+        equal(Infinity, Infinity);
+        equal(NaN.toString(), NaN.toString());
+        equal(undefined, undefined);
+
+        // attempt to delete some built-in properties fails silently
+        var objectPrototype = Object.prototype;
+        delete Object.prototype;
+        equal(Object.prototype, objectPrototype);
+
+        // this is global object in ES5 !
+        equal(this, window);
+
+        // in ES5 you can get reference to the calling function
+        equal(es5.caller, testFn);
+    }
+
+    function es5Strict() {
+        "use strict";
+
+        // you can't no longer accidentally leak variable to the global scope
+        raises(function () {globalLeak2 = "test";}, ReferenceError); // ReferenceError: globalLeak2 is not defined
+        // TODO: you can still accidentally rewrite existing variable in global scope though :(
+        globalLeak1 = "strict test";
+        equal(window.globalLeak1, "strict test");
+
+        // attempt to redefine Infinity, NaN and undefined fails visibly in ES5/strict
+        raises(function () { Infinity = 1; }, TypeError); // TypeError: Cannot assign to read only property 'Infinity' of [object Window]
+        raises(function () { NaN = 1; }, TypeError); // TypeError: Cannot assign to read only property 'NaN' of [object Window]
+        raises(function () { undefined = 1; }, TypeError); // TypeError: Cannot assign to read only property 'undefined' of [object Window]
+
+        (function () {
+            // well, you can redefine them if you try hard enough ;-)
+            var Infinity, NaN, undefined;
+
+            Infinity = 1;
+            NaN = 1;
+            undefined = 1;
+            equal(Infinity, 1);
+            equal(NaN, 1);
+            equal(undefined, 1);
+
+        })();
+
+        // attempt to delete some built-in properties fails visibly in ES5/strict
+        raises(function () { delete Object.prototype; }, TypeError); // TypeError: Cannot delete property 'prototype' of function Object()
+
+        // this is by default undefined in ES5/strict
+        equal(this, undefined);
+
+        // in ES5/strict you can't get reference to the calling function
+        equal(es5.caller, null);
+
+    }
+
+    if (supportsES5()) {
+        es5();
+    }
+    if (supportsES5Strict()) {
+        es5Strict();
+    }
+});
+
+test("As of Aug 2012 no major browser removed octal representation default from the parseInt function", function () {
+    function es3() {
+        equal(parseInt("08"), 0);
+    }
+
+    function es5() {
+        equal(parseInt("08"), 0); // should be 8
+    }
+
+    function es5Strict() {
+        equal(parseInt("08"), 0); // should be 8
+    }
+
+    es3();
+    if (supportsES5()) {
+        es5();
+    }
+    if (supportsES5Strict()) {
+        es5Strict();
+    }
+});
+
+// utility functions
+
+function supportsES5() {
+    return !$.browser.msie || ($.browser.msie && $.browser.version > 8);
+}
+
+function supportsES5Strict() {
+    return !$.browser.msie || ($.browser.msie && $.browser.version > 9);
+}
+</script>
+
+</head>
+<body>
+<h1 id="qunit-header">QUnit example</h1>
+
+<h2 id="qunit-banner"></h2>
+
+<div id="qunit-testrunner-toolbar"></div>
+<h2 id="qunit-userAgent"></h2>
+<ol id="qunit-tests"></ol>
+<div id="qunit-fixture">test markup, will be hidden</div>
+</body>
+</html>
