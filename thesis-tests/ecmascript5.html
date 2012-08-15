@@ -20,7 +20,7 @@ if (supportsES5()) {
     });
 }
 
-test("Constructor Function Without Strict Mode", function () {
+test("Constructor Function in ES3 and ES5", function () {
     function Person() {
         this.firstName = "Brandan";
         this.lastName = "Eich";
@@ -46,8 +46,8 @@ test("Constructor Function Without Strict Mode", function () {
     equal(window.lastName, "Eich");
 });
 
-if (supportsES5Strict()) {
-    test("Constructor Function in Strict Mode - Slightly Better", function () {
+if (supportsES5()) {
+    test("Constructor Function in ES5/strict - Slightly Better", function () {
         "use strict";
 
         function Person() {
@@ -174,8 +174,6 @@ test("ES5 vs ES5/strict", function testFn () {
 
     if (supportsES5()) {
         es5();
-    }
-    if (supportsES5Strict()) {
         es5Strict();
     }
 });
@@ -190,14 +188,13 @@ test("As of Aug 2012 no major browser removed octal representation default from 
     }
 
     function es5Strict() {
+        "use strict";
         equal(parseInt("08"), 0); // should be 8
     }
 
     es3();
     if (supportsES5()) {
         es5();
-    }
-    if (supportsES5Strict()) {
         es5Strict();
     }
 });
@@ -206,10 +203,6 @@ test("As of Aug 2012 no major browser removed octal representation default from 
 
 function supportsES5() {
     return !$.browser.msie || ($.browser.msie && $.browser.version > 8);
-}
-
-function supportsES5Strict() {
-    return !$.browser.msie || ($.browser.msie && $.browser.version > 9);
 }
 </script>
 
