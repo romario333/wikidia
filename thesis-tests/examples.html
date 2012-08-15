@@ -13,6 +13,15 @@
 var global = "value";
 var globalThis = this;
 
+if ($.browser.msie) {
+    // IE does not support __proto__ property, let's add it
+    Object.defineProperty(Object.prototype, "__proto__", {
+        get: function () {
+            return Object.getPrototypeOf(this);
+        }
+    });
+}
+
 (function () {
     "use strict"; // majority of examples run in ECMAScript 5's strict mode
 
