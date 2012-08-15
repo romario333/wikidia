@@ -178,24 +178,34 @@ test("ES5 vs ES5/strict", function testFn () {
     }
 });
 
-test("As of Aug 2012 no major browser removed octal representation default from the parseInt function", function () {
+test("parseInt: As of Aug 2012 only IE > 9 removes default octal representation", function () {
     function es3() {
         equal(parseInt("08"), 0);
     }
 
     function es5() {
-        equal(parseInt("08"), 0); // should be 8
+        if ($.msie) {
+            equal(parseInt("08"), 8); // 8 is the correct answer
+        } else {
+            equal(parseInt("08"), 0);
+        }
     }
 
     function es5Strict() {
         "use strict";
-        equal(parseInt("08"), 0); // should be 8
+        if ($.msie) {
+            equal(parseInt("08"), 8); // 8 is the correct answer
+        } else {
+            equal(parseInt("08"), 0);
+        }
     }
 
-    es3();
+
     if (supportsES5()) {
         es5();
         es5Strict();
+    } else {
+        es3();
     }
 });
 
