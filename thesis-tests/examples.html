@@ -758,7 +758,7 @@ var globalThis = this;
             f();
         }
 
-        raises(function () { f(); }, RangeError);
+        raises(function () { f(); }, Error);
         if (level) {
             console.log("Stack overflow error on level of recursion " + level);
         }
