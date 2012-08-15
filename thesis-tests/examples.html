@@ -53,7 +53,7 @@ if ($.browser.msie) {
     });
 
     test("Example 3-4: Almost everything can be treated as an object", function () {
-        equal({}.toString(), "[object Object]");
+        equal(({}).toString(), "[object Object]");
         equal("test".toString(), "test");
         equal(true.toString(), "true");
         equal((3).toString(), "3");
@@ -94,9 +94,9 @@ if ($.browser.msie) {
 
     test("Example 3-8: Prototype chain of built-in types", function () {
         // __proto__ = Object.getPrototypeOf
-        equal({}.__proto__, Object.getPrototypeOf({}));
+        equal(({}).__proto__, Object.getPrototypeOf({}));
 
-        equal({}.__proto__, Object.prototype);
+        equal(({}).__proto__, Object.prototype);
         equal("test".__proto__, String.prototype);
         equal(true.__proto__, Boolean.prototype);
         equal((3).__proto__, Number.prototype);
