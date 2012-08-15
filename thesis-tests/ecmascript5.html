@@ -15,7 +15,9 @@
 // some changes to the language are syntax error, load those conditionally
 // TODO: this does not work in Chrome when on local filesystem, retest this via HTTP
 if (supportsES5()) {
-    $(document.body).append('<script src="es5-breaking-changes.js"><\/script>');
+    $(document).ready(function () {
+        $(document.body).append('<script src="es5-breaking-changes.js"><\/script>');
+    });
 }
 
 test("Constructor Function Without Strict Mode", function () {
