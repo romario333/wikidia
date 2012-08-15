@@ -100,6 +100,7 @@ if ($.browser.msie) {
         equal("test".__proto__, String.prototype);
         equal(true.__proto__, Boolean.prototype);
         if ($.msie) {
+            // TODO: this is weird
             equal((3).__proto__, Object.prototype);
         } else {
             equal((3).__proto__, Number.prototype);
