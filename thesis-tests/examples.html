@@ -13,6 +13,7 @@
 var global = "value";
 var globalThis = this;
 
+// TODO: check in IE 10 that this is really necessary
 if ($.browser.msie) {
     // IE does not support __proto__ property, let's add it
     Object.defineProperty(Object.prototype, "__proto__", {
@@ -248,7 +249,7 @@ if ($.browser.msie) {
      *  -> 3.2 FUNCTIONS
      */
 
-    test("Example 3-15: Simple function definition and invocation", function () {
+    test("Example 3-16: Simple function definition and invocation", function () {
         function greet() {
             return "hello";
         }
@@ -256,7 +257,7 @@ if ($.browser.msie) {
         equal(greet(), "hello");
     });
 
-    test("Example 3-16, 3-17: Function is an object", function () {
+    test("Example 3-17, 3-18: Function is an object", function () {
         function greet() { return "hello"; } // define function
 
         equal(greet(), "hello"); // invoke function
@@ -274,7 +275,7 @@ if ($.browser.msie) {
         equal(greet.toString(), 'function greet() { return "hello"; }');
     });
 
-    test("Example 3-18, 3-19, 3-20: How to Define a Function", function () {
+    test("Example 3-19, 3-20, 3-21: How to Define a Function", function () {
         // define function using function statement
         function greet1(who) {
             return "hello " + who;
@@ -297,7 +298,7 @@ if ($.browser.msie) {
         equal(greet2.name, "");
     });
 
-    test("Example 3-21: Function declaration is hoisted, function expression is not", function () {
+    test("Example 3-22: Function declaration is hoisted, function expression is not", function () {
         // function declaration - you can call function before it's defined
         equal(callMe1(), "test");
 
@@ -315,7 +316,7 @@ if ($.browser.msie) {
         equal(callMe2(), "test");
     });
 
-    test("Example 3-22: Function scope", function () {
+    test("Example 3-23: Function scope", function () {
         var test = "global value";
 
         function scope() {
@@ -327,7 +328,7 @@ if ($.browser.msie) {
         equal(test, "global value");
     });
 
-    test("Example 3-23: You can rewrite variable in the global scope if you forget var keyword", function () {
+    test("Example 3-24: You can rewrite variable in the global scope if you forget var keyword", function () {
         var test = "global value";
 
         function scope() {
@@ -339,7 +340,7 @@ if ($.browser.msie) {
         equal(test, "local value");
     });
 
-    test("Example 3-24, 3-25: Variable hoisting", function () {
+    test("Example 3-25, 3-26: Variable hoisting", function () {
         function scope1() {
             // ReferenceError: undefinedVar is not defined
             raises(function () {undefinedVar;}, ReferenceError);
@@ -366,7 +367,7 @@ if ($.browser.msie) {
      *  -> 3.3 CLOSURES
      */
 
-    test("Example 3-26: Closure", function () {
+    test("Example 3-27: Closure", function () {
         function outer() {
 
             var outerVar = "set by outer";
@@ -382,7 +383,7 @@ if ($.browser.msie) {
         }
     });
 
-    test("Example 3-27: Sequence generator using closure", function () {
+    test("Example 3-28: Sequence generator using closure", function () {
         function sequence() {
             var count = 0;
 
@@ -397,7 +398,7 @@ if ($.browser.msie) {
         equal(next(), 3);
     });
 
-    test("Example 3-28: Closure in loop – defective version", function () {
+    test("Example 3-29: Closure in loop – defective version", function () {
         var numberGenerator = [];
 
         for (var i = 1; i <= 3; i++) {
@@ -412,7 +413,7 @@ if ($.browser.msie) {
         equal(numberGenerator[3](), 4);
     });
 
-    test("Example 3-29: Closure in loop – fixed version", function () {
+    test("Example 3-30: Closure in loop – fixed version", function () {
         var numberGenerator = [];
 
         for (var i = 1; i <= 3; i++) {
@@ -428,7 +429,7 @@ if ($.browser.msie) {
         equal(numberGenerator[3](), 3);
     });
 
-    test("Example 3-30: Closure in loop – fixed with Array.forEach", function () {
+    test("Example 3-31: Closure in loop – fixed with Array.forEach", function () {
         var numberGenerator = [];
 
         [1, 2, 3].forEach(function (number) {
