@@ -296,8 +296,10 @@ test("Example 3-19, 3-20, 3-21: How to Define a Function", function () {
     equal(greet1.__proto__, Function.prototype);
     equal(greet2.__proto__, Function.prototype);
 
-    equal(greet1.name, "greet1");
-    equal(greet2.name, "");
+    if (!$.browser.msie) {
+        equal(greet1.name, "greet1");
+        equal(greet2.name, "");
+    }
 });
 
 test("Example 3-22: Function declaration is hoisted, function expression is not", function () {
