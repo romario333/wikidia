@@ -8,12 +8,16 @@
 
 <script>
 
+if (!supportsES5Strict()) {
+    alert("It seems that your browser does not support ECMAScript 5 strict mode. Note that some tests might fail.");
+}
+
 /*
  *  6 ECMASCRIPT 5
  */
 
 // some changes to the language are syntax error, load those conditionally
-// TODO: this does not work in Chrome when on local filesystem, retest this via HTTP
+// (this does not work in Chrome when on local filesystem)
 if (supportsES5()) {
     $(document).ready(function () {
         $(document.body).append('<script src="es5-breaking-changes.js"><\/script>');
@@ -214,6 +218,20 @@ test("parseInt: As of Aug 2012 only IE > 9 removes default octal representation"
 function supportsES5() {
     return !$.browser.msie || ($.browser.msie && $.browser.version > 8);
 }
+
+/**
+ * Return true if browser supports ES5/strict. (Note
+ */
+function supportsES5Strict() {
+    "use strict";
+    try {
+        delete Object.prototype;
+    } catch (TypeError) {
+        return true;
+    }
+    return false;
+}
+
 </script>
 
 </head>

@@ -11,7 +11,7 @@
 
 // TODO: show warning if browser does not support strict mode
 
-if (!supportsStrictMode()) {
+if (!supportsES5Strict()) {
     alert("It seems that your browser does not support ECMAScript 5 strict mode. Note that some tests might fail.");
 }
 
@@ -57,7 +57,7 @@ test("Example 3-4: Almost everything can be treated as an object", function () {
     equal("test".toString(), "test");
     equal(true.toString(), "true");
     equal((3).toString(), "3");
-    equal((function () {}).toString(), "function () {}");
+    equal((function () {}).toString().substr(0, 8), "function");
 
     // TypeError: Cannot call method 'toString' of undefined
     raises(function () {undefined.toString();}, TypeError);
@@ -272,7 +272,7 @@ test("Example 3-17, 3-18: Function is an object", function () {
     greet.who = "world";
     equal(greet.who, "world");
 
-    equal(greet.toString(), 'function greet() { return "hello"; }');
+    equal(greet.toString().substr(0, 8), "function");
 });
 
 test("Example 3-19, 3-20, 3-21: How to Define a Function", function () {
@@ -852,7 +852,8 @@ test("Example 7-7: Unique ID support for objects", function () {
 /**
  * Return true if browser supports ES5/strict. (Note
  */
-function supportsStrictMode() {
+function supportsES5Strict() {
+    "use strict";
     try {
         delete Object.prototype;
     } catch (TypeError) {
