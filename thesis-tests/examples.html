@@ -97,7 +97,7 @@ test("Example 3-8: Prototype chain of built-in types", function () {
     equal(({}).__proto__, Object.getPrototypeOf({}));
 
     equal(({}).__proto__, Object.prototype);
-    if ($.msie) {
+    if ($.browser.msie && $.browser.version >= 10) {
         // IE does not auto-wrap primitive types??
         equal(new String("test").__proto__, String.prototype);
     } else {
