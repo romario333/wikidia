@@ -8,7 +8,7 @@
 
 <script>
 
-if (!supportsES5Strict()) {
+if (supportsES5() && !supportsES5Strict()) {
     alert("It seems that your browser does not support ECMAScript 5 strict mode. Note that some tests might fail.");
 }
 
@@ -221,7 +221,7 @@ test("parseInt: As of Aug 2012 only IE > 9 removes default octal representation"
 // utility functions
 
 function supportsES5() {
-    return !$.browser.msie || ($.browser.msie && $.browser.version > 8);
+    return [1,].length === 1;
 }
 
 /**
