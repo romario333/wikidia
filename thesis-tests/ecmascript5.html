@@ -139,7 +139,7 @@ test("ES5 vs ES5/strict", function testFn () {
 
         // you can't no longer accidentally leak variable to the global scope
         raises(function () {globalLeak2 = "test";}, ReferenceError); // ReferenceError: globalLeak2 is not defined
-        // TODO: you can still accidentally rewrite existing variable in global scope though :(
+        // you can still accidentally rewrite existing variable in global scope though :(
         globalLeak1 = "strict test";
         equal(window.globalLeak1, "strict test");
 

@@ -11,7 +11,9 @@
 
 // TODO: show warning if browser does not support strict mode
 
-
+if (!supportsStrictMode()) {
+    alert("It seems that your browser does not support ECMAScript 5 strict mode. Note that some tests might fail.");
+}
 
 // TODO: check in IE 10 that this is really necessary
 if ($.browser.msie) {
@@ -846,6 +848,19 @@ test("Example 7-7: Unique ID support for objects", function () {
     equal(map[key1.oid], "value1");
     equal(map[key2.oid], "value2");
 });
+
+/**
+ * Return true if browser supports ES5/strict. (Note
+ */
+function supportsStrictMode() {
+    try {
+        delete Object.prototype;
+    } catch (TypeError) {
+        return true;
+    }
+    return false;
+}
+
 </script>
 
 </head>
