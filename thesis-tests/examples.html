@@ -97,7 +97,13 @@ test("Example 3-8: Prototype chain of built-in types", function () {
     equal(({}).__proto__, Object.getPrototypeOf({}));
 
     equal(({}).__proto__, Object.prototype);
-    equal("test".__proto__, String.prototype);
+    if ($.msie) {
+        // IE does not auto-wrap primitive types??
+        equal(new String("test").__proto__, String.prototype);
+    } else {
+        equal("test".__proto__, String.prototype);
+    }
+
     equal(true.__proto__, Boolean.prototype);
     if ($.msie) {
         // TODO: this is weird
