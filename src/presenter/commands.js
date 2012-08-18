@@ -118,7 +118,7 @@ define(function(require) {
             that.y2 = y1;
             that.itemToConnect = null;
 
-            line = model.line();
+            line = model.line({text: "{{lineType=->}}"});
             diagram.addItem(line);
 
             that.preview = function () {

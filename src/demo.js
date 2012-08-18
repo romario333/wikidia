@@ -28,6 +28,17 @@ define(function(require, exports, module) {
             diagram.addItem(model.node({kind: "useCase"}));
         });
 
+        $("#addActor").click(function () {
+            diagram.addItem(model.node({kind: "actor", width: 75, height: 135}));
+        });
+
+        $("#addNote").click(function () {
+            diagram.addItem(model.node({kind: "note", text: "{{fill=yellow}}"}));
+        });
+
+        // TODO: debug
+        window.diagram = diagram;
+
 
 
     });

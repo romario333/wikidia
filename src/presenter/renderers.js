@@ -48,7 +48,9 @@ define(function(require) {
                     node: this.nodeRenderer(),
                     class: this.classNodeRenderer(),
                     useCase: this.useCaseNodeRenderer(),
-                    line: this.lineRenderer()
+                    line: this.lineRenderer(),
+                    actor: this.actorRenderer(),
+                    note: this.noteRenderer()
                 };
                 if (!renderersMap[item.kind]) {
                     throw new Error("I don't have renderer for item with kind '{kind}'".supplant({kind: item.kind}));
@@ -212,7 +214,8 @@ define(function(require) {
                     rx: halfWidth,
                     ry: halfHeight,
                     fill: renderInfo.fillColor,
-                    stroke: renderInfo.strokeColor
+                    stroke: renderInfo.strokeColor,
+                    "stroke-width": 1.5
                 });
 
                 var render = renderFilters.renderFilterChain(nodeView, [
@@ -241,6 +244,100 @@ define(function(require) {
             return that;
         },
 
+        actorRenderer: function () {
+            var that = this.nodeRenderer();
+
+            that.render = function (itemInfo) {
+                var renderInfo = that._render(itemInfo);
+
+                var node = itemInfo.item;
+                var nodeView = itemInfo.view;
+
+                var textHeight = 0;
+                renderInfo.lines.forEach(function (line) {
+                    textHeight += nodeView.measureText({text: line}).height;
+                });
+
+                var actorHeight = Math.min(node.height - textHeight, node.height);
+
+                var x = node.x, y = node.y;
+
+                nodeView.circle({
+                    cx: x + node.width / 2,
+                    cy: y + actorHeight / 6,
+                    r: Math.min(node.width / 2, actorHeight / 6),
+                    stroke: renderInfo.strokeColor,
+                    fill: renderInfo.fillColor,
+                    "stroke-width": 1.5
+                });
+                var path = nodeView.path({stroke: renderInfo.strokeColor, "stroke-width": 1.5});
+                // spine
+                path.moveTo(x + node.width / 2, y + actorHeight / 3)
+                    .lineTo(x + node.width / 2, y + 2 * actorHeight / 3)
+                // legs
+                    .moveTo(x + node.width / 2, y + 2 * actorHeight / 3)
+                    .lineTo(x, y + actorHeight)
+                    .moveTo(x + node.width / 2, y + 2 * actorHeight / 3)
+                    .lineTo(x + node.width, y + actorHeight)
+//                // arms
+                    .moveTo(x, y + actorHeight / 2.5)
+                    .lineTo(x + node.width, y + actorHeight / 2.5)
+                    .done();
+
+
+                var render = renderFilters.renderFilterChain(nodeView, [
+                    renderFilters.verticalFlow(node.width),
+                    renderFilters.relative(x, y + actorHeight)
+                ]);
+
+                renderInfo.lines.forEach(function (line) {
+                    render.text({text: line, align: "center"});
+                });
+            };
+
+            return that;
+        },
+
+        noteRenderer: function () {
+            var that = this.nodeRenderer();
+
+            that.render = function (itemInfo) {
+                var renderInfo = that._render(itemInfo);
+
+                var node = itemInfo.item;
+                var nodeView = itemInfo.view;
+
+                var edgeSize = 20;
+
+                var x = node.x, y = node.y, width = node.width, height = node.height;
+
+                var path = nodeView.path({stroke: renderInfo.strokeColor, "stroke-width": 1.5, fill: renderInfo.fillColor});
+
+                // note edge
+                path.moveTo(x + width - edgeSize, y)
+                    .lineTo(x + width - edgeSize, y + edgeSize)
+                    .lineTo(x + width, y + edgeSize)
+                    .lineTo(x + width - edgeSize, y)
+                    // draw the rest of the note
+                    .lineTo(x, y)
+                    .lineTo(x, y + height)
+                    .lineTo(x + width, y + height)
+                    .lineTo(x + width, y + edgeSize)
+                    .done();
+
+                var render = renderFilters.renderFilterChain(nodeView, [
+                    renderFilters.verticalFlow(node.width),
+                    renderFilters.relative(x, y)
+                ]);
+
+                renderInfo.lines.forEach(function (line) {
+                    render.text({text: line});
+                });
+            };
+
+            return that;
+        },
+
         lineRenderer: function () {
             var that = {};
 
@@ -250,6 +347,8 @@ define(function(require) {
 
                 var parsedText = parseRenderText(line.text);
 
+                var lineTypeString = parsedText.properties.lineType || "->";
+
                 var renderInfo = {
                     x1: line.points(0).x,
                     y1: line.points(0).y,
@@ -257,43 +356,71 @@ define(function(require) {
                     y2: line.points(1).y,
                     strokeColor: parsedText.properties.stroke || "black",
                     fillColor: parsedText.properties.fill || "white",
-                    lineType: parsedText.properties.lineType || "->"
+                    lineType: lineTypeString.substr(0, 1),
+                    headType: lineTypeString.substr(1)
                 };
+
+                if (renderInfo.headType == "<<>>") {
+                    // full diamond
+                    renderInfo.fillColor = renderInfo.strokeColor;
+                }
+
 
                 lineView.clear();
                 lineView.updateBounds(renderInfo);
                 lineView.isSelected(itemInfo.isSelected);
 
-                lineView.line({x1: renderInfo.x1, y1: renderInfo.y1, x2: renderInfo.x2, y2: renderInfo.y2, stroke: renderInfo.strokeColor, "stroke-width": 1.5, fill: renderInfo.fillColor});
+                var lineSpec = {
+                    x1: renderInfo.x1,
+                    y1: renderInfo.y1,
+                    x2: renderInfo.x2,
+                    y2: renderInfo.y2,
+                    stroke: renderInfo.strokeColor,
+                    "stroke-width": 1.5,
+                    fill: renderInfo.fillColor
+                };
+                if (renderInfo.lineType == ".") {
+                    lineSpec["stroke-dasharray"] = "8 5";
+                }
+                lineView.line(lineSpec);
 
-                if (renderInfo.lineType !== "-") {
+                if (renderInfo.headType !== "") {
                     // draw arrow head
                     var headLength = 20;
                     var angle = Math.atan2(renderInfo.y2 - renderInfo.y1, renderInfo.x2 - renderInfo.x1);
                     var path = lineView.path({stroke: renderInfo.strokeColor, "stroke-width": 1.5, fill: renderInfo.fillColor});
 
-                    if (renderInfo.lineType === "->") {
+                    if (renderInfo.headType === ">") {
                         // simple arrow head
-                        path.moveTo(renderInfo.x2, renderInfo.y2);
-                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6));
-                        path.moveTo(renderInfo.x2, renderInfo.y2);
-                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6));
-                        path.moveTo(renderInfo.x2, renderInfo.y2);
-                    } else if (renderInfo.lineType === "->>") {
+                        path.moveTo(renderInfo.x2, renderInfo.y2)
+                            .lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6))
+                            .moveTo(renderInfo.x2, renderInfo.y2)
+                            .lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6))
+                            .moveTo(renderInfo.x2, renderInfo.y2);
+                    } else if (renderInfo.headType === ">>") {
                         // triangle arrow head
-                        path.moveTo(renderInfo.x2, renderInfo.y2);
-                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6));
-                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6));
-                        path.closePath();
-                    } else if (renderInfo.lineType == "-<>") {
-                        // TODO: diamond arrow head
-//                        path.moveTo(renderInfo.x2, renderInfo.y2);
-//                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6));
-//                        path.lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6));
-//                        path.closePath();
+                        path.moveTo(renderInfo.x2, renderInfo.y2)
+                            .lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6))
+                            .lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6))
+                            .closePath();
+                    } else if (renderInfo.headType == "<>" || renderInfo.headType == "<<>>") {
+                        // diamond arrow head
+                       var x = renderInfo.x2, y = renderInfo.y2;
+                       path.moveTo(x, y);
+                       x = x - headLength * Math.cos(angle - Math.PI / 6);
+                       y = y - headLength * Math.sin(angle - Math.PI / 6);
+                       path.lineTo(x ,y);
+                       x = x - headLength * Math.cos(angle + Math.PI / 6);
+                       y = y - headLength * Math.sin(angle + Math.PI / 6);
+                       path.lineTo(x ,y);
+                       x = x + headLength * Math.cos(angle - Math.PI / 6)
+                       y = y + headLength * Math.sin(angle - Math.PI / 6)
+                       path.lineTo(x ,y);
+                       path.closePath();
                     }
 
-                    path.done();                }
+                    path.done();
+                }
             };
 
 

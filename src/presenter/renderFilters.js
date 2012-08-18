@@ -30,6 +30,10 @@ define(function(require) {
                 },
                 measureText: function (spec) {
                     return filters[0].measureText(spec);
+                },
+                circle: function (spec) {
+                    spec = spec ? utils.copyShallow(spec) : {};
+                    filters[0].circle(spec);
                 }
             };
         },
@@ -69,6 +73,12 @@ define(function(require) {
                 measureText: function (spec) {
                     spec = utils.copyShallow(spec);
                     return this._next.measureText(spec);
+                },
+                circle: function (spec) {
+                    spec = utils.copyShallow(spec);
+                    spec.x = spec.x ? spec.x + dx : dx;
+                    spec.y = spec.y ? spec.y + dy : dy;
+                    return this._next.circle(spec);
                 }
             };
         },
@@ -122,6 +132,11 @@ define(function(require) {
                 measureText: function (spec) {
                     spec = utils.copyShallow(spec);
                     return this._next.measureText(spec);
+                },
+                circle: function (spec) {
+                    // TODO:
+                    spec = utils.copyShallow(spec);
+                    return this._next.circle(spec);
                 }
             };
         }

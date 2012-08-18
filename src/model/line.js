@@ -53,6 +53,7 @@ define(function (require) {
             throw new Error("Point [{x}, {y}] not found on line with id '{line}'.".supplant({x: x, y: y, line: that.id}));
         };
 
+        // TODO: this defies the whole concept of capability testing
         that.addConnection = function (item) {
             throw new Error("You can't connect to line directly, use function on its point instead.");
         };
@@ -75,6 +76,7 @@ define(function (require) {
 
         that.isLine = true;
 
+        // TODO: make linePoint completely independent on line, it will be just point
         /**
          * @constructor
          *

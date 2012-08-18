@@ -131,7 +131,6 @@ define(function(require) {
             var pathBuilder = svgHelper.pathBuilder();
             pathBuilder.attr(spec);
 
-            // TODO: attr modification on each operation is probably not good idea
             return {
                 moveTo: function (x, y) {
                     pathBuilder.moveTo(x, y);

@@ -354,6 +354,20 @@ define(function(require) {
         };
 
         /**
+         * Draws a circle.
+         *
+         * @param spec.cx       The x-axis coordinate of the center of the circle.
+         * @param spec.cy       The y-axis coordinate of the center of the circle.
+         * @param spec.r        The radius of the circle.
+         * @param spec.fill     Fill color.
+         * @param spec.stroke   Stroke color.
+         */
+        that.circle = function (spec) {
+            var el = svgHelper.createSvgElement("circle", spec);
+            content.append(el);
+        };
+
+        /**
          * Draws an ellipse
          *
          * @param spec.cx       The x-axis coordinate of the center of the ellipse.
@@ -414,6 +428,30 @@ define(function(require) {
             textElement.text(spec.text);
             return textElement;
         }
+
+        that.path = function (spec) {
+            var pathBuilder = svgHelper.pathBuilder();
+            pathBuilder.attr(spec);
+
+            return {
+                moveTo: function (x, y) {
+                    pathBuilder.moveTo(x, y);
+                    return this;
+                },
+                lineTo: function (x, y) {
+                    pathBuilder.lineTo(x, y);
+                    return this;
+                },
+                closePath: function () {
+                    pathBuilder.closePath();
+                    return this;
+                },
+                done: function () {
+                    content.append(pathBuilder.create());
+                }
+            };
+        };
+
 
         that._test = {};
         that._test.contentSvg = function () {

@@ -213,6 +213,7 @@ define(function(require) {
         }
 
         function onDiagramClick(view) {
+            console.log("onDiagramClick");
             selection.clear();
         }
 
@@ -263,7 +264,7 @@ define(function(require) {
         }
 
         function onItemSelectionChange(item) {
-            stopEditing();
+            finishEditing();
 
             if (!selection.isMultiple() && item.isSelected) {
                 itemEditView.text(item.item.text);
@@ -273,11 +274,11 @@ define(function(require) {
         }
 
         function onItemEditViewFocus(e) {
-            startEditing();
+            beginEditing();
         }
 
         function onItemEditViewBlur(e) {
-            stopEditing();
+            finishEditing();
         }
 
         function onNodeDragStart(nodeView) {
@@ -417,20 +418,21 @@ define(function(require) {
             }
         }
 
-        function startEditing() {
-            if (commandInProgress && !commandInProgress.isEditItemCommand) {
-                // some other command in progress, throw it away, we're going to edit now
+        function beginEditing() {
+            if (commandInProgress) {
+                // some other command in progress, throw it away
+                if (commandInProgress.cancelPreview) {
+                    commandInProgress.cancelPreview();
+                }
                 commandInProgress = null;
             }
 
-            if (!commandInProgress) {
-                if (selection.itemInfos().length === 1) {
-                    commandInProgress = commands.editItemCommand(selection.itemInfos(0).item);
-                }
+            if (selection.itemInfos().length === 1) {
+                commandInProgress = commands.editItemCommand(selection.itemInfos(0).item);
             }
         }
 
-        function stopEditing() {
+        function finishEditing() {
             if (commandInProgress && commandInProgress.isEditItemCommand) {
                 commandInProgress.newText = itemEditView.text();
                 if (commandInProgress.hasChanged()) {
