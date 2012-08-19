@@ -213,7 +213,6 @@ define(function(require) {
         }
 
         function onDiagramClick(view) {
-            console.log("onDiagramClick");
             selection.clear();
         }
 
