@@ -4,4 +4,4 @@ At this point Wikidia is just an experiment though. Its goal is to create a prot
 
 **Disclaimer: this is a prototype-quality code.** It contains many TODOs, bugs and half-baked ideas.
 
-[Project Homepage](romario333.github.com/wikidia)
+[Project Homepage](http://romario333.github.com/wikidia)
