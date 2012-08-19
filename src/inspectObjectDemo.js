@@ -2,6 +2,10 @@
 define(function(require, exports, module) {
     "use strict";
 
+    if (!$.browser.webkit) {
+        alert("This prototype was developed on Google Chrome, I haven't time to make it work properly on other browsers. Sorry about that :(")
+    }
+
     var AUTO_LAYOUT_DEBUG = false;
 
     var model = require("model");
