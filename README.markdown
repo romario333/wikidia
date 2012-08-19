@@ -2,6 +2,6 @@ Wikidia is a hybrid of diagramming tool and wiki. You can create good-looking UM
 
 At this point Wikidia is just an experiment though. Its goal is to create a prototype which would validate that it is possible to build such tool using JavaScript and SVG and in the process help me to earn my degree :-).
 
-*Disclaimer: this is a prototype-quality code.* It contains many TODOs, bugs and half-baked ideas.
+**Disclaimer: this is a prototype-quality code.** It contains many TODOs, bugs and half-baked ideas.
 
 [Project Homepage](romario333.github.com/wikidia)
