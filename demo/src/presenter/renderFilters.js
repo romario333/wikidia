@@ -38,7 +38,7 @@ define(function(require) {
             };
         },
 
-        // TODO: relative must go always last (because it has to set properties which would otherwise not be set,
+        // relative must go always last (because it has to set properties which would otherwise not be set,
         // e.g. if y is not set, it has to set dy there)
         /**
          * Translates all [x, y] coordinates by (dx, dy).

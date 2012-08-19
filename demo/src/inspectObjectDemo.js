@@ -7,11 +7,6 @@ define(function(require, exports, module) {
     var view = require("view");
     var diagramPresenter = require("presenter/diagramPresenter");
 
-    /**
-     * Provides requestAnimationFrame in a cross browser way.
-     * @author paulirish / http://paulirish.com/
-     */
-
     if ( !window.requestAnimationFrame ) {
 
         window.requestAnimationFrame = ( function() {
@@ -35,31 +30,7 @@ define(function(require, exports, module) {
         $("#demo").height($(document).height());
 
         var diagram = model.diagram();
-//        var node1 = model.node({x: 130, y: 130, text: "node1"});
-//        var node2 = model.node({x: 130, y: 130, text: "node2"});
-//        var node3 = model.node({x: 250, y: 110, text: "node3"});
-//        var node4 = model.node({x: 110, y: 300, text: "node4"});
-//        diagram.addItem(node1);
-//        diagram.addItem(node2);
-//        diagram.addItem(node3);
-//        diagram.addItem(node4);
-//
-//        connect(node1, node2);
-//        connect(node1, node4);
-//        connect(node3, node4);
-//        connect(node2, node3);
-//
-//        function connect(node1, node2) {
-//            var n1c = nodeCenter(node1);
-//            var n2c = nodeCenter(node2);
-//
-//            var line = model.line({x1: n1c.x, y1: n1c.y, x2: n2c.x, y2: n2c.y});
-//            diagram.addItem(line);
-//
-//            line.points(0).addConnection(node1);
-//            line.points(1).addConnection(node2);
-//        }
-
+        window.diagram = diagram;
 
         var presenter = diagramPresenter(diagram, $("#diagram"), $("#nodeEdit"));
 
@@ -79,6 +50,8 @@ define(function(require, exports, module) {
             var f = Function(code);
             var o = f();
 
+            diagram.clear();
+
             inspect(o);
             autoLayout();
             if (!AUTO_LAYOUT_DEBUG) {
@@ -86,25 +59,26 @@ define(function(require, exports, module) {
             }
         });
 
-        $("#addNode").click(function () {
-            diagram.addItem(model.node());
-        });
-
-        $("#addClass").click(function () {
-            diagram.addItem(model.node({kind: "class"}));
-        });
-
-        $("#addUseCase").click(function () {
-            diagram.addItem(model.node({kind: "useCase"}));
-        });
-
-
-        var objNodes = {}, lastObjId = 0;
+        var visitedObjects = [], objNodes = {}, lastObjId = 0;
         function inspect(o) {
-            if (o._inspectOid) {
+            inspectInner(o);
+
+            // reset to initial state
+            var obj;
+            while (obj = visitedObjects.pop()) {
+                delete obj._inspectOid;
+            }
+            objNodes = {};
+            lastObjId = 0;
+        }
+
+        function inspectInner(o) {
+            if (o.hasOwnProperty("_inspectOid")) {
                 // already inspected, skip it
                 return objNodes[o._inspectOid];
             }
+
+            visitedObjects.push(o);
 
             var objectNode = model.node({kind: "class"});
             diagram.addItem(objectNode);
@@ -117,14 +91,14 @@ define(function(require, exports, module) {
             var attributes = [], operations = [];
 
             Object.keys(o).forEach(function (prop) {
-                if (prop == "_inspectOid") {
+                if (prop === "_inspectOid") {
                     return;
                 }
                 var value = o[prop];
                 if (value instanceof Function) {
                     operations.push(prop + "()");
                 } else if (value instanceof Object) {
-                    var childNode = inspect(o[prop]);
+                    var childNode = inspectInner(o[prop]);
                     connect(childNode, objectNode, "{{lineType=-<>}}\n" + prop);
                 } else {
                     var attr = prop + ": ";
@@ -149,7 +123,7 @@ define(function(require, exports, module) {
 
             var proto = Object.getPrototypeOf(o);
             if (proto) {
-                var protoNode = inspect(proto);
+                var protoNode = inspectInner(proto);
                 connect(objectNode, protoNode, "{{lineType=->>}}");
             }
 
@@ -157,7 +131,6 @@ define(function(require, exports, module) {
         }
 
         function getObjectName(o) {
-            console.dir(o);
             if (o === Object.prototype) {
                 return "Object.prototype";
             }
@@ -194,7 +167,7 @@ define(function(require, exports, module) {
         function autoLayout() {
 
             var iteration = 0;
-            var ITERATION_COUNT = 10;
+            var ITERATION_COUNT = 30;
 
             var nodes = diagram.items().filter(function (item) {return item.isNode;});
 
@@ -269,11 +242,9 @@ define(function(require, exports, module) {
                     v1.x += Math.floor(netForce.x);
                     v1.y += Math.floor(netForce.y);
 
-                    // TODO: debug
-                    v1.node.moveTo(v1.x, v1.y);
-
                     if (AUTO_LAYOUT_DEBUG) {
                         console.log(v1.node.id + ": <" + netForce.x + ", " + netForce.y + ">");
+                        v1.node.moveTo(v1.x, v1.y);
                     }
                 });
 
@@ -287,6 +258,11 @@ define(function(require, exports, module) {
                     } else {
                         iterationFun();
                     }
+                } else {
+                    // we are finished, set new positions for nodes
+                    vertices.forEach(function (v) {
+                        v.node.moveTo(v.x, v.y);
+                    });
                 }
             }
 
@@ -299,7 +275,7 @@ define(function(require, exports, module) {
                 }
                 var r = C1 / Math.sqrt(dist);
                 var result = subtract(v2, v1);
-                if (result.x === 0) result.x = 1; // TODO: could be solved more elegantly?
+                if (result.x === 0) result.x = 1;
                 if (result.y === 0) result.y = 1;
                 result.x = r * result.x * -1;
                 result.y = r * result.y * -1;
@@ -309,15 +285,15 @@ define(function(require, exports, module) {
 
             function springAttraction(v1, v2) {
                 var C2 = 1;
-                var springLength = ( (v1.size + v2.size) / 2 ) + 50;
+                var springLength = ( (v1.size + v2.size) / 2 ) + 100;
 
                 var dist = distance(v1, v2);
-                if (dist === 0) { // TODO: could be solved more elegantly?
+                if (dist === 0) {
                     dist = springLength / 10;
                 }
                 var a = C2 * Math.log(dist / springLength);
                 var result = subtract(v2, v1);
-                if (result.x === 0) result.x = 1; // TODO: could be solved more elegantly?
+                if (result.x === 0) result.x = 1;
                 if (result.y === 0) result.y = 1;
                 result.x = a * result.x;
                 result.y = a * result.y;
@@ -346,7 +322,7 @@ define(function(require, exports, module) {
             function initPosGenerator(maxWidth, maxHeight) {
 
                 var STEP = 100;
-                var x = 0, y = 3*STEP;
+                var x = 2*STEP, y = 3*STEP;
 
                 return function () {
                     x += STEP;
@@ -384,7 +360,7 @@ define(function(require, exports, module) {
                 line.points(1).x = node2Point.x;
                 line.points(1).y = node2Point.y;
 
-                // TODO: procpak to potrebuju?
+                // TODO: interesting, why do I have to do this manually?
                 line.fireChange();
             });
 
@@ -466,8 +442,6 @@ define(function(require, exports, module) {
                 return line.y1 - slope * line.x1;
             }
         }
-
-
 
     });
 

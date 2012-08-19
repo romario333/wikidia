@@ -85,24 +85,7 @@ define(function(require, exports, module) {
 
             expect(node.id).toBeNull();
             expect(line.id).toBeNull();
-
-            // TODO: test points
         });
-
-        // TODO:
-//        it("item is automatically removed from connections of other items when it is removed from diagram", function () {
-//            var node = model.node();
-//            var line = model.line();
-//            diagram.addItem(node);
-//            diagram.addItem(line);
-//
-//            node.addConnection(line.points(0));
-//
-//            diagram.removeItem(line);
-//
-//            expect(node.connections().length).toEqual(0);
-//            expect(line.points(0).connections().length).toEqual(0);
-//        });
 
     });
 

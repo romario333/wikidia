@@ -77,7 +77,6 @@ define(function(require) {
              * @private
              */
             that._render = function(itemInfo) {
-                // TODO: proc se tak strasne branim stavu tady?
                 var node = itemInfo.item;
                 var nodeView = itemInfo.view;
 

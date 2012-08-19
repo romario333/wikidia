@@ -22,55 +22,37 @@
 
         #controlPanel
         {
-            position: absolute; right: 10px; top: 10px; width: 33%; height: 100%
-        }
-
-        #quickHelp
-        {
-            border: 1px solid black;
-            background-color: #87cefa;
-            margin-top: 5px;
-            margin-bottom: 5px;
-            padding: 5px;
+            position: absolute; right: 10px; top: 40px; width: 33%; height: 100%
         }
 
         #codeToInspect
         {
             width: 100%; height: 40%;
         }
-
-        #nodeEdit
-        {
-            width: 100%; height: 30%;
-        }
-
     </style>
 
 </head>
 <body>
 
-    <div id="demo">
-        <div id="diagram">
-        </div>
-        <div id="controlPanel">
-            <div id="quickHelp">
-                Hold CTRL to select multiple elements.
-                <br/>
-                Hold CTRL and drag lower right corner to resize elements.
-                <br/>
-                Drag and drop red circles to create lines.
-                <br/>
-                CTRL+Z to undo and DEL to delete.
+<div id="header_wrap" class="outer small">
+    <header>
+        <h1 id="project_title">Wikidia Bachelor's Thesis</h1>
+
+        <div><a id="back" href="../index.html">&lt; Homepage</a></div>
+    </header>
+</div>
+
+<div id="main_content_wrap" class="outer">
+    <section id="main_content" class="outer no_padding">
+        <div id="demo">
+            <div id="diagram">
             </div>
-            <input id="addNode" type="button" value="Add Node" />
-            <input id="addClass" type="button" value="Add Class" />
-            <input id="addUseCase" type="button" value="Add Use-Case" />
-            <br/>
-            <input id="autoLayout" type="button" value="Auto Layout" />
-            <input id="pushArrows" type="button" value="Push Arrows" />
-            <hr/>
-            Code to Inspect:
-            <textarea id="codeToInspect">
+            <div id="controlPanel">
+                <!--<input id="autoLayout" type="button" value="Auto Layout" />-->
+                <!--<input id="pushArrows" type="button" value="Push Arrows" />-->
+                <!--<hr/>-->
+                <b>Code to Inspect:</b>
+                <textarea id="codeToInspect">
 function Person(firstName, lastName) {
 this.firstName = firstName;
 this.lastName = lastName;
@@ -88,13 +70,14 @@ zipCode: "98168"
 };
 
 return alphonso;
-            </textarea>
-            <input id="inspect" type="button" value="Inspect" />
-            <br/>
-            Item Text:
-            <textarea id="nodeEdit"></textarea>
+                </textarea>
+                <input id="inspect" type="button" value="Inspect" />
+            </div>
         </div>
-    </div>
+    </section>
+</div>
+
+
 
 </body>
 </html>

@@ -7,6 +7,8 @@
     <script type="text/javascript" src="lib/jquery-1.7.2.js"></script>
     <script data-main="src/demo.js" src="lib/require-1.0.8.js"></script>
 
+    <link rel="stylesheet" type="text/css" media="screen" href="../stylesheets/stylesheet.css">
+
     <style type="text/css">
         svg
         {
@@ -45,29 +47,41 @@
 </head>
 <body>
 
-    <div id="demo">
-        <div id="diagram">
-        </div>
-        <div id="controlPanel">
-            <div id="quickHelp">
-                Hold CTRL to select multiple elements.
-                <br/>
-                Hold CTRL and drag lower right corner to resize elements.
-                <br/>
-                Drag and drop red circles to create lines.
-                <br/>
-                CTRL+Z to undo and DEL to delete.
+<div id="header_wrap" class="outer small">
+    <header>
+        <h1 id="project_title">Wikidia Bachelor's Thesis</h1>
+
+        <div><a id="back" href="../index.html">&lt; Homepage</a></div>
+    </header>
+</div>
+
+<div id="main_content_wrap" class="outer">
+    <section id="main_content" class="outer no_padding">
+        <div id="demo">
+            <div id="diagram">
             </div>
-            <input id="addNode" type="button" value="Add Node" />
-            <input id="addClass" type="button" value="Add Class" />
-            <input id="addUseCase" type="button" value="Add Use-Case" />
-            </br>
-            <input id="addActor" type="button" value="Add Actor" />
-            <input id="addNote" type="button" value="Add Note" />
-            <hr/>
-            <textarea id="nodeEdit"></textarea>
+            <div id="controlPanel">
+                <div id="quickHelp">
+                    Hold CTRL to select multiple elements.
+                    <br/>
+                    Hold CTRL and drag lower right corner to resize elements.
+                    <br/>
+                    Drag and drop red circles to create lines.
+                    <br/>
+                    CTRL+Z to undo and DEL to delete.
+                </div>
+                <input id="addNode" type="button" value="Add Node" />
+                <input id="addClass" type="button" value="Add Class" />
+                <input id="addUseCase" type="button" value="Add Use-Case" />
+                </br>
+                <input id="addActor" type="button" value="Add Actor" />
+                <input id="addNote" type="button" value="Add Note" />
+                <hr/>
+                <textarea id="nodeEdit"></textarea>
+            </div>
         </div>
-    </div>
+    </section>
+</div>
 
 </body>
 </html>

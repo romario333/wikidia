@@ -338,13 +338,12 @@ define(function(require) {
         }
 
         function onNodeConnectPointDrop(nodeView, connectPointX, connectPointY) {
-            // TODO: musi bezet pred onNodeConnectPointDragEnd, jak to vynutit nebo testovat?
+            // TODO: must run before onNodeConnectPointDragEnd, how to enforce it?
             commandInProgress.itemToConnect = itemInfos.forView(nodeView);
             commandInProgress.x2 = connectPointX;
             commandInProgress.y2 = connectPointY;
         }
 
-        // TODO: tady se mi dx a dy v dragEnd uplne nehodi, muzu se spolehnout, ze dostanu dragMove s finalni souradnici?
         function onNodeConnectPointDragEnd(nodeView, dx, dy) {
             commandInProgress.cancelPreview();
             commandExecutor.execute(commandInProgress);
@@ -535,7 +534,6 @@ define(function(require) {
             };
         }
 
-        // TODO: for inspectObjectDemo.js
         that.fitContent = function (node) {
             var nodeView = itemInfos.forItem(node).view;
             var size = nodeView.contentSize();
