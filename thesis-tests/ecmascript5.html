@@ -46,8 +46,8 @@ test("Constructor Function in ES3 and ES5", function () {
     // we have inadvertently REWRITTEN parts of WINDOW OBJECT!
     equal(person2, window);
     if ($.browser.msie && $.browser.version >= 9) {
-        // TODO: what's going on in here?
-        equal(window.toString(), "[Object window]");
+        // in newer IE it is not possible to rewrite toString of the window
+        equal(window.toString(), "[object Window]");
     } else {
         equal(window.toString(), "Brandan Eich");
     }
