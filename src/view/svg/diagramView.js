@@ -10,14 +10,26 @@ define(function(require) {
         // TODO: view.createElement vs svgHelper.createSvgElement + is out of init because of parent(element) call, which sucks
         var diagramElement = rootView.createElement("g", {class: "diagram"});
         eventBox = svgHelper.createSvgElement("rect", {class: "eventBox", opacity: 0, fill: "blue", width: "100%", height: "100%"});
+        diagramElement.append(eventBox);
         grid = svgHelper.createSvgElement("g", {class: "grid"});
         diagramElement.append(grid);
         var viewPort = svgHelper.createSvgElement("g", {class: "viewPort"});
         diagramElement.append(viewPort);
-        viewPort.append(eventBox);
         var that = parent(viewPort);
         var eventBox, grid;
         var onDragStart, onDragMove, onDragEnd;
+
+        // TODO: click event does not work, this is quick and dirty workaround
+        var onClick;
+        eventBox.click(function () {
+            if (onClick) {
+                onClick(that);
+            }
+        });
+        that.click = function (handler) {
+            onClick = handler;
+        };
+
 
         function init() {
 
@@ -43,6 +55,7 @@ define(function(require) {
                     onDragEnd(that, dragInfo.dx, dragInfo.dy);
                 }
             });
+
         }
 
         /**
@@ -127,8 +140,6 @@ define(function(require) {
                 height: boundingBox.height
             };
         };
-
-
 
         init();
 

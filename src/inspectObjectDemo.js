@@ -7,11 +7,6 @@ define(function(require, exports, module) {
     var view = require("view");
     var diagramPresenter = require("presenter/diagramPresenter");
 
-    /**
-     * Provides requestAnimationFrame in a cross browser way.
-     * @author paulirish / http://paulirish.com/
-     */
-
     if ( !window.requestAnimationFrame ) {
 
         window.requestAnimationFrame = ( function() {
@@ -35,31 +30,6 @@ define(function(require, exports, module) {
         $("#demo").height($(document).height());
 
         var diagram = model.diagram();
-//        var node1 = model.node({x: 130, y: 130, text: "node1"});
-//        var node2 = model.node({x: 130, y: 130, text: "node2"});
-//        var node3 = model.node({x: 250, y: 110, text: "node3"});
-//        var node4 = model.node({x: 110, y: 300, text: "node4"});
-//        diagram.addItem(node1);
-//        diagram.addItem(node2);
-//        diagram.addItem(node3);
-//        diagram.addItem(node4);
-//
-//        connect(node1, node2);
-//        connect(node1, node4);
-//        connect(node3, node4);
-//        connect(node2, node3);
-//
-//        function connect(node1, node2) {
-//            var n1c = nodeCenter(node1);
-//            var n2c = nodeCenter(node2);
-//
-//            var line = model.line({x1: n1c.x, y1: n1c.y, x2: n2c.x, y2: n2c.y});
-//            diagram.addItem(line);
-//
-//            line.points(0).addConnection(node1);
-//            line.points(1).addConnection(node2);
-//        }
-
 
         var presenter = diagramPresenter(diagram, $("#diagram"), $("#nodeEdit"));
 
@@ -85,19 +55,6 @@ define(function(require, exports, module) {
                 pushArrowsToNodeBoundaries();
             }
         });
-
-        $("#addNode").click(function () {
-            diagram.addItem(model.node());
-        });
-
-        $("#addClass").click(function () {
-            diagram.addItem(model.node({kind: "class"}));
-        });
-
-        $("#addUseCase").click(function () {
-            diagram.addItem(model.node({kind: "useCase"}));
-        });
-
 
         var objNodes = {}, lastObjId = 0;
         function inspect(o) {
@@ -299,7 +256,7 @@ define(function(require, exports, module) {
                 }
                 var r = C1 / Math.sqrt(dist);
                 var result = subtract(v2, v1);
-                if (result.x === 0) result.x = 1; // TODO: could be solved more elegantly?
+                if (result.x === 0) result.x = 1;
                 if (result.y === 0) result.y = 1;
                 result.x = r * result.x * -1;
                 result.y = r * result.y * -1;
@@ -312,12 +269,12 @@ define(function(require, exports, module) {
                 var springLength = ( (v1.size + v2.size) / 2 ) + 50;
 
                 var dist = distance(v1, v2);
-                if (dist === 0) { // TODO: could be solved more elegantly?
+                if (dist === 0) {
                     dist = springLength / 10;
                 }
                 var a = C2 * Math.log(dist / springLength);
                 var result = subtract(v2, v1);
-                if (result.x === 0) result.x = 1; // TODO: could be solved more elegantly?
+                if (result.x === 0) result.x = 1;
                 if (result.y === 0) result.y = 1;
                 result.x = a * result.x;
                 result.y = a * result.y;
@@ -384,7 +341,7 @@ define(function(require, exports, module) {
                 line.points(1).x = node2Point.x;
                 line.points(1).y = node2Point.y;
 
-                // TODO: procpak to potrebuju?
+                // TODO: interesting, why do I have to do this manually?
                 line.fireChange();
             });
 
@@ -466,8 +423,6 @@ define(function(require, exports, module) {
                 return line.y1 - slope * line.x1;
             }
         }
-
-
 
     });
 
