@@ -362,7 +362,7 @@ define(function(require) {
                     lines: parsedText.lines
                 };
 
-                if (renderInfo.headType == "<<>>") {
+                if (renderInfo.headType === "<<>>") {
                     // full diamond
                     renderInfo.fillColor = renderInfo.strokeColor;
                 }
@@ -381,7 +381,7 @@ define(function(require) {
                     "stroke-width": 1.5,
                     fill: renderInfo.fillColor
                 };
-                if (renderInfo.lineType == ".") {
+                if (renderInfo.lineType === ".") {
                     lineSpec["stroke-dasharray"] = "8 5";
                 }
                 lineView.line(lineSpec);
@@ -416,8 +416,8 @@ define(function(require) {
                        x = x - headLength * Math.cos(angle + Math.PI / 6);
                        y = y - headLength * Math.sin(angle + Math.PI / 6);
                        path.lineTo(x ,y);
-                       x = x + headLength * Math.cos(angle - Math.PI / 6)
-                       y = y + headLength * Math.sin(angle - Math.PI / 6)
+                       x = x + headLength * Math.cos(angle - Math.PI / 6);
+                       y = y + headLength * Math.sin(angle - Math.PI / 6);
                        path.lineTo(x ,y);
                        path.closePath();
                     }

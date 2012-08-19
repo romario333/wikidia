@@ -1,5 +1,10 @@
+/*global requestAnimationFrame*/
 define(function(require, exports, module) {
     "use strict";
+
+    if (!$.browser.webkit) {
+        alert("Use Google Chrome or Safari if possible. I haven't time to make this work properly on other browsers. Sorry about that :(")
+    }
 
     var AUTO_LAYOUT_DEBUG = false;
 
@@ -46,8 +51,10 @@ define(function(require, exports, module) {
         });
 
         $("#inspect").click(function () {
+            /*jshint evil:true*/
+
             var code = $("#codeToInspect").val();
-            var f = Function(code);
+            var f = new Function(code);
             var o = f();
 
             diagram.clear();
@@ -65,7 +72,7 @@ define(function(require, exports, module) {
 
             // reset to initial state
             var obj;
-            while (obj = visitedObjects.pop()) {
+            while ((obj = visitedObjects.pop())) {
                 delete obj._inspectOid;
             }
             objNodes = {};
@@ -160,11 +167,12 @@ define(function(require, exports, module) {
                 return {
                     x: Math.floor(node.x + (node.width / 2)),
                     y: Math.floor(node.y + (node.height / 2))
-                }
+                };
             }
         }
 
         function autoLayout() {
+            /*jshint devel:true*/
 
             var iteration = 0;
             var ITERATION_COUNT = 30;
@@ -275,8 +283,8 @@ define(function(require, exports, module) {
                 }
                 var r = C1 / Math.sqrt(dist);
                 var result = subtract(v2, v1);
-                if (result.x === 0) result.x = 1;
-                if (result.y === 0) result.y = 1;
+                if (result.x === 0) { result.x = 1; }
+                if (result.y === 0) { result.y = 1; }
                 result.x = r * result.x * -1;
                 result.y = r * result.y * -1;
 
@@ -293,8 +301,8 @@ define(function(require, exports, module) {
                 }
                 var a = C2 * Math.log(dist / springLength);
                 var result = subtract(v2, v1);
-                if (result.x === 0) result.x = 1;
-                if (result.y === 0) result.y = 1;
+                if (result.x === 0) { result.x = 1; }
+                if (result.y === 0) { result.y = 1; }
                 result.x = a * result.x;
                 result.y = a * result.y;
 
@@ -305,14 +313,14 @@ define(function(require, exports, module) {
                 return {
                     x: v1.x + v2.x,
                     y: v1.y + v2.y
-                }
+                };
             }
 
             function subtract(v1, v2) {
                 return {
                     x: v1.x - v2.x,
                     y: v1.y - v2.y
-                }
+                };
             }
 
             function distance(v1, v2) {
@@ -339,7 +347,7 @@ define(function(require, exports, module) {
                     return {
                         x: x,
                         y: y
-                    }
+                    };
                 };
             }
         }
@@ -431,7 +439,7 @@ define(function(require, exports, module) {
             }
 
             function lineSlope(line) {
-                if (line.x1 == line.x2) {
+                if (line.x1 === line.x2) {
                     // slope for vertical line is not defined
                     return null;
                 }

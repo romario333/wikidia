@@ -84,7 +84,7 @@ define(function(require) {
          */
         that.clear = function () {
             var removed;
-            while (removed = items.pop()) {
+            while ((removed = items.pop())) {
                 if (changeEventsEnabled) {
                     that.fireItemRemoved(removed);
                 }
