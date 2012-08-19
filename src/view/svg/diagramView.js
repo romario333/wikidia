@@ -10,11 +10,11 @@ define(function(require) {
         // TODO: view.createElement vs svgHelper.createSvgElement + is out of init because of parent(element) call, which sucks
         var diagramElement = rootView.createElement("g", {class: "diagram"});
         eventBox = svgHelper.createSvgElement("rect", {class: "eventBox", opacity: 0, fill: "blue", width: "100%", height: "100%"});
-        diagramElement.append(eventBox);
         grid = svgHelper.createSvgElement("g", {class: "grid"});
         diagramElement.append(grid);
         var viewPort = svgHelper.createSvgElement("g", {class: "viewPort"});
         diagramElement.append(viewPort);
+        viewPort.append(eventBox);
         var that = parent(viewPort);
         var eventBox, grid;
         var onDragStart, onDragMove, onDragEnd;
