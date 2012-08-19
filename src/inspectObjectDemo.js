@@ -1,13 +1,11 @@
 define(function(require, exports, module) {
     "use strict";
 
-    var AUTO_LAYOUT_DEBUG = true;
+    var AUTO_LAYOUT_DEBUG = false;
 
     var model = require("model");
     var view = require("view");
     var diagramPresenter = require("presenter/diagramPresenter");
-
-    // TOOD:
 
     /**
      * Provides requestAnimationFrame in a cross browser way.
@@ -119,12 +117,15 @@ define(function(require, exports, module) {
             var attributes = [], operations = [];
 
             Object.keys(o).forEach(function (prop) {
+                if (prop == "_inspectOid") {
+                    return;
+                }
                 var value = o[prop];
                 if (value instanceof Function) {
                     operations.push(prop + "()");
                 } else if (value instanceof Object) {
                     var childNode = inspect(o[prop]);
-                    connect(objectNode, childNode, "{{lineType=->}}");
+                    connect(childNode, objectNode, "{{lineType=-<>}}");
                 } else {
                     var attr = prop + ": ";
                     if (o[prop] === undefined) {
@@ -156,10 +157,18 @@ define(function(require, exports, module) {
         }
 
         function getObjectName(o) {
-            if (o instanceof Function) {
-                return o.name;
+            console.dir(o);
+            if (o === Object.prototype) {
+                return "Object.prototype";
             }
-            return "??";
+            if (o.constructor) {
+                var name = o.constructor.name;
+                if (o.constructor.prototype === o) {
+                    name += ".prototype";
+                }
+                return name;
+            }
+            return "???";
             // o.constructor ? o.constructor.name : "???"
         }
 
@@ -191,9 +200,10 @@ define(function(require, exports, module) {
 
             var vertices = [];
             var verticesById = {};
+            var nextInitPos = initPosGenerator(diagramWidth, diagramHeight);
             nodes.forEach(function (node) {
-                // TODO: vertices should be centered in node's center
-                node.moveTo(Math.floor(Math.random() * diagramWidth), Math.floor(Math.random() * diagramHeight));
+                var initPos = nextInitPos();
+                node.moveTo(initPos.x, initPos.y);
 
                 var v = {
                     node: node,
@@ -333,7 +343,29 @@ define(function(require, exports, module) {
                 return Math.sqrt(Math.pow(v2.x - v1.x, 2) + Math.pow(v2.y - v1.y, 2));
             }
 
+            function initPosGenerator(maxWidth, maxHeight) {
 
+                var STEP = 100;
+                var x = 0, y = STEP;
+
+                return function () {
+                    x += STEP;
+                    if (x > maxWidth) {
+                        x = 0;
+                        y += STEP;
+                    }
+                    if (y > maxHeight) {
+                        y = 0;
+                    }
+//                    x = Math.round(Math.random() * maxWidth);
+//                    y = Math.round(Math.random() * maxHeight);
+
+                    return {
+                        x: x,
+                        y: y
+                    }
+                };
+            }
         }
 
         function pushArrowsToNodeBoundaries() {
@@ -404,6 +436,8 @@ define(function(require, exports, module) {
                     result.x = (b2 - b1) / (m1 - m2);
                     result.y = m1 * result.x + b1;
                 }
+                result.x = Math.round(result.x);
+                result.y = Math.round(result.y);
 
                 if (pointLiesOnLine(result, line1) && pointLiesOnLine(result, line2)) {
                     return result;
