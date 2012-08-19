@@ -198,7 +198,11 @@ test("Example 3-11: Create an object using constructor function", function () {
     equal(person.toString(), "Brandan Eich");
 });
 
+console.log("What is going on??");
 var globalThis = this;
+if (globalThis === window) {
+    console.log("equals out of test");
+}
 test("Example 3-12: This keyword binding depends on context where it is used", function () {
     // when you call a function on an object, this refers to the object
     var o = {
@@ -217,8 +221,10 @@ test("Example 3-12: This keyword binding depends on context where it is used", f
     equal(thisInConstructor, fObj);
 
     // this refers to global object in global scope
-    // TODO: test
-    //equal(globalThis, window);
+    if (globalThis === window) {
+        console.log("equals in test");
+    }
+    equal(globalThis, window);
 
     // when you call a function, this refers to undefined
     function f() {
