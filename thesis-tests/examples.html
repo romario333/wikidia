@@ -9,21 +9,19 @@
 <script>
 "use strict";
 
-// TODO: show warning if browser does not support strict mode
-
 if (!supportsES5Strict()) {
     alert("It seems that your browser does not support ECMAScript 5 strict mode. Note that some tests might fail.");
 }
 
 // TODO: check in IE 10 that this is really necessary
-if ($.browser.msie) {
-    // IE does not support __proto__ property, let's add it
-    Object.defineProperty(Object.prototype, "__proto__", {
-        get: function () {
-            return Object.getPrototypeOf(this);
-        }
-    });
-}
+//if ($.browser.msie) {
+//    // IE does not support __proto__ property, let's add it
+//    Object.defineProperty(Object.prototype, "__proto__", {
+//        get: function () {
+//            return Object.getPrototypeOf(this);
+//        }
+//    });
+//}
 
 /*
  *  3 JAVASCRIPT BASICS
