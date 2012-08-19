@@ -30,6 +30,7 @@ define(function(require, exports, module) {
         $("#demo").height($(document).height());
 
         var diagram = model.diagram();
+        window.diagram = diagram;
 
         var presenter = diagramPresenter(diagram, $("#diagram"), $("#nodeEdit"));
 
@@ -49,6 +50,8 @@ define(function(require, exports, module) {
             var f = Function(code);
             var o = f();
 
+            diagram.clear();
+
             inspect(o);
             autoLayout();
             if (!AUTO_LAYOUT_DEBUG) {
@@ -56,12 +59,26 @@ define(function(require, exports, module) {
             }
         });
 
-        var objNodes = {}, lastObjId = 0;
+        var visitedObjects = [], objNodes = {}, lastObjId = 0;
         function inspect(o) {
-            if (o._inspectOid) {
+            inspectInner(o);
+
+            // reset to initial state
+            var obj;
+            while (obj = visitedObjects.pop()) {
+                delete obj._inspectOid;
+            }
+            objNodes = {};
+            lastObjId = 0;
+        }
+
+        function inspectInner(o) {
+            if (o.hasOwnProperty("_inspectOid")) {
                 // already inspected, skip it
                 return objNodes[o._inspectOid];
             }
+
+            visitedObjects.push(o);
 
             var objectNode = model.node({kind: "class"});
             diagram.addItem(objectNode);
@@ -74,14 +91,14 @@ define(function(require, exports, module) {
             var attributes = [], operations = [];
 
             Object.keys(o).forEach(function (prop) {
-                if (prop == "_inspectOid") {
+                if (prop === "_inspectOid") {
                     return;
                 }
                 var value = o[prop];
                 if (value instanceof Function) {
                     operations.push(prop + "()");
                 } else if (value instanceof Object) {
-                    var childNode = inspect(o[prop]);
+                    var childNode = inspectInner(o[prop]);
                     connect(childNode, objectNode, "{{lineType=-<>}}\n" + prop);
                 } else {
                     var attr = prop + ": ";
@@ -106,7 +123,7 @@ define(function(require, exports, module) {
 
             var proto = Object.getPrototypeOf(o);
             if (proto) {
-                var protoNode = inspect(proto);
+                var protoNode = inspectInner(proto);
                 connect(objectNode, protoNode, "{{lineType=->>}}");
             }
 
@@ -114,7 +131,6 @@ define(function(require, exports, module) {
         }
 
         function getObjectName(o) {
-            console.dir(o);
             if (o === Object.prototype) {
                 return "Object.prototype";
             }
@@ -151,7 +167,7 @@ define(function(require, exports, module) {
         function autoLayout() {
 
             var iteration = 0;
-            var ITERATION_COUNT = 10;
+            var ITERATION_COUNT = 30;
 
             var nodes = diagram.items().filter(function (item) {return item.isNode;});
 
@@ -226,11 +242,9 @@ define(function(require, exports, module) {
                     v1.x += Math.floor(netForce.x);
                     v1.y += Math.floor(netForce.y);
 
-                    // TODO: debug
-                    v1.node.moveTo(v1.x, v1.y);
-
                     if (AUTO_LAYOUT_DEBUG) {
                         console.log(v1.node.id + ": <" + netForce.x + ", " + netForce.y + ">");
+                        v1.node.moveTo(v1.x, v1.y);
                     }
                 });
 
@@ -244,6 +258,11 @@ define(function(require, exports, module) {
                     } else {
                         iterationFun();
                     }
+                } else {
+                    // we are finished, set new positions for nodes
+                    vertices.forEach(function (v) {
+                        v.node.moveTo(v.x, v.y);
+                    });
                 }
             }
 
@@ -266,7 +285,7 @@ define(function(require, exports, module) {
 
             function springAttraction(v1, v2) {
                 var C2 = 1;
-                var springLength = ( (v1.size + v2.size) / 2 ) + 50;
+                var springLength = ( (v1.size + v2.size) / 2 ) + 100;
 
                 var dist = distance(v1, v2);
                 if (dist === 0) {
@@ -303,7 +322,7 @@ define(function(require, exports, module) {
             function initPosGenerator(maxWidth, maxHeight) {
 
                 var STEP = 100;
-                var x = 0, y = 3*STEP;
+                var x = 2*STEP, y = 3*STEP;
 
                 return function () {
                     x += STEP;

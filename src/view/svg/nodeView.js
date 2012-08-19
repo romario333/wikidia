@@ -303,7 +303,6 @@ define(function(require) {
             });
         }
 
-        // TODO: for inspectObjectDemo.js
         that.contentSize = function () {
             var boundingBox = content[0].getBBox();
             return {

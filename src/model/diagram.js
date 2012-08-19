@@ -36,7 +36,7 @@ define(function(require) {
             item.id = ++lastId;
 
             if (item.isLine) {
-                item.points().forEach(function (point) { // TODO: put to line via some generic callback?
+                item.points().forEach(function (point) {
                     point.id = ++lastId;
                 });
             }
@@ -76,6 +76,18 @@ define(function(require) {
 
             if (changeEventsEnabled) {
                 that.fireItemRemoved(item);
+            }
+        };
+
+        /**
+         * Remove all items from the diagram.
+         */
+        that.clear = function () {
+            var removed;
+            while (removed = items.pop()) {
+                if (changeEventsEnabled) {
+                    that.fireItemRemoved(removed);
+                }
             }
         };
 

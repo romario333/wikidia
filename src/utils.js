@@ -52,7 +52,6 @@ define(function (require) {
             object["__" + propertyName] = initialValue;
         },
 
-        // TODO: tests for these two
         copyShallow: function (object) {
             return jQuery.extend({}, object);
         },

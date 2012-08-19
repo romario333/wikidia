@@ -25,7 +25,7 @@ define(function(require) {
             readyForDrag = true;
         });
 
-        // TODO: tady povesim pomerne hodne uplne stejnych handleru na body, nestacil by jeden?
+        // TODO: possible optimization: register only one global event handler
         $(document.body).mousemove(function (e) {
             if (readyForDrag) {
                 isDragged = true;
