@@ -6,6 +6,7 @@ define(function(require) {
         var parent = require("./viewBase");
         var svgHelper = require("./svgHelper");
         var dragEventHandler = require("./dragEventHandler");
+        var itemRenderMixin = require("./itemRenderMixin");
 
         var element = diagramView.createElement("g", {class: "line"});
         var that = parent(element);
@@ -118,39 +119,10 @@ define(function(require) {
             connectPoints.empty();
         };
 
-        that.clear = function () {
-            content.empty();
-        };
-
-        that.line = function (spec) {
-            var el = svgHelper.createSvgElement("line", spec);
-            content.append(el);
-        };
-
-        that.path = function (spec) {
-            var pathBuilder = svgHelper.pathBuilder();
-            pathBuilder.attr(spec);
-
-            return {
-                moveTo: function (x, y) {
-                    pathBuilder.moveTo(x, y);
-                    return this;
-                },
-                lineTo: function (x, y) {
-                    pathBuilder.lineTo(x, y);
-                    return this;
-                },
-                closePath: function () {
-                    pathBuilder.closePath();
-                    return this;
-                },
-                done: function () {
-                    content.append(pathBuilder.create());
-                }
-            };
-        };
-
         init();
+
+        // apply mixin with rendering operations
+        itemRenderMixin(that, content);
 
         return that;
     };

@@ -125,7 +125,7 @@ define(function(require, exports, module) {
                     operations.push(prop + "()");
                 } else if (value instanceof Object) {
                     var childNode = inspect(o[prop]);
-                    connect(childNode, objectNode, "{{lineType=-<>}}");
+                    connect(childNode, objectNode, "{{lineType=-<>}}\n" + prop);
                 } else {
                     var attr = prop + ": ";
                     if (o[prop] === undefined) {
@@ -346,7 +346,7 @@ define(function(require, exports, module) {
             function initPosGenerator(maxWidth, maxHeight) {
 
                 var STEP = 100;
-                var x = 0, y = STEP;
+                var x = 0, y = 3*STEP;
 
                 return function () {
                     x += STEP;

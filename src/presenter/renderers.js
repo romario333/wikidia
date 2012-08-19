@@ -342,6 +342,8 @@ define(function(require) {
             var that = {};
 
             that.render = function (itemInfo) {
+                var x, y;
+
                 var line = itemInfo.item;
                 var lineView = itemInfo.view;
 
@@ -357,7 +359,8 @@ define(function(require) {
                     strokeColor: parsedText.properties.stroke || "black",
                     fillColor: parsedText.properties.fill || "white",
                     lineType: lineTypeString.substr(0, 1),
-                    headType: lineTypeString.substr(1)
+                    headType: lineTypeString.substr(1),
+                    lines: parsedText.lines
                 };
 
                 if (renderInfo.headType == "<<>>") {
@@ -403,9 +406,10 @@ define(function(require) {
                             .lineTo(renderInfo.x2 - headLength * Math.cos(angle - Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle - Math.PI / 6))
                             .lineTo(renderInfo.x2 - headLength * Math.cos(angle + Math.PI / 6), renderInfo.y2 - headLength * Math.sin(angle + Math.PI / 6))
                             .closePath();
-                    } else if (renderInfo.headType == "<>" || renderInfo.headType == "<<>>") {
+                    } else if (renderInfo.headType === "<>" || renderInfo.headType === "<<>>") {
                         // diamond arrow head
-                       var x = renderInfo.x2, y = renderInfo.y2;
+                       x = renderInfo.x2;
+                       y = renderInfo.y2;
                        path.moveTo(x, y);
                        x = x - headLength * Math.cos(angle - Math.PI / 6);
                        y = y - headLength * Math.sin(angle - Math.PI / 6);
@@ -421,9 +425,37 @@ define(function(require) {
 
                     path.done();
                 }
+
+                // render text (identical logic as for use-case)
+                if (renderInfo.lines.length > 0) {
+                    x = Math.min(renderInfo.x1, renderInfo.x2);
+                    y = Math.min(renderInfo.y1, renderInfo.y2);
+                    var width = Math.max(renderInfo.x1, renderInfo.x2) - x;
+                    var height = Math.max(renderInfo.y1, renderInfo.y2) - y;
+
+                    var render = renderFilters.renderFilterChain(lineView, [
+                        renderFilters.verticalFlow(width),
+                        renderFilters.relative(x, y)
+                    ]);
+
+                    var textHeight = 0, textStartY = 0;
+                    renderInfo.lines.forEach(function (line) {
+                        textHeight += lineView.measureText({text: line}).height;
+                    });
+                    if (height > textHeight) {
+                        textStartY = ((height - textHeight) / 2);
+                    }
+
+                    renderInfo.lines.forEach(function (line, index) {
+                        if (index === 0) {
+                            // text is centered vertically, offset first line
+                            render.text({y: textStartY, text: line, align: "center"});
+                        } else {
+                            render.text({text: line, align: "center"});
+                        }
+                    });
+                }
             };
-
-
 
             return that;
         }
