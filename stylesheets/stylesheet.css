@@ -321,22 +321,6 @@ Full-Width Styles
   text-shadow: #111 0px 0px 10px;
 }
 
-#header_wrap.small #project_title {
-    font-size: 14px;
-    padding-top: 5px;
-    padding-left: 5px;
-    font-weight: bold;
-    line-height: 1;
-}
-
-#header_wrap.small #back {
-    font-size: 12px;
-    font-weight: normal;
-    padding-left: 5px;
-    padding-bottom: 5px;
-    line-height: 1.5;
-}
-
 #downloads {
   position: absolute;
   width: 210px;
