@@ -1,0 +1,856 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<script src="lib/jquery-1.7.1.js"></script>
+<link rel="stylesheet" href="lib/qunit-v1.3.0pre.css" type="text/css" media="screen"/>
+<script type="text/javascript" src="lib/qunit-1.3.0pre.js"></script>
+
+<script>
+"use strict";
+
+if (!supportsES5Strict()) {
+    alert("It seems that your browser does not support ECMAScript 5 strict mode. Note that some tests might fail.");
+}
+
+if ($.browser.msie) {
+    // IE does not support __proto__ property, let's add it
+    Object.defineProperty(Object.prototype, "__proto__", {
+        get: function () {
+            return Object.getPrototypeOf(this);
+        }
+    });
+}
+
+/*
+ *  3 JAVASCRIPT BASICS
+ *
+ *  -> 3.1 OBJECTS
+ */
+
+test("Example 3-1, 3-2, 3-3: An object is a collection of properties.", function () {
+    var person = {
+        firstName: "Brandan",
+        lastName: "Eich",
+        toString: function () {
+            return this.firstName + " " + this.lastName;
+        }
+    };
+
+    equal(person["firstName"], "Brandan");
+    equal(person["lastName"], "Eich");
+    equal(person["toString"](), "Brandan Eich");
+
+
+    equal(person.firstName, "Brandan");
+    equal(person.lastName, "Eich");
+    equal(person.toString(), "Brandan Eich");
+
+    equal("Hello " + person, "Hello Brandan Eich");
+});
+
+test("Example 3-4: Almost everything can be treated as an object", function () {
+    equal(({}).toString(), "[object Object]");
+    equal("test".toString(), "test");
+    equal(true.toString(), "true");
+    equal((3).toString(), "3");
+    equal((function () {}).toString().substr(0, 8), "function");
+
+    // TypeError: Cannot call method 'toString' of undefined
+    raises(function () {undefined.toString();}, TypeError);
+    // TypeError: Cannot call method 'toString' of null
+    raises(function () {null.toString();}, TypeError);
+});
+
+test("Example 3-5: You cannot add properties to primitive values", function () {
+    var number = 3;
+
+    number.pow = function (exponent) {
+        return Math.pow(this, exponent);
+    };
+
+    // TypeError: Object 3 has no method 'pow'
+    raises(function () { equal(number.pow(2), 9); }, TypeError);
+});
+
+test("Example 3-6: You can add properties to wrappers of primitive values", function () {
+    var number = 3;
+
+    // you can extend the wrapper object though
+    Number.prototype.pow = function (exponent) {
+        return Math.pow(this, exponent);
+    };
+
+    equal(number.pow(2), 9);
+});
+
+var global = "value";
+test("Example 3-7: Global symbols are accessible as properties of the global object", function () {
+    equal(window.global, global);
+});
+
+test("Example 3-8: Prototype chain of built-in types", function () {
+    // __proto__ = Object.getPrototypeOf
+    equal(({}).__proto__, Object.getPrototypeOf({}));
+
+    equal(({}).__proto__, Object.prototype);
+    if ($.browser.msie && $.browser.version >= 10) {
+        // IE does not auto-wrap primitive types??
+        equal(new String("test").__proto__, String.prototype);
+        equal(new Boolean(true).__proto__, Boolean.prototype);
+        equal(new Number(3).__proto__, Number.prototype);
+    } else {
+        equal("test".__proto__, String.prototype);
+        equal(true.__proto__, Boolean.prototype);
+        equal((3).__proto__, Number.prototype);
+    }
+
+    equal((function () {}).__proto__, Function.prototype);
+
+    // TypeError: Cannot read property '__proto__' of undefined
+    raises(function () {undefined.__proto__;}, TypeError);
+    // TypeError: Cannot read property '__proto__' of null
+    raises(function () {null.__proto__;}, TypeError);
+
+    // everything inherits from object
+    equal(String.prototype.__proto__, Object.prototype);
+    equal(Boolean.prototype.__proto__, Object.prototype);
+    equal(Number.prototype.__proto__, Object.prototype);
+    equal(Function.prototype.__proto__, Object.prototype);
+
+    equal(Object.getPrototypeOf(String.prototype), Object.prototype);
+    equal(Object.getPrototypeOf(Boolean.prototype), Object.prototype);
+    equal(Object.getPrototypeOf(Number.prototype), Object.prototype);
+    equal(Object.getPrototypeOf(Function.prototype), Object.prototype);
+
+});
+
+test("Example 3-9, 3-10: Create an object using object Literal and Object.create", function () {
+    var person1 = {
+        firstName: "Brandan",
+        lastName: "Eich",
+        toString: function () {
+            return this.firstName + " " + this.lastName;
+        }
+    };
+
+    equal(person1.toString(), "Brandan Eich");
+    equal(person1.__proto__, Object.prototype);
+
+    var person2 = Object.create(person1);
+    person2.firstName = "Douglas";
+    person2.lastName = "Crockford";
+
+    equal(person1.toString(), "Brandan Eich");
+    equal(person2.toString(), "Douglas Crockford");
+
+    // there is only one toString function
+    equal(person1.toString, person2.toString);
+
+    // data properties are duplicated though
+    notEqual(person1.firstName, person2.firstName);
+    notEqual(person1.lastName, person2.lastName);
+
+    // and person2's prototype is person1
+    equal(person2.__proto__, person1);
+});
+
+test("Example 3-11: Create an object using constructor function", function () {
+    function Person() {
+        this.firstName = "Brandan";
+        this.lastName = "Eich";
+
+        this.toString = function () {
+            return this.firstName + " " + this.lastName;
+        };
+
+        return this;
+    }
+
+    // call constructor with new
+    var person = new Person();
+    equal(person.toString(), "Brandan Eich");
+});
+
+test("Example 3-12: This keyword binding depends on context where it is used", function () {
+    // when you call a function on an object, this refers to the object
+    var o = {
+        f: function () {
+            equal(this, o);
+        }
+    };
+    o.f();
+
+    // when you call a function with new, this refers to a created object
+    var thisInConstructor;
+    function F() {
+        thisInConstructor = this;
+    }
+    var fObj = new F();
+    equal(thisInConstructor, fObj);
+
+    // this refers to global object in global scope
+    // TODO: this fails in IE>=9, I have no idea why :(
+    equal(globalThis, window);
+
+    // when you call a function, this refers to undefined
+    function f() {
+        equal(this, undefined);
+    }
+    f();
+});
+
+test("Example 3-13: This keyword binding can be set explicitly", function () {
+    // caller of the function can bind this to whatever he wants
+    var anyObj = {};
+    function f2() {
+        equal(this, anyObj);
+    }
+    f2.call(anyObj);
+});
+
+test("Example 3-14: Redefine the window.alert function", function () {
+    window.alert = function (message) {
+        console.log("Alert Dialog: " + message);
+        window.alert.lastMessage = message;
+    };
+
+    alert("test message");
+    equal(window.alert.lastMessage, "test message");
+});
+
+/*
+ *  3 JAVASCRIPT BASICS
+ *
+ *  -> 3.2 FUNCTIONS
+ */
+
+test("Example 3-16: Simple function definition and invocation", function () {
+    function greet() {
+        return "hello";
+    }
+
+    equal(greet(), "hello");
+});
+
+test("Example 3-17, 3-18: Function is an object", function () {
+    function greet() { return "hello"; } // define function
+
+    equal(greet(), "hello"); // invoke function
+
+    // function is an object
+    equal(greet.__proto__, Function.prototype);
+    equal(Function.prototype.__proto__, Object.prototype);
+
+    var greet2 = greet;
+    equal(greet2(), "hello");
+
+    greet.who = "world";
+    equal(greet.who, "world");
+
+    equal(greet.toString().substr(0, 8), "function");
+});
+
+test("Example 3-19, 3-20, 3-21: How to Define a Function", function () {
+    // define function using function statement
+    function greet1(who) {
+        return "hello " + who;
+    }
+
+    // define function using function expression
+    var greet2 = function (who) {
+        return "hello " + who;
+    };
+
+    equal(greet1("world"), "hello world");
+    equal(greet2("world"), "hello world");
+
+    // both function have same prototype
+    equal(greet1.__proto__, greet2.__proto__);
+    equal(greet1.__proto__, Function.prototype);
+    equal(greet2.__proto__, Function.prototype);
+
+    if (!$.browser.msie) {
+        equal(greet1.name, "greet1");
+        equal(greet2.name, "");
+    }
+});
+
+test("Example 3-22: Function declaration is hoisted, function expression is not", function () {
+    // function declaration - you can call function before it's defined
+    equal(callMe1(), "test");
+
+    function callMe1() {
+        return "test";
+    }
+
+    // function expression - YOU HAVE TO DEFINE FUNCTION FIRST!
+    raises(function () {callMe2();}, TypeError); // TypeError: undefined is not a function
+
+    var callMe2 = function () {
+        return "test";
+    };
+
+    equal(callMe2(), "test");
+});
+
+test("Example 3-23: Function scope", function () {
+    var test = "global value";
+
+    function scope() {
+        var test = "local value";
+        equal(test, "local value");
+    }
+    scope();
+    // global variable wasn't affected by scope1 function
+    equal(test, "global value");
+});
+
+test("Example 3-24: You can rewrite variable in the global scope if you forget var keyword", function () {
+    var test = "global value";
+
+    function scope() {
+        test = "local value";
+        equal(test, "local value");
+    }
+    scope();
+    // global variable was changed by scope2!
+    equal(test, "local value");
+});
+
+test("Example 3-25, 3-26: Variable hoisting", function () {
+    function scope1() {
+        // ReferenceError: undefinedVar is not defined
+        raises(function () {undefinedVar;}, ReferenceError);
+
+        equal(local, undefined);
+        var local = "local variable";
+        equal(local, "local variable");
+    }
+    scope1();
+
+    // Code above is equivalent to this:
+    function scope2() {
+        var local;
+        equal(local, undefined);
+        local = "local variable";
+        equal(local, "local variable");
+    }
+    scope2();
+});
+
+/*
+ *  3 JAVASCRIPT BASICS
+ *
+ *  -> 3.3 CLOSURES
+ */
+
+test("Example 3-27: Closure", function () {
+    function outer() {
+
+        var outerVar = "set by outer";
+
+        function inner() {
+            equal(outerVar, "set by outer");
+            outerVar = "set by inner";
+        }
+
+        equal(outerVar, "set by outer");
+        inner();
+        equal(outerVar, "set by inner");
+    }
+});
+
+test("Example 3-28: Sequence generator using closure", function () {
+    function sequence() {
+        var count = 0;
+
+        return function () {
+            return count += 1;
+        }
+    }
+
+    var next = sequence();
+    equal(next(), 1);
+    equal(next(), 2);
+    equal(next(), 3);
+});
+
+test("Example 3-29: Closure in loop – defective version", function () {
+    var numberGenerator = [];
+
+    for (var i = 1; i <= 3; i++) {
+        numberGenerator[i] = function () {
+            return i;
+        }
+    }
+
+    // THEY ALL RETURN 4! What is happening here?
+    equal(numberGenerator[1](), 4);
+    equal(numberGenerator[2](), 4);
+    equal(numberGenerator[3](), 4);
+});
+
+test("Example 3-30: Closure in loop – fixed version", function () {
+    var numberGenerator = [];
+
+    for (var i = 1; i <= 3; i++) {
+        (function (i) {
+            numberGenerator[i] = function () {
+                return i;
+            }
+        })(i);
+    }
+
+    equal(numberGenerator[1](), 1);
+    equal(numberGenerator[2](), 2);
+    equal(numberGenerator[3](), 3);
+});
+
+test("Example 3-31: Closure in loop – fixed with Array.forEach", function () {
+    var numberGenerator = [];
+
+    [1, 2, 3].forEach(function (number) {
+        numberGenerator[number] = function () {
+            return number;
+        }
+    });
+
+    equal(numberGenerator[1](), 1);
+    equal(numberGenerator[2](), 2);
+    equal(numberGenerator[3](), 3);
+});
+
+/*
+ *  4 OBJECT-ORIENTED JAVASCRIPT
+ *
+ *  -> 4.1 POLYMORPHISM
+ */
+
+test("Example 4-1: Capability testing (aka duck-typing)", function () {
+    expect(1);
+
+    var duck = {
+        quack: function () {
+            console.log("quack");
+        }
+    };
+
+    if (duck.quack) {
+        ok("Ducks quack, no surprise here.");
+        duck.quack();
+    }
+
+    if (duck.bark) {
+        fail("Ducks do not bark, obviously.")
+        duck.bark(); // this would fail
+    }
+});
+
+test("Example 4-2: Capability testing (aka duck-typing) – function check", function () {
+    expect(1);
+
+    var duck = {
+        quack: function () {
+            console.log("quack");
+        }
+    };
+
+    if (duck.quack && typeof duck.quack === "function") {
+        ok("Ducks quack, no surprise here.");
+        duck.quack();
+    }
+});
+
+/*
+ *  4 OBJECT-ORIENTED JAVASCRIPT
+ *
+ *  -> 4.2 INFORMATION HIDING
+ */
+
+test("Example 4-3: Keep password secret with function closure", function () {
+    function newUser(spec) {
+        var that = {}, // public interface
+                password = spec.password;
+
+        that.login = spec.login;
+
+        that.authenticate = function (aPassword) {
+            return password === aPassword;
+        };
+
+        return that;
+    }
+
+    var user = newUser({login: "eich", password: "secret"});
+
+    equal(user.login, "eich");
+    equal(user.password, undefined);
+    equal(user.authenticate("secret"), true);
+    equal(user.authenticate("bad secret"), false);
+});
+
+test("Example 4-4: Define an accessor property within an object literal", function () {
+    var person = {
+        firstName: "Brandan",
+        lastName: "Eich",
+        get fullName() {
+            return this.firstName + " " +  this.lastName;
+        },
+        set fullName(value) {
+            var parts = value.split(" ");
+            this.firstName = parts[0];
+            this.lastName = parts[1];
+        }
+    };
+
+    equal(person["fullName"], "Brandan Eich");
+    equal(person.fullName, "Brandan Eich");
+
+    person.fullName = "Douglas Crockford";
+
+    equal(person.fullName, "Douglas Crockford");
+    equal(person.firstName, "Douglas");
+    equal(person.lastName, "Crockford");
+});
+
+test("Example 4-5: Add accessor properties to the existing object", function () {
+    var person = {
+        firstName: "Brandan",
+        lastName: "Eich"
+    };
+
+    Object.defineProperty(person, "fullName", {
+        get: function () {
+            return this.firstName + " " +  this.lastName;
+        },
+        set: function (value) {
+            var parts = value.split(" ");
+            this.firstName = parts[0];
+            this.lastName = parts[1];
+        }
+    });
+
+    equal(person["fullName"], "Brandan Eich");
+    equal(person.fullName, "Brandan Eich");
+
+    person.fullName = "Douglas Crockford";
+
+    equal(person.fullName, "Douglas Crockford");
+    equal(person.firstName, "Douglas");
+    equal(person.lastName, "Crockford");
+});
+
+test("Example 4-6: Inspect property attributes - data vs. accessor property", function () {
+    var person = {
+        firstName: "Brandan",
+        lastName: "Eich",
+        get fullName() {
+            return this.firstName + " " +  this.lastName;
+        },
+        set fullName(value) {
+            var parts = value.split(" ");
+            this.firstName = parts[0];
+            this.lastName = parts[1];
+        }
+    };
+
+    var dataProp = Object.getOwnPropertyDescriptor(person, "firstName");
+    console.dir(dataProp);
+    equal(dataProp.value, "Brandan");
+    equal(dataProp.writable, true);
+    equal(dataProp.enumerable, true);
+    equal(dataProp.configurable, true);
+    equal(dataProp.get, undefined);
+    equal(dataProp.set, undefined);
+
+    var accessorProp = Object.getOwnPropertyDescriptor(person, "fullName");
+    console.dir(accessorProp);
+    equal(accessorProp.value, undefined);
+    equal(accessorProp.writable, undefined);
+    equal(accessorProp.configurable, true);
+    equal(accessorProp.enumerable, true);
+    equal(typeof accessorProp.get === "function", true);
+    equal(typeof accessorProp.set == "function", true);
+});
+
+/*
+ *  4 OBJECT-ORIENTED JAVASCRIPT
+ *
+ *  -> 4.3 INHERITANCE
+ */
+
+test("Example 4-7, 4-8: Prototype chain - property setting and retrieval", function () {
+    var person = {
+        firstName: "",
+        lastName: "",
+        fullName: function () {
+            return this.firstName + " " + this.lastName;
+        }
+    };
+
+    var brandan = Object.create(person);
+
+    equal(brandan.firstName, "");
+    equal(brandan.lastName, "");
+
+    brandan.firstName = "Brandan";
+    brandan.lastName = "Eich";
+
+    equal(brandan.firstName, "Brandan");
+    equal(brandan.lastName, "Eich");
+
+    equal(person.firstName, "");
+    equal(person.lastName, "");
+
+    var axel = Object.create(person);
+    axel.firstName = "Axel";
+    axel.lastName = "Rauschmayer";
+
+    equal(brandan.fullName(), "Brandan Eich");
+    equal(axel.fullName(), "Axel Rauschmayer");
+});
+
+test("Example 4-9: Inspect a prototype chain from the code", function () {
+    var person = {
+        firstName: "",
+        lastName: ""
+    };
+
+    var brandan = Object.create(person);
+
+    equal(Object.getPrototypeOf(brandan), person);
+    equal(Object.getPrototypeOf(person), Object.prototype);
+    equal(Object.getPrototypeOf(Object.prototype), null);
+
+    equal(brandan.__proto__, person);
+    equal(person.__proto__, Object.prototype);
+    equal(Object.prototype.__proto__, null);
+
+    equal(person.isPrototypeOf(brandan), true);
+    equal(Object.prototype.isPrototypeOf(brandan), true);
+});
+
+test("Example 4-10, 4-11: Prototype-based inheritance with constructor functions", function () {
+    function Person() {
+        this.firstName = "";
+        this.lastName = "";
+        // implicit return this
+    }
+
+    Person.prototype.fullName = function () {
+        return this.firstName + " " + this.lastName;
+    };
+
+    var brandan = new Person();
+    brandan.firstName = "Brandan";
+    brandan.lastName = "Eich";
+
+    equal(brandan.fullName(), "Brandan Eich");
+
+    var axel = new Person();
+    axel.firstName = "Axel";
+    axel.lastName = "Rauschmayer";
+
+    equal(axel.fullName(), "Axel Rauschmayer");
+});
+
+test("Example 4-12: Prototype-based inheritance with constructor functions", function () {
+    var cat = {};
+
+    function Dog() {
+        return cat;
+    }
+
+    var dog = new Dog();
+    equal(dog instanceof Dog, false);
+    equal(dog, cat);
+});
+
+test("Example 4-13: Apply a mixin to an object", function () {
+    function applyMixin(object, mixin) {
+        Object.keys(mixin).forEach(function (key) {
+            object[key] = mixin[key];
+        });
+    }
+
+    var o = {
+        firstName: "Brandan",
+        lastName: "Eich"
+    };
+
+    var debugMixin = {
+        printProperties: function () {
+            var props = [];
+            var keys = Object.keys(this);
+            for (var i in keys) {
+                var key = keys[i];
+                if (typeof this[key] !== "function")
+                    props.push(keys[i] + ": " + this[keys[i]]);
+            }
+            return props.join(", ");
+        }
+    };
+
+    applyMixin(o, debugMixin);
+
+    equal(o.printProperties(), "firstName: Brandan, lastName: Eich");
+});
+
+test("Example 4-14: “Classical” inheritance with function constructor", function () {
+    function Person(firstName, lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    Person.prototype.fullName = function () {
+        return this.firstName + " " + this.lastName;
+    };
+
+    var brandan = new Person("Brandan", "Eich");
+    equal(brandan.fullName(), "Brandan Eich");
+    equal(brandan instanceof Person, true);
+});
+
+test("Example 4-15: Create a simple module", function () {
+    var MY_APP = MY_APP || {};
+    MY_APP.module = {};
+
+    (function () {
+        var exports = MY_APP.module;
+
+        exports.publicFunc = function () {
+            privateFunc();
+        };
+
+        function privateFunc() {
+            // do something
+        }
+    })();
+
+    var module = MY_APP.module;
+    module.publicFunc();
+});
+
+/*
+ *  5 FUNCTIONAL JAVASCRIPT
+ */
+
+test("Example 5-1: How deep does the rabbit hole go?", function () {
+    var level = 1;
+    function f() {
+        if (level > 100000) {
+            // Exit if stack overflow didn't occur in first 100,000 iterations.
+            // This will probably happen in the future when tail call optimization
+            // support is added.
+            level = undefined;
+            console.log("No stack-overflow in first 100,000 iterations, giving up.");
+            return;
+        }
+
+        level += 1;
+        f();
+    }
+
+    raises(function () { f(); }, Error);
+    if (level) {
+        console.log("Stack overflow error on level of recursion " + level);
+    }
+});
+
+test("Example 5-2: Functional programming with Array functions", function () {
+    var employees = [
+        {name: "Abel September", salary: 50000},
+        {name: "Laurence Napier", salary: 4000},
+        {name: "Oliver Nolan", salary: 13000}
+    ];
+
+    var salaryReport = employees.filter(function (employee) {
+        return employee.salary > 10000;
+    }).map(function (employee) {
+                return employee.name + ": $" + employee.salary;
+            }).join(", ");
+    equal(salaryReport, "Abel September: $50000, Oliver Nolan: $13000");
+});
+
+test("Example 5-3: Function currying with Function.bind", function () {
+    var add = function(a, b) {
+        return a + b;
+    };
+
+    var add5 = add.bind(null, 5);
+
+    equal(add5(3), 8);
+});
+
+/*
+ *  7 APPLICATION PROTOTYPE
+ */
+
+test("Example 7-5: Object as a map", function () {
+    var map = {};
+
+    map["key1"] = "value1";
+    map["key2"] = "value2";
+
+    equal(map["key1"], "value1");
+    equal(map["key2"], "value2");
+});
+
+test("Example 7-6: Object as a map – keys are just strings", function () {
+    var map = {};
+    var key1 = {}, key2 = {};
+    map[key1] = "value1";
+    map[key2] = "value2";
+
+    equal(map[key1], "value2");
+    equal(map[key2], "value2");
+
+    equal(Object.keys(map).length, 1);
+    equal(Object.keys(map)[0], "[object Object]");    });
+
+test("Example 7-7: Unique ID support for objects", function () {
+    var objectWithId = function f () {
+        if (!f.lastId) {
+            f.lastId = 0;
+        }
+        f.lastId++;
+        return {oid: f.lastId};
+    };
+
+    var map = {};
+    var key1 = objectWithId(), key2 = objectWithId();
+    map[key1.oid] = "value1";
+    map[key2.oid] = "value2";
+
+    equal(map[key1.oid], "value1");
+    equal(map[key2.oid], "value2");
+});
+
+/**
+ * Return true if browser supports ES5/strict. (Note
+ */
+function supportsES5Strict() {
+    "use strict";
+    try {
+        delete Object.prototype;
+    } catch (TypeError) {
+        return true;
+    }
+    return false;
+}
+
+</script>
+
+</head>
+<body>
+<h1 id="qunit-header">QUnit example</h1>
+
+<h2 id="qunit-banner"></h2>
+
+<div id="qunit-testrunner-toolbar"></div>
+<h2 id="qunit-userAgent"></h2>
+<ol id="qunit-tests"></ol>
+<div id="qunit-fixture">test markup, will be hidden</div>
+</body>
+</html>

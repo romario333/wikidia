@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Wikidia Demo</title>
+
+    <script type="text/javascript" src="lib/jquery-1.7.2.js"></script>
+    <script data-main="src/inspectObjectDemo.js" src="lib/require-1.0.8.js"></script>
+
+    <style type="text/css">
+        svg
+        {
+            width: 100%;
+            height: 100%;
+        }
+
+        #diagram
+        {
+            width: 100%; height: 100%;
+            color: #bbbbbb;
+        }
+
+        #controlPanel
+        {
+            position: absolute; right: 10px; top: 10px; width: 33%; height: 100%
+        }
+
+        #quickHelp
+        {
+            border: 1px solid black;
+            background-color: #87cefa;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            padding: 5px;
+        }
+
+        #codeToInspect
+        {
+            width: 100%; height: 40%;
+        }
+
+        #nodeEdit
+        {
+            width: 100%; height: 30%;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <div id="demo">
+        <div id="diagram">
+        </div>
+        <div id="controlPanel">
+            <div id="quickHelp">
+                Hold CTRL to select multiple elements.
+                <br/>
+                Hold CTRL and drag lower right corner to resize elements.
+                <br/>
+                Drag and drop red circles to create lines.
+                <br/>
+                CTRL+Z to undo and DEL to delete.
+            </div>
+            <input id="addNode" type="button" value="Add Node" />
+            <input id="addClass" type="button" value="Add Class" />
+            <input id="addUseCase" type="button" value="Add Use-Case" />
+            <br/>
+            <input id="autoLayout" type="button" value="Auto Layout" />
+            <input id="pushArrows" type="button" value="Push Arrows" />
+            <hr/>
+            Code to Inspect:
+            <textarea id="codeToInspect">
+function Person(firstName, lastName) {
+this.firstName = firstName;
+this.lastName = lastName;
+}
+
+Person.prototype.fullName = function () {
+return this.firstName + " " + this.lastName();
+};
+
+var alphonso = new Person("Alphonso", "Deryck");
+alphonso.address = {
+street: "14 Main Street",
+city: "Tukwilla, WA",
+zipCode: "98168"
+};
+
+return alphonso;
+            </textarea>
+            <input id="inspect" type="button" value="Inspect" />
+            <br/>
+            Item Text:
+            <textarea id="nodeEdit"></textarea>
+        </div>
+    </div>
+
+</body>
+</html>
