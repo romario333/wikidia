@@ -90,9 +90,10 @@ define(function(require) {
         target.text = function (spec) {
             var textElement = createTextElement(spec);
             content.append(textElement);
+            var bBox = textElement[0].getBBox();
             return {
-                width: textElement.width(),
-                height: textElement.height()
+                width: bBox.width,
+                height: bBox.height
             };
         };
 
@@ -108,9 +109,10 @@ define(function(require) {
             var textElement = createTextElement(spec);
             // add text temporarily to the document so we can get its size
             content.append(textElement);
+            var bBox = textElement[0].getBBox();
             var textSize = {
-                width: textElement.width(),
-                height: textElement.height()
+                width:  bBox.width,
+                height: bBox.height
             };
             textElement.remove();
             return textSize;
