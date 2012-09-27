@@ -1,6 +1,10 @@
 define(function(require, exports, module) {
     "use strict";
 
+    if (!$.browser.webkit) {
+        alert("Use Google Chrome or Safari if possible. I haven't time to make this work properly on other browsers. Sorry about that :(")
+    }
+
     var model = require("model");
     var view = require("view");
     var diagramPresenter = require("presenter/diagramPresenter");
